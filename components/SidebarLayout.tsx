@@ -12,7 +12,7 @@ export default function SidebarLayout({ children }: Props) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-gray-50 min-w-fit">
       {/* Mobile sidebar overlay */}
       {mobileOpen && (
         <div
@@ -24,7 +24,7 @@ export default function SidebarLayout({ children }: Props) {
       {/* Sidebar */}
       <aside
         className={`
-          fixed z-40 top-0 left-0 h-full w-60 bg-amber-50 p-4 space-y-4 text-lg font-medium
+          fixed z-40 top-0 left-0  w-60 h-screen bg-gray-100 p-4 space-y-4 text-lg font-medium
           transform ${mobileOpen ? "translate-x-0" : "-translate-x-full"}
           transition-transform duration-300
           md:relative md:translate-x-0 md:block
@@ -51,9 +51,9 @@ export default function SidebarLayout({ children }: Props) {
       </aside>
 
       {/* Main Content */}
-      <div className="flex-1 md:ml-60 p-4 w-full">
+      <div className="flex-1 md:ml-2 p-4 w-full">
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-end mb-4">
           <button
             className="md:hidden"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -61,7 +61,7 @@ export default function SidebarLayout({ children }: Props) {
           >
             <Menu className="w-6 h-6" />
           </button>
-          <div className="text-lg font-semibold">Search / Filters</div>
+          {/* <div className="text-lg font-semibold">Search / Filters</div> */}
           <div className="flex items-center gap-4">
             <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
               New Claim
@@ -71,9 +71,7 @@ export default function SidebarLayout({ children }: Props) {
         </div>
 
         {/* Page content */}
-        <div className="bg-white border rounded-md p-4 shadow-sm">
-          {children}
-        </div>
+        <div className="bg-white  rounded-md  shadow-sm">{children}</div>
       </div>
     </div>
   );
