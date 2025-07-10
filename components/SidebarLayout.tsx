@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Menu, ChevronDown, ChevronRight, X } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "@/constants/menu";
+import { usePathname } from "next/navigation";
 import clsx from "clsx";
 
 type Props = {
@@ -13,31 +14,48 @@ type Props = {
 type NavItem = {
   label: string;
   path?: string;
+  icon?: string;
+
   children?: NavItem[];
 };
 
 const SidebarItem = ({
   item,
   level = 0,
+  pathname,
 }: {
   item: NavItem;
   level?: number;
+  pathname?: string;
 }) => {
   const [open, setOpen] = useState(false);
   const hasChildren = item.children && item.children.length > 0;
-
+  const isActive = pathname === item.path;
   return (
     <div className={`pl-${level * 4} text-sm`}>
       <div
-        className="flex items-center justify-between cursor-pointer hover:bg-gray-300  p-3"
+        className={`flex items-center justify-between cursor-pointer shadow-sm p-2 ${
+          isActive ? "bg-[#FBBC05]" : "hover:bg-[#FBBC05]"
+        }`}
         onClick={() => hasChildren && setOpen(!open)}
       >
         {item.path ? (
-          <Link href={item.path} className="block w-full">
-            {item.label}
+          <Link
+            href={item.path}
+            className="flex justify-start items-center gap-x-2 w-full "
+          >
+            <span>
+              <img src={item.icon} alt="Logo" className="mx-auto w-3" />
+            </span>
+            <span>{item.label}</span>
           </Link>
         ) : (
-          <span>{item.label}</span>
+          <div className="flex justify-start items-center gap-x-2 w-full ">
+            <span>
+              <img src={item.icon} alt="Logo" className="mx-auto w-3" />
+            </span>
+            <span>{item.label}</span>
+          </div>
         )}
         {hasChildren && (
           <span>
@@ -57,26 +75,54 @@ const SidebarItem = ({
 };
 
 export default function SidebarLayout({ children }: Props) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(true);
+  const pathname = usePathname();
 
   return (
-    <div className="flex min-h-screen bg-gray-50 w-full">
+    <div className="flex min-h-screen bg-gray-50 w-full ">
       {/* Sidebar */}
       <aside
         className={clsx(
-          "transition-all duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto",
-          isOpen ? "w-60 p-4" : "w-0 p-0"
+          "transition-all relative duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto",
+          isOpen ? "w-60 " : "w-0 p-0"
         )}
       >
-        <hr className="text-red-400 p-2" />
-
-        {isOpen && (
-          <div className="space-y-2 text-gray-800 font-medium">
-            {navItems.map((item) => (
-              <SidebarItem key={item.label} item={item} />
-            ))}
+        <div className="w-full flex justify-center border-b-1 border-gray-500">
+          <div className="w-24 h-24">
+            <img
+              src="assets/larisha-logo.png"
+              alt="Logo"
+              className="w-full h-full"
+            />
           </div>
-        )}
+        </div>
+
+        <div className="flex flex-col justify-between h-[calc(100%-120px)]">
+          {isOpen && (
+            <div className="space-y-4 text-gray-800 font-medium pl-6 pt-6">
+              {navItems.map((item) => (
+                <SidebarItem key={item.label} item={item} pathname={pathname} />
+              ))}
+            </div>
+          )}
+          <div className="space-y-4 text-gray-800 font-medium pl-6 pt-6 w-full">
+            <div
+              className={`flex items-center justify-start cursor-pointer shadow-sm p-2 
+         hover:bg-[#FBBC05]
+        `}
+              // onClick={() => hasChildren && setOpen(!open)}
+            >
+              <span>
+                <img
+                  src={"assets/patient.png"}
+                  alt="Logout"
+                  className="mx-auto w-3"
+                />
+              </span>
+              <span>Logout</span>
+            </div>
+          </div>
+        </div>
       </aside>
 
       {/* Main Content */}
@@ -88,23 +134,24 @@ export default function SidebarLayout({ children }: Props) {
       >
         {/* Topbar */}
         <div className="flex items-center justify-between px-4 py-3 bg-white border-b shadow-sm sticky top-0 z-10">
-          <button
+          {/* <button
             className="block cursor-pointer"
             onClick={() => setIsOpen(!isOpen)}
             aria-label="Toggle Menu"
           >
             {isOpen ? (
-              <Menu className="w-6 h-6 text-gray-700" />
-            ) : (
               <X className="w-6 h-6 text-gray-700" />
+            ) : (
+              <Menu className="w-6 h-6 text-gray-700" />
             )}
-          </button>
+          </button> */}
 
           <div className="flex items-center gap-4 ml-auto">
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm">
-              New Claim
+            <button className="bg-[#FBBC05] text-white block w-10 h-10 rounded-full text-sm">
+              Notification
             </button>
-            <span className="text-sm font-medium">ProfileNotification</span>
+            <span className="block w-10 h-10 rounded-full bg-gray-300"></span>
+            <span className="text-sm font-medium">User Name</span>
           </div>
         </div>
 

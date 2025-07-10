@@ -9,13 +9,13 @@ export default function LoginPage() {
   const [loginType, setLoginType] = useState<"admin" | "hospital">("admin");
 
   return (
-    <div className="flex min-h-screen bg-grey-50 rounded-l-4xl">
+    <div className="flex min-h-screen w-screen bg-white">
       {/* Left Branding Section - only on desktop */}
-      <div className="hidden lg:flex w-1/2 bg-primary text-white flex-col justify-center items-center relative">
+      <div className="hidden lg:flex w-2/3 bg-primary  text-white flex-col justify-center items-center relative">
         <img
           src="assets/doctor-bg.jpg"
           alt="Doctor background"
-          className="absolute inset-0 w-full h-full object-cover opacity-25"
+          className="absolute inset-0 w-full h-full object-cover opacity-25 rotate-y-180"
         />
         <div className="z-10 text-center w-[600px]">
           <img
@@ -28,7 +28,9 @@ export default function LoginPage() {
       </div>
 
       {/* Right Login Panel */}
-      <div className="relative w-full lg:w-1/2 flex items-center justify-center p-12  bg-white rounded-l-3xl">
+      <div className="relative w-full lg:w-1/3 flex items-center justify-center   overflow-hidden  -translate-x-10 z-30   bg-white rounded-l-[2.5rem]">
+        {/* <div className="absolute top-0 left-0 w-full  h-full md:w-[100%] bg-red-300 rounded-l-[2rem]  translate-x-0 translate-y-0 -z-20 hidden md:block" /> */}
+
         <div className="w-full max-w-md space-y-6">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-6">
