@@ -34,8 +34,8 @@ const SidebarItem = ({
   return (
     <div className={`pl-${level * 4} text-sm`}>
       <div
-        className={`flex items-center justify-between cursor-pointer shadow-sm p-2 ${
-          isActive ? "bg-[#FBBC05]" : "hover:bg-[#FBBC05]"
+        className={`flex items-center justify-between cursor-pointer  p-2 ${
+          isActive ? "bg-[#FBBC05]" : "hover:shadow-sm"
         }`}
         onClick={() => hasChildren && setOpen(!open)}
       >
@@ -80,7 +80,6 @@ export default function SidebarLayout({ children }: Props) {
 
   return (
     <div className="flex min-h-screen bg-gray-50 w-full ">
-      {/* Sidebar */}
       <aside
         className={clsx(
           "transition-all relative duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto",
@@ -99,7 +98,7 @@ export default function SidebarLayout({ children }: Props) {
 
         <div className="flex flex-col justify-between h-[calc(100%-120px)]">
           {isOpen && (
-            <div className="space-y-4 text-gray-800 font-medium pl-6 pt-6">
+            <div className="space-y-4 text-gray-800 font-medium pl-6 pt-2">
               {navItems.map((item) => (
                 <SidebarItem key={item.label} item={item} pathname={pathname} />
               ))}
@@ -125,14 +124,12 @@ export default function SidebarLayout({ children }: Props) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div
         className={clsx(
           "flex flex-col transition-all duration-300 ease-in-out",
           isOpen ? "w-[calc(100%-15rem)]" : "w-full"
         )}
       >
-        {/* Topbar */}
         <div className="flex items-center justify-between px-4 py-3 bg-white border-b shadow-sm sticky top-0 z-10">
           {/* <button
             className="block cursor-pointer"
@@ -146,11 +143,22 @@ export default function SidebarLayout({ children }: Props) {
             )}
           </button> */}
 
-          <div className="flex items-center gap-4 ml-auto">
-            <button className="bg-[#FBBC05] text-white block w-10 h-10 rounded-full text-sm">
-              Notification
+          <div className="flex items-center gap-2 ml-auto">
+            <button className=" text-white block w-10 h-10  text-sm">
+              {/* Notification */}
+              <img
+                src={"assets/notification_icon.png"}
+                alt="Logout"
+                className="mx-auto w-6 h-6"
+              />
             </button>
-            <span className="block w-10 h-10 rounded-full bg-gray-300"></span>
+            <span className=" w-10 h-10 flex justify-center items-center mb-2">
+              <img
+                src={"assets/user.png"}
+                alt="Logout"
+                className="mx-auto w-7 h-7 "
+              />
+            </span>
             <span className="text-sm font-medium">User Name</span>
           </div>
         </div>
