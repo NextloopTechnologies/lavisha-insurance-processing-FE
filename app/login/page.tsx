@@ -1,62 +1,117 @@
+// app/login/page.tsx or src/pages/login.tsx (based on your setup)
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const router = useRouter();
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // 👉 Add your login logic here
-    console.log("Email:", email);
-    console.log("Password:", password);
-    if (email === "admin@example.com" && password === "password") {
-      document.cookie = `auth-token=example-token; path=/`;
-      router.push("/");
-    } else {
-      alert("Invalid credentials");
-    }
-  };
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginType, setLoginType] = useState<"admin" | "hospital">("admin");
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-      <div className="w-full max-w-md bg-white p-6 rounded-md shadow-md">
-        <h2 className="text-2xl font-semibold mb-6 text-center">Login</h2>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="mt-1"
+    <div className="flex min-h-screen w-screen bg-white">
+      {/* Left Branding Section - only on desktop */}
+      <div className="hidden lg:flex w-2/3 bg-primary  text-white flex-col justify-center items-center relative">
+        <img
+          src="assets/doctor-bg.jpg"
+          alt="Doctor background"
+          className="absolute inset-0 w-full h-full object-cover opacity-25 rotate-y-180"
+        />
+        <div className="z-10 text-center w-[600px]">
+          <img
+            src="assets/larisha-logo.png"
+            alt="Logo"
+            className="mx-auto mb-4 w-full"
+          />
+          {/* <h1 className="text-3xl font-bold">LARISHA HEALTH CARE PVT LTD</h1> */}
+        </div>
+      </div>
+
+      {/* Right Login Panel */}
+      <div className="relative w-full lg:w-1/3 flex items-center justify-center   overflow-hidden  -translate-x-10 z-30   bg-white rounded-l-[2.5rem]">
+        {/* <div className="absolute top-0 left-0 w-full  h-full md:w-[100%] bg-red-300 rounded-l-[2rem]  translate-x-0 translate-y-0 -z-20 hidden md:block" /> */}
+
+        <div className="w-full max-w-md space-y-6">
+          {/* Mobile logo */}
+          <div className="lg:hidden text-center mb-6">
+            <img
+              src="assets/larisha-logo.png"
+              alt="Logo"
+              className="mx-auto w-20"
             />
+            <h2 className="font-bold text-primary mt-2">
+              LARISHA HEALTH CARE PVT LTD
+            </h2>
           </div>
-          <div>
-            <Label htmlFor="password">Password</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="mt-1"
-            />
+
+          <div className="text-center">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Hi, Welcome! 👋
+            </h1>
+            <div className="mt-2 flex justify-center gap-6 text-sm font-semibold">
+              <button
+                className={`border-b-2 ${
+                  loginType === "admin"
+                    ? "border-yellow-400 text-yellow-500"
+                    : "border-transparent text-gray-600"
+                }`}
+                onClick={() => setLoginType("admin")}
+              >
+                Admin Login
+              </button>
+              <button
+                className={`border-b-2 ${
+                  loginType === "hospital"
+                    ? "border-yellow-400 text-yellow-500"
+                    : "border-transparent text-gray-600"
+                }`}
+                onClick={() => setLoginType("hospital")}
+              >
+                Hospital Login
+              </button>
+            </div>
           </div>
-          <Button type="submit" className="w-full">
-            Sign In
-          </Button>
-        </form>
+
+          {/* Form */}
+          <form className="space-y-4">
+            <div>
+              <input
+                type="email"
+                placeholder="Email"
+                className="w-full border-b border-yellow-300 px-2 py-2 focus:outline-none text-sm"
+              />
+            </div>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                className="w-full border-b border-yellow-300 px-2 py-2 focus:outline-none text-sm"
+              />
+              <span
+                className="absolute right-2 top-2 cursor-pointer text-gray-500"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                id="remember"
+                className="accent-yellow-400"
+              />
+              <label htmlFor="remember" className="text-gray-600">
+                Remember me
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-yellow-400 hover:bg-yellow-500 text-white py-2 rounded-full font-semibold text-sm"
+            >
+              Log In
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   );
