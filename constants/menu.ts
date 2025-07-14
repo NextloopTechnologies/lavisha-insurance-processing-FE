@@ -6,7 +6,7 @@ export const navItems = [
   },
   {
     label: "Claims",
-path: "/claims",
+    path: "/claims",
     icon: "assets/claims.png",
 
     // children: [
@@ -37,7 +37,7 @@ path: "/claims",
     icon: "assets/patient.png",
   },
   {
-    label: "queries",
+    label: "Queries",
     icon: "assets/patient.png",
     children: [
       {
