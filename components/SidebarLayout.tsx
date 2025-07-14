@@ -35,7 +35,7 @@ const SidebarItem = ({
     <div className={`pl-${level * 4} text-sm`}>
       <div
         className={`flex items-center justify-between cursor-pointer  p-2 ${
-          isActive ? "bg-[#FBBC05] rounded-l-sm shadow-md" : "hover:shadow-md"
+          isActive ? "bg-[#FBBC05] rounded-l-sm shadow-md text-white" : "hover:shadow-md"
         }`}
         onClick={() => hasChildren && setOpen(!open)}
       >
