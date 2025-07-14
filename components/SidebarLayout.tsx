@@ -35,7 +35,7 @@ const SidebarItem = ({
     <div className={`pl-${level * 4} text-sm`}>
       <div
         className={`flex items-center justify-between cursor-pointer  p-2 ${
-          isActive ? "bg-[#FBBC05]" : "hover:shadow-sm"
+          isActive ? "bg-[#FBBC05] rounded-l-sm shadow-md" : "hover:shadow-md"
         }`}
         onClick={() => hasChildren && setOpen(!open)}
       >
@@ -106,8 +106,8 @@ export default function SidebarLayout({ children }: Props) {
           )}
           <div className="space-y-4 text-gray-800 font-medium pl-6 pt-6 w-full">
             <div
-              className={`flex items-center justify-start cursor-pointer shadow-sm p-2 
-         hover:bg-[#FBBC05]
+              className={`flex items-center justify-start cursor-pointer  p-2 
+         hover:shadow-sm
         `}
               // onClick={() => hasChildren && setOpen(!open)}
             >
@@ -164,7 +164,7 @@ export default function SidebarLayout({ children }: Props) {
         </div>
 
         {/* Page content */}
-        <main className="p-4">{children}</main>
+        <main className="p-0">{children}</main>
       </div>
     </div>
   );
