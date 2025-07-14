@@ -104,16 +104,6 @@ const users: User[] = [
   },
 ];
 
-// const dummyData = Array(10).fill({
-//   id: 1,
-//   patientName: "Hemant Rajput",
-//   description: "Description",
-//   status: "Pending",
-//   claimId: "ID25325871",
-//   createdDate: "10/11/2025",
-//   doctor: "Dr. Rajesh panda",
-//   preAuthStatus: "........",
-// });
 
 export function DataTable() {
   const [searchTerm, setSearchTerm] = useState("");
