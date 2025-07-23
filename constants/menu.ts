@@ -39,18 +39,18 @@ export const navItems = [
   {
     label: "Queries",
     icon: "assets/patient.png",
-    children: [
-      {
-        label: "Profile",
-        path: "/queries/profile",
-        icon: "assets/patient.png",
-      },
-      {
-        label: "Security",
-        path: "/queries/security",
-        icon: "assets/patient.png",
-      },
-    ],
+    // children: [
+    //   {
+    //     label: "Profile",
+    //     path: "/queries/profile",
+    //     icon: "assets/patient.png",
+    //   },
+    //   {
+    //     label: "Security",
+    //     path: "/queries/security",
+    //     icon: "assets/patient.png",
+    //   },
+    // ],
   },
   { path: "/settlements", label: "Settlements", icon: "assets/patient.png" },
   { path: "/enhancements", label: "Enhancements", icon: "assets/patient.png" },

@@ -1,18 +1,22 @@
-// middleware.ts
+// app/middleware.ts
+
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const PUBLIC_ROUTES = ["/login"];
+
 export function middleware(request: NextRequest) {
-  const token = request.cookies.get("auth-token")?.value;
+  const token = request.cookies.get("access_token")?.value;
+  const isPublicRoute = PUBLIC_ROUTES.includes(request.nextUrl.pathname);
+  const isAuthRoute = request.nextUrl.pathname === "/login";
 
-  const isAuth = Boolean(token);
-  const isLogin = request.nextUrl.pathname === "/login";
-
-  if (!isAuth && !isLogin) {
+  // If no token and trying to access protected page → redirect to login
+  if (!token && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (isAuth && isLogin) {
+  // If token exists and trying to access login → redirect to dashboard
+  if (token && isAuthRoute) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

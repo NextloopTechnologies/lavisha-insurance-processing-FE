@@ -17,9 +17,17 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { DatePicker } from "@/components/DatePicker";
-
-import { Plus, Eye, Pencil, Trash2, Copy } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
+  Copy,
+  EllipsisVertical,
+} from "lucide-react";
 import { useMemo, useState } from "react";
+import { MultiSelect } from "./MultiSelect";
 
 type User = {
   id: number;
@@ -162,24 +170,31 @@ export function DataTable() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const router = useRouter();
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses((prev) =>
+      prev.includes(status)
+        ? prev.filter((item) => item !== status)
+        : [...prev, status]
+    );
+  };
   const itemsPerPage = 10;
   const filteredData = useMemo(() => {
-    return users.filter(
-      (row) => {
-        const matchesSearch = Object.values(row).some((val) =>
-          val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-        );
+    return users.filter((row) => {
+      const matchesSearch = Object.values(row).some((val) =>
+        val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
-        const matchesStatus =
-          statusFilter === "All" || row.status === statusFilter;
-        return matchesSearch && matchesStatus;
-      }
-      // Object.values(row).some((val) =>
-      //   String(val).toLowerCase().includes(searchTerm.toLowerCase())
-      // )
-    );
-  }, [searchTerm, statusFilter]);
+      // const matchesStatus =
+      //   statusFilter === "All" || row.status === statusFilter;
+      const matchesStatus =
+        selectedStatuses.length === 0 || selectedStatuses.includes(row.status);
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [searchTerm, selectedStatuses, statusFilter]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -192,11 +207,11 @@ export function DataTable() {
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
       <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-2 md:flex-wrap">
           <div className="relative">
             <Input
               placeholder="Search here"
-              className="pl-10 w-56 bg-white rounded-4xl"
+              className="pl-10 w-[180px] md:w-56 bg-white rounded-4xl"
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -215,71 +230,56 @@ export function DataTable() {
               </svg>
             </span>
           </div>
-
-          <Select
-            onValueChange={(value) => setStatusFilter(value)}
-            // defaultValue="All"
-          >
-            <SelectTrigger className="w-[130px] bg-white rounded-4xl">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {status.map((item) => (
-                <SelectItem value={item.name}>
-                  <img src={item.icon} alt="Logo" className="mx-auto w-3" />
-                  {item.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {/* <Select>
-            <SelectTrigger className="w-[150px] bg-white rounded-4xl">
-              <SelectValue placeholder="Created Date" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="today">Today</SelectItem>
-              <SelectItem value="yesterday">Yesterday</SelectItem>
-            </SelectContent>
-          </Select> */}
+          <MultiSelect
+            selectedStatuses={selectedStatuses}
+            status={status}
+            toggleStatus={toggleStatus}
+            setSelectedStatuses={setSelectedStatuses}
+          />
           <DatePicker date={selectedDate} onChange={setSelectedDate} />
         </div>
-
-        <Button className="bg-[#FBBC05] hover:bg-[#fbbd05ea] text-white rounded-sm">
+        <Button
+          onClick={() => router.push("/newClaim")}
+          className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+        >
           <Plus className="mr-2 h-4 w-4" /> New Claim
         </Button>
+        <Plus
+          onClick={() => router.push("/newClaim")}
+          className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
+        />
       </div>
 
       {/* Table */}
       <div className="  overflow-x-auto">
-        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-210px)]">
+        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-300px)] md:h-[calc(100vh-210px)]">
           <Table className="min-w-full ">
             <TableHeader className="text-red-400  w-full">
               <TableRow className="bg-white text-[#FBBC05]">
                 {/* <div className="rounded-md border  w-20"> */}
                 {/* <TableHead className="text-[#FBBC05] border p-3">S No.</TableHead> */}
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Patient Name
                 </TableHead>
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Claim ID
                 </TableHead>
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Description
                 </TableHead>
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Status
                 </TableHead>
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Created Date
                 </TableHead>
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Dr. Name
                 </TableHead>
-                <TableHead className="text-[#FBBC05] border p-3">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Pre-Auth Status
                 </TableHead>
-                <TableHead className="text-center text-[#FBBC05] border p-3">
+                <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
                   Action
                 </TableHead>
                 {/* </div> */}
@@ -292,22 +292,24 @@ export function DataTable() {
                 <TableRow key={index} className="">
                   {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
-                  <TableCell className=" border p-3">
+                  <TableCell className=" border p-5">
                     {row.patientName}
                   </TableCell>
-                  <TableCell className=" border p-3">{row.claimId}</TableCell>
-                  <TableCell className=" border p-3 w-48">
+                  <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                    {row.claimId}
+                  </TableCell>
+                  <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
                     {row.description}
                   </TableCell>
-                  <TableCell className=" border p-3">{row.status}</TableCell>
-                  <TableCell className=" border p-3">
+                  <TableCell className=" border p-5 ">{row.status}</TableCell>
+                  <TableCell className=" border p-5 ">
                     {row.createdDate}
                   </TableCell>
-                  <TableCell className=" border p-3">{row.doctor}</TableCell>
-                  <TableCell className=" border p-3">
+                  <TableCell className=" border p-5 ">{row.doctor}</TableCell>
+                  <TableCell className=" border p-5 ">
                     {row.preAuthStatus}
                   </TableCell>
-                  <TableCell className=" border p-3">
+                  <TableCell className=" border p-5">
                     <div className="flex gap-2 justify-center text-muted-foreground">
                       <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
                       <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
