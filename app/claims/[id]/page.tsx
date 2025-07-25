@@ -77,12 +77,10 @@ export default function PatientClaimDetails() {
     fetchPatients();
   }, [id]);
 
-  console.log("claims", claims);
   const fetchClaims = async () => {
     setLoading(true);
     try {
       const res = await getClaimsById(id);
-      console.log("res", res);
       setClaims(res.data);
       setLoading(false);
     } catch (err) {
