@@ -1,4 +1,5 @@
-import { UserRound } from "lucide-react";
+import { doctorBriefcase, editIcon, userRound } from "@/assets";
+import Image from "next/image";
 
 export default function PatientDetails() {
   return (
@@ -11,8 +12,8 @@ export default function PatientDetails() {
       ].map(([label, value], idx) => (
         <div key={idx} className="p-4 border rounded-md bg-white">
           <div className="flex gap-x-4">
-            <span>
-              <UserRound className="text-[#3E79D6]" />{" "}
+            <span className="mt-1">
+              <Image src={label === "Dr. Name" ? doctorBriefcase : userRound} alt="User Icon" width={20} height={20} />
             </span>
             <div>
               <div className="font-medium">{label}</div>
@@ -23,16 +24,22 @@ export default function PatientDetails() {
       ))}
 
       <div className="col-span-2 p-4 border rounded-md bg-white">
-        <label className="text-xs text-gray-500">Description</label>
-        <p className="text-sm mt-1 text-gray-700">
+        <span>
+          <Image src={editIcon} alt="Edit Icon" width={20} height={20} className="inline-block mr-2" />
+          <label className="font-medium">Description</label>
+        </span>
+        <p className="text-sm mt-1 text-gray-700 ml-8">
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry...
         </p>
       </div>
 
       <div className="col-span-2 p-4 border rounded-md bg-white">
-        <label className="text-xs text-gray-500">Additional Notes</label>
-        <p className="text-sm mt-1 text-gray-700">
+        <span>
+          <Image src={editIcon} alt="Edit Icon" width={20} height={20} className="inline-block mr-2" />
+          <label className="font-medium">Additional Notes</label>
+        </span>
+        <p className="text-sm mt-1 text-gray-700 ml-8">
           Lorem Ipsum is simply dummy text of the printing and typesetting
           industry...
         </p>
