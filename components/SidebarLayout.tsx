@@ -158,12 +158,6 @@ export default function SidebarLayout({ children }: Props) {
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="flex justify-center items-center gap-2 ml-auto">
               <button className="">
-                {/* Notification */}
-                {/* <img
-                  src={"assets/notification_icon.png"}
-                  alt="Logout"
-                  className="mx-auto w-6 h-6"
-                /> */}
                 <Bell size={20} className="text-[#3E79D6] text-center" />
               </button>
               <span className=" w-10 h-10 flex justify-center items-center mb-2">

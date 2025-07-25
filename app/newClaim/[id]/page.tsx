@@ -43,7 +43,6 @@ export default function AddClaimForm() {
   });
   const params = useParams();
   const id = params.id;
-  console.log("id", id);
   const handleSelectChange = (value: string | boolean, name: string) => {
     setClaimInputs((prev) => {
       return {
@@ -54,21 +53,18 @@ export default function AddClaimForm() {
   };
 
   const handleFileChange = async (value, name, multiple) => {
-    console.log("value", value);
-
     if (multiple) {
       const formData = new FormData();
 
       // Append all files as 'files[]'
       Array.from(value).forEach((file: any) => {
-        formData.append("files", file); // key should be 'files' as API expects
+        formData.append("files", file);
       });
 
       formData.append("folder", "claims");
 
       try {
         const res = await bulkUploadFiles(formData); // Single API call
-        console.log("Bulk upload response:", res?.data);
 
         const uploadedFiles = res?.data?.map((file) => ({
           fileName: file?.key,
@@ -90,7 +86,6 @@ export default function AddClaimForm() {
 
       try {
         const res = await uploadFiles(formData);
-        console.log("Single file upload success:", res.data);
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
@@ -105,34 +100,10 @@ export default function AddClaimForm() {
     }
   };
 
-  // const handleFileChange = async (value, name, multiple) => {
-  //   console.log("value", value);
-  //   const formData = new FormData();
-  //   formData.append("file", value[0]);
-  //   formData.append("folder", "claims"); // static folder key
-
-  //   console.log("formData", formData);
-  //   const res = await uploadFiles(formData);
-  //   console.log("Upload success:", res.data);
-
-  //   setClaimInputs((prev) => {
-  //     return {
-  //       ...prev,
-  //       [name]: {
-  //         fileName: res?.data?.key,
-  //         type: name,
-  //         ...(name === "OTHER" && { remark: "custom remark" }),
-  //       },
-  //     };
-  //   });
-  // };
-
-  console.log("patients", patients);
   const fetchPatients = async () => {
     setLoading(true);
     try {
       const res = await getPatients();
-      console.log("res", res);
       setPatients(res.data.data);
       setLoading(false);
     } catch (err) {
@@ -143,8 +114,6 @@ export default function AddClaimForm() {
   useEffect(() => {
     fetchPatients();
   }, [id]);
-
-  console.log("claimInputs", claimInputs);
 
   const handleCreateClaim = async () => {
     try {
@@ -167,9 +136,7 @@ export default function AddClaimForm() {
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
-      console.log("payload", payload);
       const res = await createClaims(payload);
-      console.log("res", res);
     } catch (error) {
       console.error("Upload error:", error);
     } finally {

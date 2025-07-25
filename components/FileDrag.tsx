@@ -31,7 +31,6 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     setFiles(updatedFiles);
     onChange?.(updatedFiles, name, multiple);
   };
-  console.log("files", files);
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -161,24 +160,6 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
         </div>
       )}
 
-      {/* Image Preview Popup */}
-      {/* {imagePreview && (
-        <div className="fixed inset-0 bg-gray-300 bg-opacity-10 flex items-center justify-center z-50">
-          <div className="bg-white rounded shadow-lg max-w-[90%] max-h-[90%] relative">
-            <button
-              className="absolute top-1 right-1 text-gray-700 hover:text-red-500"
-              onClick={() => setImagePreview(null)}
-            >
-              <X className="text-xl" />
-            </button>
-            <img
-              src={imagePreview}
-              alt="Preview"
-              className="object-contain max-w-full max-h-[80vh] p-4"
-            />
-          </div>
-        </div>
-      )} */}
       <ImagePreview
         open={modalOpen}
         onClose={() => setModalOpen(false)}

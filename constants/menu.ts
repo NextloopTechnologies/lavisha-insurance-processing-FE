@@ -89,3 +89,14 @@ export const statusOptions = [
     key: "settled",
   },
 ];
+
+export const documents = [
+  { type: "Document Type 1", icon: true },
+  { type: "Document Type 2", icon: true },
+  { type: "Document Type 3", icon: false },
+  { type: "Document Type 4", icon: false },
+  { type: "Document Type 5", icon: false },
+  { type: "Document Type 6", icon: false },
+  { type: "Misc Document", icon: false },
+  { type: "More Document", icon: false },
+];

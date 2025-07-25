@@ -18,12 +18,10 @@ const Dashboard = () => {
     to: new Date("2025-07-30"),
   });
 
-  console.log("dashboardData", dashboardData);
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       const res = await getDashboardByDate(dateRange.from, dateRange.to);
-      console.log("res", res);
       setDashboardData(res.data);
       setLoading(false);
     } catch (err) {

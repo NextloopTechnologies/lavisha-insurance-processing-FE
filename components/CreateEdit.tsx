@@ -6,7 +6,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { uploadFiles } from "@/services/files";
 
@@ -42,38 +41,20 @@ export default function PatientFormDialog({
       setImage(undefined);
     }
   }, [defaultData, open]);
-  // const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const file = e.target.files?.[0];
-  //   if (file) {
-  //     const reader = new FileReader();
-  //     reader.onloadend = () => {
-  //       setImage(reader.result as string);
-  //     };
-  //     reader.readAsDataURL(file);
-  //   }
-  // };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setLoading(true);
-    // setPhoto(file)
     setImage(URL.createObjectURL(file));
-    console.log("file", file);
-    // Simulate API upload
-    // await new Promise((res) => setTimeout(res, 1500))
+    
     const formData = new FormData();
     formData.append("file", file);
     formData.append("folder", "profiles"); // static folder key
 
-    console.log("formData", formData);
     try {
-      // const res = await axios.post("/api/upload", formData, {
-      //   headers: { "Content-Type": "multipart/form-data" },
-      // });
       const res = await uploadFiles(formData);
-      console.log("Upload success:", res.data);
       setFileUpload({
         fileName: res?.data?.key,
         url: res.data?.url,
@@ -127,7 +108,6 @@ export default function PatientFormDialog({
         {/* Form */}
         <div className="space-y-3 text-left">
           <div>
-            {/* <Label htmlFor="name">Name</Label> */}
             <Input
               id="name"
               placeholder="Name"
@@ -136,7 +116,6 @@ export default function PatientFormDialog({
             />
           </div>
           <div>
-            {/* <Label htmlFor="age">Age</Label> */}
             <Input
               type="number"
               id="age"

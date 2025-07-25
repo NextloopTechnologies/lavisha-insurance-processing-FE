@@ -10,41 +10,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { addDays, subMonths, subYears, startOfToday } from "date-fns";
+import { cn, predefinedRanges } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 
 interface DateRangePickerProps {
   date: { from: Date; to: Date };
   setDate: (date: { from: Date; to: Date }) => void;
 }
-
-const predefinedRanges = [
-  {
-    label: "Last 7 Days",
-    range: () => ({ from: addDays(new Date(), -6), to: new Date() }),
-  },
-  {
-    label: "Last 1 Month",
-    range: () => ({ from: subMonths(new Date(), 1), to: new Date() }),
-  },
-  {
-    label: "Last 6 Month",
-    range: () => ({ from: subMonths(new Date(), 6), to: new Date() }),
-  },
-  {
-    label: "Last 1 Year",
-    range: () => ({ from: subYears(new Date(), 1), to: new Date() }),
-  },
-  {
-    label: "Last 2 Year",
-    range: () => ({ from: subYears(new Date(), 2), to: new Date() }),
-  },
-  {
-    label: "Last 3 Year",
-    range: () => ({ from: subYears(new Date(), 3), to: new Date() }),
-  },
-];
 
 export function DateRangePicker({ date, setDate }: DateRangePickerProps) {
   const [open, setOpen] = React.useState(false);
@@ -101,8 +73,6 @@ export function DateRangePicker({ date, setDate }: DateRangePickerProps) {
           </Button>
         </div>
 
-        {/* Custom range picker */}
-        {/* {custom && ( */}
         <div className="flex gap-4">
           <Calendar
             mode="range"
@@ -112,7 +82,6 @@ export function DateRangePicker({ date, setDate }: DateRangePickerProps) {
             initialFocus
           />
         </div>
-        {/* )} */}
       </PopoverContent>
     </Popover>
   );

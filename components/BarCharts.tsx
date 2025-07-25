@@ -17,48 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { useEffect, useMemo, useState } from "react";
-
-const dataTPA = [
-  { name: "TPA Name ", value: 1300 },
-  { name: "TPA Name ", value: 1700 },
-  { name: "TPA Name ", value: 1900 },
-  { name: "TPA Name ", value: "" },
-];
-
-const dataInsurance = [
-  { name: "Insurance 1", value: 1400 },
-  { name: "Insurance 2", value: 1200 },
-  { name: "Insurance 3", value: 1500 },
-];
+import { useEffect, useState } from "react";
 
 const BarCharts = ({ data }) => {
   const [dropdown, setDropdown] = useState([]);
   const [filter, setFilter] = useState<any>([]);
   const [chartData, setChartData] = useState<any[]>([]);
-  // const grouped = [];
-  // const chartGrouped = {};
-  // for (let element in data) {
-  //   if (Array.isArray(data[element])) {
-  //     grouped.push({ name: element });
-  //     chartGrouped[element] = element;
-  //   }
-  // }
 
-  // const chartData = filter === "TPA" ? dataTPA : dataInsurance;
   const handleChange = (value: string) => {
     setFilter(value);
   };
-  // const chartData = useMemo(() => {
-  //   if (Object.keys(chartGrouped).length > 0) {
-  //     return chartGrouped?.[filter].map((item) => {
-  //       return {
-  //         ...item,
-  //         value: item?.count,
-  //       };
-  //     });
-  //   }
-  // }, [filter, chartGrouped]);
 
   useEffect(() => {
     const validKeys = Object.keys(data).filter((key) =>
@@ -96,7 +64,6 @@ const BarCharts = ({ data }) => {
     return spacedLabel.replace(/^./, (str) => str.toUpperCase());
   };
 
-  console.log("chartData", chartData);
   return (
     <div className="bg-white flex flex-col justify-between">
       <div className="min-w-[200px] flex justify-end gap-x-4">

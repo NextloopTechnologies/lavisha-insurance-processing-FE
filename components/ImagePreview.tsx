@@ -22,17 +22,6 @@ export default function ImagePreview({
   file,
   documentName,
 }: FilePreviewModalProps) {
-  //   const getFileType = (file: File | null) => {
-  //     if (!file) return "";
-  //     return file.type.startsWith("image/")
-  //       ? "image"
-  //       : file.type === "application/pdf"
-  //       ? "pdf"
-  //       : "other";
-  //   };
-
-  //   const fileType = getFileType(file);
-  console.log("open", open);
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="min-w-xl max-w-md">
