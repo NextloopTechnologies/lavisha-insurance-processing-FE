@@ -7,29 +7,44 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import Image from "next/image";
 
 export function MultiSelect({
   status,
   selectedStatuses,
   setSelectedStatuses,
   toggleStatus,
+  mode = "multi",
 }: {
-  selectedStatuses?: any;
-  toggleStatus: (undefinded) => void;
-  setSelectedStatuses: (undefinded) => void;
-  status?: {
+  selectedStatuses: string[] | string;
+  toggleStatus: (value: string) => void;
+  setSelectedStatuses: (val: any) => void;
+  status: {
     name: string;
     icon: string;
     key: string;
   }[];
+  mode?: "multi" | "single";
 }) {
-  const isAllSelected = selectedStatuses.length === status.length;
+  const isMulti = mode === "multi";
+  const selectedArray = Array.isArray(selectedStatuses)
+    ? selectedStatuses
+    : [selectedStatuses];
+  const isAllSelected = isMulti && selectedArray.length === status.length;
 
   const toggleAll = () => {
     if (isAllSelected) {
       setSelectedStatuses([]);
     } else {
       setSelectedStatuses(status.map((s) => s.name));
+    }
+  };
+
+  const handleChange = (value: string) => {
+    if (isMulti) {
+      toggleStatus(value);
+    } else {
+      setSelectedStatuses(value);
     }
   };
 
@@ -40,19 +55,22 @@ export function MultiSelect({
           variant="outline"
           className="md:w-[220px] justify-start bg-white rounded-md font-normal"
         >
-          {selectedStatuses.length > 0
-            ? selectedStatuses.join(", ")
+          {selectedArray.length > 0
+            ? selectedArray.join(", ")
             : "Select Status"}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[220px]">
         <div className="flex flex-col space-y-2">
-          <label className="flex items-center gap-2 font-normal">
-            <Checkbox checked={isAllSelected} onCheckedChange={toggleAll} />
-            Select All
-          </label>
-
-          <hr className="my-1" />
+          {isMulti && (
+            <>
+              <label className="flex items-center gap-2 font-normal">
+                <Checkbox checked={isAllSelected} onCheckedChange={toggleAll} />
+                Select All
+              </label>
+              <hr className="my-1" />
+            </>
+          )}
 
           {status.map((item) => (
             <label
@@ -60,10 +78,10 @@ export function MultiSelect({
               className="flex items-center gap-2 cursor-pointer"
             >
               <Checkbox
-                checked={selectedStatuses.includes(item.name)}
-                onCheckedChange={() => toggleStatus(item.name)}
+                checked={selectedArray.includes(item.name)}
+                onCheckedChange={() => handleChange(item.name)}
               />
-              <img src={item.icon} alt={item.name} className="w-3" />
+              <Image src={item.icon} alt={item.name} className="w-3" />
               <span className="text-sm">{item.name}</span>
             </label>
           ))}

@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { MultiSelect } from "./MultiSelect";
+import Link from "next/link";
+import { statusOptions } from "@/constants/menu";
 
 type User = {
   id: number;
@@ -38,6 +40,23 @@ type User = {
   description: string;
   claimId: string;
   preAuthStatus: string;
+};
+type DATA = {
+  id?: number;
+  patientName?: string;
+  status?: string;
+  doctorName?: string;
+  createdAt: string;
+  description?: string;
+  claimId: string;
+  refNumber?: string;
+  isPreAuth: string;
+  tpaName?: string;
+  insuranceCompany?: string;
+  patient: {
+    id?: string;
+    name?: string;
+  };
 };
 
 const users: User[] = [
@@ -112,61 +131,8 @@ const users: User[] = [
     preAuthStatus: "........",
   },
 ];
-const status = [
-  {
-    name: "Pending",
-    icon: "assets/pending.svg",
-    key: "status",
-  },
-  {
-    name: "Send to TPA",
-    icon: "assets/send 1.svg",
 
-    key: "tpa",
-  },
-  {
-    name: "Draft",
-    icon: "assets/draft.svg",
-
-    key: "draft",
-  },
-  {
-    name: "Queried",
-    icon: "assets/faq.svg",
-
-    key: "query",
-  },
-  {
-    name: "Approved",
-    icon: "assets/approve.svg",
-
-    key: "approved",
-  },
-  {
-    name: "Denied",
-    icon: "assets/cancel.svg",
-    key: "denied",
-  },
-  {
-    name: "Enhancement",
-    icon: "assets/growth.svg",
-
-    key: "enhancement",
-  },
-  {
-    name: "Dishcharged",
-    icon: "assets/discharge.svg",
-
-    key: "discharged",
-  },
-  {
-    name: "Settled",
-    icon: "assets/settled.svg",
-    key: "settled",
-  },
-];
-
-export function DataTable() {
+export function DataTable({ data }: { data: DATA[] }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
@@ -182,7 +148,7 @@ export function DataTable() {
   };
   const itemsPerPage = 10;
   const filteredData = useMemo(() => {
-    return users.filter((row) => {
+    return data.filter((row) => {
       const matchesSearch = Object.values(row).some((val) =>
         val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -190,11 +156,15 @@ export function DataTable() {
       // const matchesStatus =
       //   statusFilter === "All" || row.status === statusFilter;
       const matchesStatus =
-        selectedStatuses.length === 0 || selectedStatuses.includes(row.status);
+        selectedStatuses.length === 0 ||
+        selectedStatuses
+          ?.toString()
+          .toLowerCase()
+          .includes(row.status?.toLowerCase());
 
       return matchesSearch && matchesStatus;
     });
-  }, [searchTerm, selectedStatuses, statusFilter]);
+  }, [searchTerm, selectedStatuses, statusFilter, data]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
@@ -231,8 +201,9 @@ export function DataTable() {
             </span>
           </div>
           <MultiSelect
+            mode="multi"
             selectedStatuses={selectedStatuses}
-            status={status}
+            status={statusOptions}
             toggleStatus={toggleStatus}
             setSelectedStatuses={setSelectedStatuses}
           />
@@ -293,25 +264,32 @@ export function DataTable() {
                   {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
                   <TableCell className=" border p-5">
-                    {row.patientName}
+                    {row.patient.name}
                   </TableCell>
                   <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                    {row.claimId}
+                    {row.refNumber}
                   </TableCell>
                   <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
                     {row.description}
                   </TableCell>
                   <TableCell className=" border p-5 ">{row.status}</TableCell>
                   <TableCell className=" border p-5 ">
-                    {row.createdDate}
+                    {row.createdAt}
                   </TableCell>
-                  <TableCell className=" border p-5 ">{row.doctor}</TableCell>
                   <TableCell className=" border p-5 ">
-                    {row.preAuthStatus}
+                    {row.doctorName}
+                  </TableCell>
+                  <TableCell className=" border p-5 ">
+                    {row.isPreAuth ? "True" : "False"}
                   </TableCell>
                   <TableCell className=" border p-5">
                     <div className="flex gap-2 justify-center text-muted-foreground">
-                      <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
+                      <Link href={`/newClaim/${row.patient.id}`}>
+                        <Eye
+                          // onClick={() => row.patient.id}
+                          className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                        />
+                      </Link>
                       <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                       <Trash2 className="w-4 h-4 hover:text-red-600 cursor-pointer" />
                       <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />

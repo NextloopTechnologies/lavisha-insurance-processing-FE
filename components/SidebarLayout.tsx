@@ -7,6 +7,9 @@ import { navItems } from "@/constants/menu";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { logout } from "@/services/auth";
+import { logoImage, logoSvg, patientImage, userImage } from "../assets";
+import Image from "next/image";
+import { StaticImageData } from "next/image";
 
 type Props = {
   children: React.ReactNode;
@@ -15,7 +18,7 @@ type Props = {
 type NavItem = {
   label: string;
   path?: string;
-  icon?: string;
+  icon?: string | StaticImageData;
 
   children?: NavItem[];
 };
@@ -48,14 +51,14 @@ const SidebarItem = ({
             className="flex justify-start items-center gap-x-2 w-full "
           >
             <span>
-              <img src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
+              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
             </span>
             <span>{item.label}</span>
           </Link>
         ) : (
           <div className="flex justify-start items-center gap-x-2 w-full ">
             <span>
-              <img src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
+              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
             </span>
             <span>{item.label}</span>
           </div>
@@ -86,7 +89,7 @@ export default function SidebarLayout({ children }: Props) {
     router.push("/login");
   };
   return (
-    <div className="flex min-h-screen bg-gray-100 w-full ">
+    <div className="relative flex min-h-screen bg-gray-100 w-full ">
       <aside
         // className={clsx(
         //   "transition-all relative duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto",
@@ -99,7 +102,7 @@ export default function SidebarLayout({ children }: Props) {
       >
         <div className="w-full flex justify-center border-b-1 border-gray-500">
           <div className="w-24 h-24">
-            <img src="assets/Logo.svg" alt="Logo" className="w-full h-full" />
+            <Image src={logoSvg} alt="Logo" className="w-full h-full" />
           </div>
         </div>
 
@@ -122,11 +125,7 @@ export default function SidebarLayout({ children }: Props) {
               // onClick={() => hasChildren && setOpen(!open)}
             >
               <span>
-                <img
-                  src={"assets/patient.png"}
-                  alt="Logout"
-                  className="mx-auto w-3"
-                />
+                <Image src={userImage} alt="Logout" className="mx-auto w-3" />
               </span>
               <span>Logout</span>
             </div>
@@ -168,8 +167,8 @@ export default function SidebarLayout({ children }: Props) {
                 <Bell size={20} className="text-[#3E79D6] text-center" />
               </button>
               <span className=" w-10 h-10 flex justify-center items-center mb-2">
-                <img
-                  src={"assets/user.png"}
+                <Image
+                  src={userImage}
                   alt="Logout"
                   className="mx-auto w-7 h-7 "
                 />
@@ -198,8 +197,8 @@ export default function SidebarLayout({ children }: Props) {
                     // onClick={() => hasChildren && setOpen(!open)}
                   >
                     <span>
-                      <img
-                        src={"assets/patient.png"}
+                      <Image
+                        src={patientImage}
                         alt="Logout"
                         className="mx-auto w-3"
                       />
@@ -208,24 +207,6 @@ export default function SidebarLayout({ children }: Props) {
                   </div>
                 </div>
               </div>
-              {/* )} */}
-              {/* <div className="space-y-4 text-gray-800 font-medium pl-6 pt-6 w-full">
-                <div
-                  className={`flex items-center justify-start cursor-pointer  p-2 
-         hover:shadow-sm
-        `}
-                  // onClick={() => hasChildren && setOpen(!open)}
-                >
-                  <span>
-                    <img
-                      src={"assets/patient.png"}
-                      alt="Logout"
-                      className="mx-auto w-3"
-                    />
-                  </span>
-                  <span>Logout</span>
-                </div>
-              </div> */}
             </div>
           </div>
         </div>

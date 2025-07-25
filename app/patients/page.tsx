@@ -1,5 +1,4 @@
 "use client";
-import { DataTable } from "@/components/DataTable";
 import SidebarLayout from "@/components/SidebarLayout";
 import Image from "next/image";
 import { Pencil, Trash2, Plus } from "lucide-react";
@@ -13,28 +12,26 @@ import {
   getPatients,
   updatePatient,
 } from "@/services/patients";
-
-const patients = [
-  { id: 1, name: "Rakesh Joshi", age: 26 },
-  { id: 2, name: "Rakesh Joshi", age: 26 },
-  { id: 3, name: "Rakesh Joshi", age: 26 },
-  { id: 4, name: "Rakesh Joshi", age: 26 },
-  { id: 5, name: "Rakesh Joshi", age: 26 },
-];
+import LoadingOverlay from "@/components/LoadingOverlay";
+import Link from "next/link";
 
 export default function Patients() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [patients, setPatients] = useState([]);
-
   const fetchPatients = async () => {
+    setLoading(true);
     try {
       const res = await getPatients();
-      setPatients(res.data);
+      console.log("res", res);
+      setPatients(res.data.data);
+      setLoading(false);
     } catch (err) {
+      setLoading(false);
       console.error("Failed to fetch patients:", err);
     }
   };
@@ -65,18 +62,19 @@ export default function Patients() {
     setSelectedPatient(patients.filter((item) => item.id == id)[0]);
   };
 
-  console.log("selectedPatient", selectedPatient);
   const handleSubmitPatient = async (payload) => {
     if (selectedPatient) {
       // console.log("Updating patient:", payload);
       const { name, age, fileName, url } = payload;
       try {
+        setLoading(true);
         const response = await updatePatient(
           { name, age, fileName, url },
           selectedPatient.id
         );
-        setPatients(response.data);
+        fetchPatients();
       } catch (error: any) {
+        setLoading(false);
         console.error(
           "Error creating patient:",
           error.response?.data || error.message
@@ -85,21 +83,25 @@ export default function Patients() {
     } else {
       const { name, age, fileName, url } = payload;
       try {
+        setLoading(true);
         const response = await createPatient({ name, age, fileName, url });
-        setPatients(response.data);
+        // setPatients(response.data);
+        fetchPatients();
       } catch (error: any) {
+        setLoading(false);
         console.error(
           "Error creating patient:",
           error.response?.data || error.message
         );
       }
     }
-    // Save to backend here if needed
   };
 
   return (
     <SidebarLayout>
       <div className="h-[calc(100vh-80px)] bg-gray-100 p-6 overflow-y-scroll">
+        {loading && <LoadingOverlay />}
+
         {/* Header */}
         <div className="flex justify-between items-center mb-4">
           <div className="relative">
@@ -174,9 +176,11 @@ export default function Patients() {
               <div className="text-gray-600 mb-10">Age: {patient.age} year</div>
 
               {/* View Claims Button */}
-              <button className="mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]">
-                View Claims
-              </button>
+              <Link href={`/claims/${patient.id}`}>
+                <button className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]">
+                  View Claims
+                </button>
+              </Link>
             </div>
           ))}
         </div>

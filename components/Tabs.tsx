@@ -6,8 +6,8 @@ export const Tabs = ({ labels, activeTab, onTabChange }) => (
         key={index}
         className={`py-2 px-6 text-sm font-medium ${
           activeTab === index
-            ? "border-b-2 border-blue-600 text-blue-600"
-            : "text-gray-500 hover:text-blue-500"
+            ? "border-b-2 border-[#3E79D6] text-[#3E79D6]"
+            : "text-gray-500 hover:text-[#3E79D6]"
         }`}
         onClick={() => onTabChange(index)}
       >

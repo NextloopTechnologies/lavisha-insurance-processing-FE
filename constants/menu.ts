@@ -1,57 +1,91 @@
+import {
+  dashboardImage,
+  claimsImage,
+  patientImage,
+  pendingIcon,
+  send1Icon,
+  draftIcon,
+  faqIcon,
+  approveIcon,
+  cancelIcon,
+  growthIcon,
+  dischargeIcon,
+  settledIcon,
+} from "../assets";
+
 export const navItems = [
   {
     label: "Dashboard",
     path: "/",
-    icon: "assets/dashboard.png",
+    icon: dashboardImage,
   },
   {
     label: "Claims",
     path: "/claims",
-    icon: "assets/claims.png",
-
-    // children: [
-    //   { label: "All Claims", path: "/claims", icon: "assets/claims.png" },
-    //   { label: "New Claim", path: "/claims/new", icon: "assets/claims.png" },
-    //   {
-    //     label: "Rejected Claims",
-    //     icon: "assets/claims.png",
-
-    //     children: [
-    //       {
-    //         label: "By Patient",
-    //         path: "/claims/rejected/patient",
-    //         icon: "assets/patient.png",
-    //       },
-    //       {
-    //         label: "By Hospital",
-    //         path: "/claims/rejected/hospital",
-    //         icon: "assets/patient.png",
-    //       },
-    //     ],
-    //   },
-    // ],
+    icon: claimsImage,
   },
   {
     label: "Patients",
     path: "/patients",
-    icon: "assets/patient.png",
+    icon: patientImage,
   },
   {
     label: "Queries",
-    icon: "assets/patient.png",
-    // children: [
-    //   {
-    //     label: "Profile",
-    //     path: "/queries/profile",
-    //     icon: "assets/patient.png",
-    //   },
-    //   {
-    //     label: "Security",
-    //     path: "/queries/security",
-    //     icon: "assets/patient.png",
-    //   },
-    // ],
+    icon: patientImage,
   },
-  { path: "/settlements", label: "Settlements", icon: "assets/patient.png" },
-  { path: "/enhancements", label: "Enhancements", icon: "assets/patient.png" },
+  { path: "/settlements", label: "Settlements", icon: patientImage },
+  { path: "/enhancements", label: "Enhancements", icon: patientImage },
+];
+
+export const statusOptions = [
+  {
+    name: "Pending",
+    icon: pendingIcon,
+    key: "status",
+  },
+  {
+    name: "Send to TPA",
+    icon: send1Icon,
+
+    key: "tpa",
+  },
+  {
+    name: "Draft",
+    icon: draftIcon,
+
+    key: "draft",
+  },
+  {
+    name: "Queried",
+    icon: faqIcon,
+
+    key: "query",
+  },
+  {
+    name: "Approved",
+    icon: approveIcon,
+    key: "approved",
+  },
+  {
+    name: "Denied",
+    icon: cancelIcon,
+    key: "denied",
+  },
+  {
+    name: "Enhancement",
+    icon: growthIcon,
+
+    key: "enhancement",
+  },
+  {
+    name: "Dishcharged",
+    icon: dischargeIcon,
+
+    key: "discharged",
+  },
+  {
+    name: "Settled",
+    icon: settledIcon,
+    key: "settled",
+  },
 ];

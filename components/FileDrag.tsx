@@ -7,7 +7,7 @@ import ImagePreview from "./ImagePreview";
 interface FileDropzoneProps {
   title: string;
   multiple?: boolean;
-  onChange?: (files: File[], name?: string) => void;
+  onChange?: (files: File[], name?: string, multiple?: boolean) => void;
   name?: string;
 }
 
@@ -29,7 +29,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     const fileArray = Array.from(newFiles);
     const updatedFiles = multiple ? [...files, ...fileArray] : [fileArray[0]];
     setFiles(updatedFiles);
-    onChange?.(updatedFiles, name);
+    onChange?.(updatedFiles, name, multiple);
   };
   console.log("files", files);
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
@@ -90,26 +90,6 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
   return (
     <div className="border rounded-md bg-blue-50 p-0 w-full max-w-full mb-3">
       {/* Header */}
-      {/* <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
-          <Folder className="h-5 w-5 text-blue-500" />
-          {title}
-        </div>
-        <button
-          onClick={openFileDialog}
-          className="text-sm text-blue-600 hover:underline flex items-center gap-1"
-        >
-          <UploadCloud className="h-4 w-4" />
-          Upload
-        </button>
-        <input
-          type="file"
-          multiple={multiple}
-          hidden
-          ref={inputRef}
-          onChange={handleInputChange}
-        />
-      </div> */}
       <div
         className={`w-full min-h-[50px] rounded-md p-4 flex items-center justify-center transition-all duration-200 cursor-pointer 
           ${
@@ -142,6 +122,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
             </button>
             <input
               type="file"
+              accept=".jpeg,.jpg,.png,.webp,.pdf"
               multiple={multiple}
               hidden
               ref={inputRef}

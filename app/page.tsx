@@ -1,26 +1,40 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-// import { DateRangePicker } from "@/components/shared/date-range-picker";
-// import {
-//   DropdownMenu,
-//   DropdownMenuTrigger,
-//   DropdownMenuContent,
-//   DropdownMenuItem,
-// } from "@/components/ui/dropdown-menu";
 import SidebarLayout from "@/components/SidebarLayout";
 import PieCharts from "@/components/PieCharts";
 import BarCharts from "@/components/BarCharts";
 import { ChartNoAxesColumnIncreasing } from "lucide-react";
 import { DateRangePicker } from "@/components/DateRangePicker";
+import { getDashboardByDate } from "@/services/dashboard";
 
 const Dashboard = () => {
+  const [dashboardData, setDashboardData] = useState<any>([]);
+  const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState({
-    from: new Date(),
-    to: new Date(),
+    from: new Date("2025-06-01"),
+    to: new Date("2025-07-30"),
   });
+
+  console.log("dashboardData", dashboardData);
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    try {
+      const res = await getDashboardByDate(dateRange.from, dateRange.to);
+      console.log("res", res);
+      setDashboardData(res.data);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch patients:", err);
+    }
+  };
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
   return (
     <SidebarLayout>
       <div className="relative  p-6 space-y-6 h-[calc(100vh-100px)] overflow-y-scroll">
@@ -59,7 +73,9 @@ const Dashboard = () => {
                 <span className="w-12 h-12 rounded-full bg-[#3E79D6] flex justify-center items-center">
                   <ChartNoAxesColumnIncreasing className="text-[#3E79D6] bg-white rounded-[4px]" />
                 </span>
-                <p className="text-2xl font-bold">110</p>
+                <p className="text-2xl font-bold">
+                  {dashboardData?.activeClaims}
+                </p>
                 <p className="text-sm text-gray-500">Active Claim</p>
               </CardContent>
             </Card>
@@ -78,12 +94,12 @@ const Dashboard = () => {
         {/* Chart Filter and Graphs */}
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
           <Card className="p-4 md:col-span-2">
-            <PieCharts />
+            <PieCharts data={dashboardData} />
           </Card>
 
           {/* Right - Bar Chart by TPA */}
           <Card className="p-4 md:col-span-4">
-            <BarCharts />
+            <BarCharts data={dashboardData} />
           </Card>
         </div>
       </div>

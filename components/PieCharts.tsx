@@ -1,18 +1,19 @@
 "use client";
 import { PieChart, Pie, Cell } from "recharts";
 import { Link2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 const COLORS = ["#3b82f6", "#6366f1", "#a5b4fc"]; // Tailwind-like blue shades
 
-const data = [
-  { name: "Settled", value: 40 },
-  { name: "Enhancement", value: 32 },
-  { name: "Pending", value: 28 },
-];
+const PieCharts = ({ data }) => {
 
-const PieCharts = () => {
-  const total = data.reduce((acc, cur) => acc + cur.value, 0);
-
+  const chartData = useMemo(() => {
+    return [
+      { name: "Settled", value: Number(data?.percentageSettled) },
+      { name: "Enhancement", value: Number(data?.percentageEnhancement) },
+      { name: "Pending", value: Number(data?.percentagePending) },
+    ];
+  }, [data]);
   return (
     <div className="p-2 w-full">
       <div className="flex justify-between items-center">
@@ -22,13 +23,13 @@ const PieCharts = () => {
       <div className="flex justify-center items-center">
         <PieChart width={250} height={210}>
           <Pie
-            data={data}
+            data={chartData}
             innerRadius={70}
             outerRadius={90}
             paddingAngle={2}
             dataKey="value"
           >
-            {data.map((_, index) => (
+            {chartData.map((_, index) => (
               <Cell
                 key={`cell-${index}`}
                 fill={COLORS[index % COLORS.length]}
@@ -42,12 +43,12 @@ const PieCharts = () => {
             dominantBaseline="middle"
             className="text-3xl font-bold"
           >
-            {total}
+            {data?.totalClaims}
           </text>
         </PieChart>
       </div>
       <div className="flex justify-around mt-4 text-sm">
-        {data.map((item, idx) => (
+        {chartData?.map((item, idx) => (
           <div key={idx} className="flex items-center gap-1">
             <span
               className="w-2 h-2 rounded-full"

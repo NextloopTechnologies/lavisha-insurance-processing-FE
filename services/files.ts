@@ -8,4 +8,12 @@ export const uploadFiles = (data: any) =>
       "Content-Type": "multipart/form-data",
     },
   });
+  export const bulkUploadFiles = (data: any) =>
+  api.post("/file/bulkUpload", data, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  
 // export const deletePatient = (id: string) => api.delete(`/patients/${id}`);

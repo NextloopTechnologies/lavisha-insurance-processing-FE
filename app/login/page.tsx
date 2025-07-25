@@ -5,10 +5,12 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/services/auth";
 import { useRouter } from "next/navigation";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginType, setLoginType] = useState<"admin" | "hospital">("admin");
+  const [loading, setLoading] = useState(false);
   const [inputs, setInputs] = useState({
     email: "",
     password: "",
@@ -22,19 +24,26 @@ export default function LoginPage() {
       };
     });
   };
+  console.log("loading", loading);
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLoading(true);
     try {
       const userData = await login(inputs);
-      router.push("/");
+      if (userData?.access_token) {
+        setLoading(true);
+        router.push("/");
+      }
     } catch (error) {
       console.error("Login failed:", error);
       // Show toast or error message
+      setLoading(false);
     }
   };
 
   return (
     <div className="flex min-h-screen w-screen bg-white">
+      {loading && <LoadingOverlay />}
       {/* Left Branding Section - only on desktop */}
       <div className="hidden lg:flex w-2/3 bg-primary  text-white flex-col justify-center items-center relative">
         <img
