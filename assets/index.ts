@@ -27,3 +27,6 @@ export { default as cancelIcon } from "./cancel.svg";
 export { default as settledIcon } from "./settled.svg";
 export { default as vectorIcon } from "./Vector.svg";
 export { default as trailLoading } from "./loader/trail-loading.gif";
+export {default as userRound} from "./userRound.png";
+export {default as editIcon} from "./edit_icon.png";
+export {default as doctorBriefcase} from "./doctor-briefcase.png";
