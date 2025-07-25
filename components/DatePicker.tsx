@@ -21,10 +21,12 @@ export function DatePicker({
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className="w-[180px] justify-start text-left font-normal"
+          className="w-[40px] md:w-[180px] justify-start text-left font-normal"
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "dd/MM/yyyy") : <span>Created Date</span>}
+          <div className="md:block hidden">
+            {date ? format(date, "dd/MM/yyyy") : <span>Created Date</span>}
+          </div>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0">
