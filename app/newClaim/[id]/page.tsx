@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { INSURANCE_COMPANIES, TPA_OPTIONS } from "@/constants/menu";
 import { createClaims } from "@/services/claims";
 import { bulkUploadFiles, uploadFiles } from "@/services/files";
 import { getPatientById, getPatients } from "@/services/patients";
@@ -193,8 +194,11 @@ export default function AddClaimForm() {
                 <SelectValue placeholder="TPA Name" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tpa1">TPA 1</SelectItem>
-                <SelectItem value="tpa2">TPA 2</SelectItem>
+                {TPA_OPTIONS.map((tpa) => (
+                  <SelectItem key={tpa} value={tpa}>
+                    {tpa}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 
@@ -208,8 +212,11 @@ export default function AddClaimForm() {
                 <SelectValue placeholder="Insurance Company" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="tpa">TPA</SelectItem>
-                <SelectItem value="bank">Bank</SelectItem>
+                {INSURANCE_COMPANIES.map((company) => (
+                  <SelectItem key={company} value={company}>
+                    {company}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

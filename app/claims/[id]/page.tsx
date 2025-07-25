@@ -16,6 +16,7 @@ import { getPatientById } from "@/services/patients";
 import { MultiSelect } from "@/components/MultiSelect";
 import { statusOptions } from "@/constants/menu";
 import CreateFormPopup from "@/components/CreateFormPopup";
+import { getClaims, getClaimsById } from "@/services/claims";
 
 const tabLabels = [
   "Details",
@@ -33,7 +34,7 @@ export default function PatientClaimDetails() {
   const [patients, setPatients] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-
+  const [claims, setClaims] = useState<any>([]);
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -61,12 +62,10 @@ export default function PatientClaimDetails() {
   const params = useParams();
   const id = params.id;
 
-  console.log("patients", patients);
   const fetchPatients = async () => {
     setLoading(true);
     try {
       const res = await getPatientById(id);
-      console.log("res", res);
       setPatients(res.data);
       setLoading(false);
     } catch (err) {
@@ -77,16 +76,33 @@ export default function PatientClaimDetails() {
   useEffect(() => {
     fetchPatients();
   }, [id]);
+
+  console.log("claims", claims);
+  const fetchClaims = async () => {
+    setLoading(true);
+    try {
+      const res = await getClaimsById(id);
+      console.log("res", res);
+      setClaims(res.data);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch claims:", err);
+    }
+  };
+  useEffect(() => {
+    fetchClaims();
+  }, []);
   return (
     <SidebarLayout>
       <div className="p-6">
         <div className="flex justify-between gap-x-3 items-center mb-4">
           <div className="flex justify-start gap-x-3 items-center">
-            <h2 className="text-xl font-semibold">{patients.name}</h2>
+            <h2 className="text-xl font-semibold">{claims?.patient?.name}</h2>
             <span className="  px-3 py-1 rounded-md text-sm border">
               Claim Id:{" "}
               <a href="#" className="text-blue-600">
-                ID58673545
+                {claims.refNumber}
               </a>
             </span>
           </div>
@@ -109,8 +125,8 @@ export default function PatientClaimDetails() {
         <div className="mt-6">
           {activeTab === 0 && (
             <>
-              <PatientDetails />
-              <DocumentDetails />
+              <PatientDetails data={claims}/>
+              <DocumentDetails data={claims}/>
             </>
           )}
           {activeTab === 1 && <p>Comments/History content</p>}

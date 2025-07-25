@@ -1,15 +1,16 @@
-import { documents } from "@/constants/menu";
+// import { documents } from "@/constants/menu";
+import { getFileIconType } from "@/lib/utils";
 import { Eye, Folder, Image } from "lucide-react";
 
-export default function DocumentDetails() {
+export default function DocumentDetails({ data }) {
   return (
     <div className="grid grid-cols-6 gap-4 mt-6">
-      {documents.map((doc, idx) => (
+      {data?.documents?.map((doc, idx) => (
         <div
           key={idx}
           className="relative flex flex-col justify-between items-center border rounded-md p-4  bg-white shadow-sm"
         >
-          {doc.icon ? (
+          {getFileIconType(doc?.fileName) == "image" ? (
             <Image className="h-18 w-18 text-blue-500" />
           ) : (
             <div className="h-12 mb-2" />
