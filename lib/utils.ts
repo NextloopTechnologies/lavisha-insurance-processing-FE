@@ -32,3 +32,17 @@ export const predefinedRanges = [
     range: () => ({ from: subYears(new Date(), 3), to: new Date() }),
   },
 ];
+
+export function getFileIconType(fileName:string) {
+  const extension = fileName.split('.').pop().toLowerCase();
+
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+  const pdfExtensions = ['pdf'];
+  const excelExtensions = ['xls', 'xlsx'];
+
+  if (imageExtensions.includes(extension)) return 'image';    // use 🖼️ or an <ImageIcon />
+  if (pdfExtensions.includes(extension)) return 'pdf';         // use 📄 or a <PdfIcon />
+  if (excelExtensions.includes(extension)) return 'excel';     // use 📊 or a <ExcelIcon />
+  
+  return 'file'; // default generic file 📁
+}
