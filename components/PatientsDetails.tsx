@@ -1,4 +1,5 @@
-import { UserRound } from "lucide-react";
+import { doctorBriefcase, editIcon, userRound } from "@/assets";
+import Image from "next/image";
 
 export default function PatientDetails({ data }) {
   const userData = [
@@ -24,8 +25,8 @@ export default function PatientDetails({ data }) {
       {userData.map(({ key, value }, idx) => (
         <div key={idx} className="p-4 border rounded-md bg-white">
           <div className="flex gap-x-4">
-            <span>
-              <UserRound className="text-[#3E79D6]" />{" "}
+            <span className="mt-1">
+              <Image src={key === "Dr. Name" ? doctorBriefcase : userRound} alt="User Icon" width={20} height={20} />
             </span>
             <div>
               <div className="font-medium">{key}</div>

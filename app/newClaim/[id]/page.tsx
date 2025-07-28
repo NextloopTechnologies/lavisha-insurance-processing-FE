@@ -19,13 +19,19 @@ import { bulkUploadFiles, uploadFiles } from "@/services/files";
 import { getPatientById, getPatients } from "@/services/patients";
 
 // import { Textarea } from "@/components/ui/textarea"
-import { UploadCloud } from "lucide-react";
+import { Plus, Search, UploadCloud } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { userRound } from "@/assets";
+import PatientFormDialog from "@/components/CreateEdit";
 
 export default function AddClaimForm() {
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [openPatientDialog, setOpenPatientDialog] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -145,6 +151,15 @@ export default function AddClaimForm() {
     }
   };
 
+  const filteredPatients = patients.filter((patient) =>
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCreatePatient = () => {
+    setSelectedPatient(null);
+    setOpenPatientDialog(true);
+  };
+
   return (
     <SidebarLayout>
       <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
@@ -172,8 +187,27 @@ export default function AddClaimForm() {
                 <SelectValue placeholder="Patient Name" />
               </SelectTrigger>
               <SelectContent>
-                {patients.map((item) => (
-                  <SelectItem value={item.id}>{item.name}</SelectItem>
+                <div className="flex items-center px-2 pb-2 border-b">
+                  <Search size={16} className="mr-2 text-[#3E79D6]" />
+                  <Input
+                    placeholder="Search here..."
+                    className="h-8 border-none focus-visible:ring-0"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                 <button
+                  onClick={handleCreatePatient}
+                  className="flex items-center w-full hover:bg-gray-100 rounded p-2"
+                >
+                  <Plus size={16} className="mr-2 text-[#3E79D6]" />
+                  Add New Patient
+                </button>
+                {filteredPatients.map((item) => (
+                  <SelectItem key={item.id} value={item.id} className="flex items-center">
+                    <Image src={userRound} alt="User Icon" width={20} height={20} />
+                    {item.name}
+                  </SelectItem>
                 ))}
                 {/* <SelectItem value="Jane Smith">Jane Smith</SelectItem> */}
               </SelectContent>
@@ -231,6 +265,13 @@ export default function AddClaimForm() {
               className="bg-[#F2F7FC] text-sm font-semibold text-black placeholder:pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
             />
           </div>
+          <PatientFormDialog 
+            open={openPatientDialog}
+            onOpenChange={setOpenPatientDialog}
+            onSubmit={handleCreatePatient}
+            defaultData={selectedPatient}
+            isEditMode={!!selectedPatient}
+          />
 
           {/* Upload Fields */}
           {claimInputs?.isPreAuth && (
