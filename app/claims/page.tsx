@@ -8,12 +8,10 @@ import { useEffect, useState } from "react";
 export default function Claims() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState([]);
-  console.log("claims", claims);
   const fetchClaims = async () => {
     setLoading(true);
     try {
       const res = await getClaims();
-      console.log("res", res);
       setClaims(res.data.data);
       setLoading(false);
     } catch (err) {

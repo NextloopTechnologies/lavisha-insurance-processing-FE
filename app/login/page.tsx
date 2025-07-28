@@ -24,7 +24,6 @@ export default function LoginPage() {
       };
     });
   };
-  console.log("loading", loading);
   const handleSubmit = async (event) => {
     event.preventDefault();
     setLoading(true);

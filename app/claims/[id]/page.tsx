@@ -17,6 +17,7 @@ import { MultiSelect } from "@/components/MultiSelect";
 import { statusOptions } from "@/constants/menu";
 import CreateFormPopup from "@/components/CreateFormPopup";
 import { getClaims, getClaimsById } from "@/services/claims";
+import Comments from "@/components/Comments";
 
 const tabLabels = [
   "Details",
@@ -123,11 +124,15 @@ export default function PatientClaimDetails() {
         <div className="mt-6">
           {activeTab === 0 && (
             <>
-              <PatientDetails data={claims}/>
-              <DocumentDetails data={claims}/>
+              <PatientDetails data={claims} />
+              <DocumentDetails data={claims} />
             </>
           )}
-          {activeTab === 1 && <p>Comments/History content</p>}
+          {activeTab === 1 && (
+            <div>
+              <Comments />
+            </div>
+          )}
           {activeTab === 2 && (
             <div>
               <>

@@ -27,7 +27,6 @@ export default function Patients() {
     setLoading(true);
     try {
       const res = await getPatients();
-      console.log("res", res);
       setPatients(res.data.data);
       setLoading(false);
     } catch (err) {
@@ -64,7 +63,6 @@ export default function Patients() {
 
   const handleSubmitPatient = async (payload) => {
     if (selectedPatient) {
-      // console.log("Updating patient:", payload);
       const { name, age, fileName, url } = payload;
       try {
         setLoading(true);

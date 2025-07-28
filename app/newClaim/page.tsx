@@ -17,6 +17,7 @@ import { INSURANCE_COMPANIES, TPA_OPTIONS } from "@/constants/menu";
 import { createClaims } from "@/services/claims";
 import { bulkUploadFiles, uploadFiles } from "@/services/files";
 import { getPatientById, getPatients } from "@/services/patients";
+import { useRouter } from "next/navigation";
 
 // import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, UploadCloud } from "lucide-react";
@@ -25,6 +26,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { userRound } from "@/assets";
 import PatientFormDialog from "@/components/CreateEdit";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 export default function AddClaimForm() {
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,7 @@ export default function AddClaimForm() {
     CLINIC_PAPER: "",
     ICP: "",
   });
+  const router = useRouter();
   const params = useParams();
   const id = params.id;
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -108,7 +111,7 @@ export default function AddClaimForm() {
   };
 
   const fetchPatients = async () => {
-    setLoading(true);
+    // setLoading(true);
     try {
       const res = await getPatients();
       setPatients(res.data.data);
@@ -143,7 +146,12 @@ export default function AddClaimForm() {
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
+      setLoading(true);
       const res = await createClaims(payload);
+      if (res.status == 201) {
+        setLoading(false);
+        router.push("/");
+      }
     } catch (error) {
       console.error("Upload error:", error);
     } finally {
@@ -162,6 +170,7 @@ export default function AddClaimForm() {
 
   return (
     <SidebarLayout>
+      {loading && <LoadingOverlay />}
       <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
         <div className="flex justify-start gap-x-10 items-center mt-2 pl-16">
           <h2 className="text-lg font-semibold">Add New Claim</h2>
@@ -196,7 +205,7 @@ export default function AddClaimForm() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
                 </div>
-                 <button
+                <button
                   onClick={handleCreatePatient}
                   className="flex items-center w-full hover:bg-gray-100 rounded p-2"
                 >
@@ -204,8 +213,17 @@ export default function AddClaimForm() {
                   Add New Patient
                 </button>
                 {filteredPatients.map((item) => (
-                  <SelectItem key={item.id} value={item.id} className="flex items-center">
-                    <Image src={userRound} alt="User Icon" width={20} height={20} />
+                  <SelectItem
+                    key={item.id}
+                    value={item.id}
+                    className="flex items-center"
+                  >
+                    <Image
+                      src={userRound}
+                      alt="User Icon"
+                      width={20}
+                      height={20}
+                    />
                     {item.name}
                   </SelectItem>
                 ))}
@@ -265,7 +283,7 @@ export default function AddClaimForm() {
               className="bg-[#F2F7FC] text-sm font-semibold text-black placeholder:pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
             />
           </div>
-          <PatientFormDialog 
+          <PatientFormDialog
             open={openPatientDialog}
             onOpenChange={setOpenPatientDialog}
             onSubmit={handleCreatePatient}

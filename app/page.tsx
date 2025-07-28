@@ -37,7 +37,8 @@ const Dashboard = () => {
     <SidebarLayout>
       <div className="relative  p-6 space-y-6 h-[calc(100vh-100px)] overflow-y-scroll">
         {/* Top Welcome + Metrics Section */}
-        <div className=" flex justify-end">
+        <div className=" flex justify-between items-center">
+          <h1>Dashboard</h1>{" "}
           <DateRangePicker date={dateRange} setDate={setDateRange} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
