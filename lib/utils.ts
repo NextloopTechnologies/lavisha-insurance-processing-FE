@@ -46,3 +46,25 @@ export function getFileIconType(fileName:string) {
   
   return 'file'; // default generic file 📁
 }
+
+
+export  function formatDateTime(isoString) {
+  if (!isoString) return { date: "", time: "" };
+
+  const dateObj = new Date(isoString);
+
+  const date = dateObj.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+  });
+
+  const time = dateObj.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  return { date, time };
+}
+

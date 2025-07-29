@@ -1,6 +1,4 @@
-// components/FileDropzone.tsx
-
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { UploadCloud, Folder, Image, X } from "lucide-react";
 import ImagePreview from "./ImagePreview";
 
@@ -9,6 +7,7 @@ interface FileDropzoneProps {
   multiple?: boolean;
   onChange?: (files: File[], name?: string, multiple?: boolean) => void;
   name?: string;
+  claimInputs?: any;
 }
 
 const FileDrag: React.FC<FileDropzoneProps> = ({
@@ -16,6 +15,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
   multiple = false,
   onChange,
   name,
+  claimInputs,
 }) => {
   const [files, setFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -31,6 +31,12 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     setFiles(updatedFiles);
     onChange?.(updatedFiles, name, multiple);
   };
+  // useEffect(() => {
+  //   if (!claimInputs) {
+  //     return;
+  //   }
+  //   setFiles(claimInputs);
+  // }, [claimInputs]);
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);

@@ -14,6 +14,7 @@ import {
 } from "@/services/patients";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Link from "next/link";
+import Avtar from "@/components/Avtar";
 
 export default function Patients() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -154,7 +155,6 @@ export default function Patients() {
 
               {/* Avatar */}
               <div className="w-24 h-24 mx-auto rounded-full bg-gray-300 mb-4 text-center flex justify-center items-center overflow-hidden">
-                {/* <div className="rounded-full w-20 h-20 bg-gray-200 flex items-center justify-center overflow-hidden"> */}
                 {patient.url ? (
                   <img
                     src={patient?.url}
@@ -166,7 +166,6 @@ export default function Patients() {
                     {patient.name.charAt(0)}
                   </span>
                 )}
-                {/* </div> */}
               </div>
 
               {/* Patient Info */}

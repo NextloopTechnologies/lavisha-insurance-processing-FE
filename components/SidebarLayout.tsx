@@ -81,6 +81,8 @@ const SidebarItem = ({
 };
 
 export default function SidebarLayout({ children }: Props) {
+  const loggedInUserName = localStorage.getItem("userName");
+
   const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -167,7 +169,7 @@ export default function SidebarLayout({ children }: Props) {
                   className="mx-auto w-7 h-7 "
                 />
               </span>
-              <span className="text-sm font-medium">User Name</span>
+              <span className="text-sm font-medium">{loggedInUserName}</span>
             </div>
             {/* mobile view */}
             <div className="md:hidden flex justify-between h-[calc(100%-120px)] w-90 overflow-scroll">
