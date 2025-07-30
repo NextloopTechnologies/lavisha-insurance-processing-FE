@@ -54,7 +54,7 @@ export default function CreateFormPopup({
   const handleFileChange = async (value, name, multiple) => {};
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm text-center p-6 rounded-lg">
+      <DialogContent className="min-w-5xl max-w-md text-center p-6 rounded-lg">
         <DialogHeader>
           <DialogTitle>
             {isEditMode ? "Edit Patient" : `Create ${selectedTab}`}

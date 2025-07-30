@@ -280,7 +280,7 @@ export default function AddClaimForm() {
                 handleSelectChange(e.target.value, "description")
               }
               placeholder="Description"
-              className="bg-[#F2F7FC] text-sm font-semibold text-black placeholder:pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+              className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
             />
           </div>
           <PatientFormDialog
@@ -338,7 +338,7 @@ export default function AddClaimForm() {
                 handleSelectChange(e.target.value, "additionalNotes")
               }
               placeholder="Additional Notes"
-              className="bg-[#F2F7FC] text-sm font-semibold text-black placeholder:pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+              className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
             />
           </div>
 

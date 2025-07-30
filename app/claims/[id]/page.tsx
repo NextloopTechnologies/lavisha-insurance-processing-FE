@@ -18,6 +18,8 @@ import { statusOptions } from "@/constants/menu";
 import CreateFormPopup from "@/components/CreateFormPopup";
 import { getClaims, getClaimsById } from "@/services/claims";
 import Comments from "@/components/Comments";
+import CreateSettlementPopup from "@/components/CreateSettlementPopup";
+import { Pencil } from "lucide-react";
 
 const tabLabels = [
   "Details",
@@ -124,28 +126,47 @@ export default function PatientClaimDetails() {
         <div className="mt-6">
           {activeTab === 0 && (
             <>
-              <PatientDetails data={claims} />
+              <PatientDetails
+                data={claims}
+                show={{
+                  drName: true,
+                  name: true,
+                  tpaName: true,
+                  icName: true,
+                  notes: true,
+                }}
+              />
               <DocumentDetails data={claims} />
             </>
           )}
           {activeTab === 1 && (
             <div>
-              <Comments />
+              <Comments claimId={claims.id} />
             </div>
           )}
           {activeTab === 2 && (
             <div>
               <>
-                <div className="flex justify-end">
+                {/* <div className="flex justify-end">
                   <button
                     onClick={() => setOpenPatientDialog(true)}
                     className="rounded-sm bg-blue-500 px-3 py-2 text-white"
                   >
                     Create Enhancement
                   </button>
-                </div>
-                <PatientDetails />
-                <DocumentDetails />
+                </div> */}
+                <PatientDetails
+                  data={claims}
+                  show={{
+                    drName: true,
+                    name: false,
+                    tpaName: false,
+                    icName: false,
+                    notes: false,
+                    noOfDays: true,
+                  }}
+                />
+                <DocumentDetails data={claims} />
               </>
             </div>
           )}
@@ -169,16 +190,25 @@ export default function PatientClaimDetails() {
           {activeTab === 4 && (
             <div>
               <>
-                <div className="flex justify-end">
+                {/* <div className="flex justify-end">
                   <button
                     onClick={() => setOpenPatientDialog(true)}
                     className="rounded-sm bg-blue-500 px-3 py-2 text-white"
                   >
                     Create Discharge
                   </button>
-                </div>
-                <PatientDetails />
-                <DocumentDetails />
+                </div> */}
+                <PatientDetails
+                  data={claims}
+                  show={{
+                    drName: true,
+                    name: false,
+                    tpaName: false,
+                    icName: false,
+                    notes: false,
+                  }}
+                />
+                <DocumentDetails data={claims} />
               </>
             </div>
           )}
@@ -188,13 +218,22 @@ export default function PatientClaimDetails() {
                 <div className="flex justify-end">
                   <button
                     onClick={() => setOpenPatientDialog(true)}
-                    className="rounded-sm bg-blue-500 px-3 py-2 text-white"
+                    // className="rounded-sm bg-blue-500 px-3 py-2 text-white"
                   >
-                    Create Settlement
+                    <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
                   </button>
                 </div>
-                <PatientDetails />
-                <DocumentDetails />
+                <PatientDetails
+                  data={claims}
+                  show={{
+                    drName: true,
+                    name: false,
+                    tpaName: false,
+                    icName: false,
+                    notes: false,
+                  }}
+                />
+                <DocumentDetails data={claims} />
               </>
             </div>
           )}
@@ -224,6 +263,19 @@ export default function PatientClaimDetails() {
           // claimInputs={}
           // isEditMode={!!selectedPatient}
           selectedTab={"Queried"}
+        />
+      )}
+      {activeTab === 5 && (
+        <CreateSettlementPopup
+          open={openPatientDialog}
+          onOpenChange={setOpenPatientDialog}
+          // onSubmit={handleSubmitPatient}
+          // defaultData={selectedPatient}
+          // claimInputs={}
+          // isEditMode={!!selectedPatient}
+          data={claims}
+          claimId={id}
+          selectedTab={"Settlement"}
         />
       )}
     </SidebarLayout>
