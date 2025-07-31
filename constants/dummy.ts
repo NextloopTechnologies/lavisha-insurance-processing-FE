@@ -30,3 +30,23 @@ export const chatMessages = [
     avatar: "https://i.pravatar.cc/150?img=59",
   },
 ];
+
+export const unread = [
+  {
+    name: "John Doe",
+    message:
+      "Lorem Ipsum is simply dummy text of the printing and typesetting industry. ",
+    time: "3 months ago",
+    avatar: "https://i.pravatar.cc/40?img=1",
+  },
+];
+
+export const recent = [
+  {
+    name: "Meg",
+    message: "Griffin invited you to edit the folder  Logo graphics",
+    time: "Jul 1, 2021",
+    icon: "📁",
+    status: "Successfull",
+  },
+];

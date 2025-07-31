@@ -29,12 +29,12 @@ export const navItems = [
     path: "/patients",
     icon: patientImage,
   },
-  {
-    label: "Queries",
-    icon: patientImage,
-  },
-  { path: "/settlements", label: "Settlements", icon: patientImage },
-  { path: "/enhancements", label: "Enhancements", icon: patientImage },
+  // {
+  //   label: "Queries",
+  //   icon: patientImage,
+  // },
+  // { path: "/settlements", label: "Settlements", icon: patientImage },
+  // { path: "/enhancements", label: "Enhancements", icon: patientImage },
 ];
 
 export const statusOptions = [

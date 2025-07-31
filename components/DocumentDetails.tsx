@@ -1,11 +1,16 @@
 // import { documents } from "@/constants/menu";
 import { getFileIconType } from "@/lib/utils";
-import { Eye, Folder, Image } from "lucide-react";
+import { Eye, Image } from "lucide-react";
 
-export default function DocumentDetails({ data }) {
+export default function DocumentDetails({ data, type }) {
+  const filteredDocs = data?.documents?.filter((doc) => {
+    if (type === "all") return true;
+    if (Array.isArray(type)) return type.includes(doc.type);
+    return doc.type === type;
+  });
   return (
     <div className="grid grid-cols-6 gap-4 mt-6">
-      {data?.documents?.map((doc, idx) => (
+      {filteredDocs?.map((doc, idx) => (
         <div
           key={idx}
           className="relative flex flex-col justify-between items-center border rounded-md p-4  bg-white shadow-sm"
