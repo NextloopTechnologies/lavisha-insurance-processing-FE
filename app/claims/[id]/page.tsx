@@ -20,6 +20,7 @@ import { getClaims, getClaimsById } from "@/services/claims";
 import Comments from "@/components/Comments";
 import CreateSettlementPopup from "@/components/CreateSettlementPopup";
 import { Pencil } from "lucide-react";
+import CreateEnhancementPopup from "@/components/CreateEnhancementPopup";
 
 const tabLabels = [
   "Details",
@@ -91,9 +92,22 @@ export default function PatientClaimDetails() {
       console.error("Failed to fetch claims:", err);
     }
   };
+  const fetchEnhancement = async () => {
+    setLoading(true);
+    try {
+      const res = await getClaimsById(id);
+      setClaims(res.data);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch claims:", err);
+    }
+  };
   useEffect(() => {
     fetchClaims();
+    fetchEnhancement();
   }, []);
+
   return (
     <SidebarLayout>
       <div className="p-6">
@@ -136,7 +150,7 @@ export default function PatientClaimDetails() {
                   notes: true,
                 }}
               />
-              <DocumentDetails data={claims} />
+              <DocumentDetails data={claims} type="all" />
             </>
           )}
           {activeTab === 1 && (
@@ -147,14 +161,15 @@ export default function PatientClaimDetails() {
           {activeTab === 2 && (
             <div>
               <>
-                {/* <div className="flex justify-end">
+                <div className="flex justify-end">
                   <button
                     onClick={() => setOpenPatientDialog(true)}
-                    className="rounded-sm bg-blue-500 px-3 py-2 text-white"
+                    className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    Create Enhancement
+                    Create Another Enhancement
+                    {/* <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" /> */}
                   </button>
-                </div> */}
+                </div>
                 <PatientDetails
                   data={claims}
                   show={{
@@ -166,7 +181,7 @@ export default function PatientClaimDetails() {
                     noOfDays: true,
                   }}
                 />
-                <DocumentDetails data={claims} />
+                <DocumentDetails data={claims} type={["ICP", "OTHER"]} />
               </>
             </div>
           )}
@@ -176,13 +191,13 @@ export default function PatientClaimDetails() {
                 <div className="flex justify-end">
                   <button
                     onClick={() => setOpenPatientDialog(true)}
-                    className="rounded-sm bg-blue-500 px-3 py-2 text-white"
+                    className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
                     Create Queried
                   </button>
                 </div>
                 <PatientDetails />
-                <DocumentDetails />
+                <DocumentDetails type={["ICP", "SETTLEMENT_LETTER", "OTHER"]} />
               </>
             </div>
           )}
@@ -208,7 +223,7 @@ export default function PatientClaimDetails() {
                     notes: false,
                   }}
                 />
-                <DocumentDetails data={claims} />
+                <DocumentDetails data={claims} type={["ICP", "OTHER"]} />
               </>
             </div>
           )}
@@ -218,7 +233,7 @@ export default function PatientClaimDetails() {
                 <div className="flex justify-end">
                   <button
                     onClick={() => setOpenPatientDialog(true)}
-                    // className="rounded-sm bg-blue-500 px-3 py-2 text-white"
+                    // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
                     <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
                   </button>
@@ -233,7 +248,10 @@ export default function PatientClaimDetails() {
                     notes: false,
                   }}
                 />
-                <DocumentDetails data={claims} />
+                <DocumentDetails
+                  data={claims}
+                  type={["ICP", "SETTLEMENT_LETTER", "OTHER"]}
+                />
               </>
             </div>
           )}
@@ -243,17 +261,6 @@ export default function PatientClaimDetails() {
           {activeTab === 4 && <p>Queried content</p>} */}
         </div>
       </div>
-      {activeTab === 2 && (
-        <CreateFormPopup
-          open={openPatientDialog}
-          onOpenChange={setOpenPatientDialog}
-          // onSubmit={handleSubmitPatient}
-          // defaultData={selectedPatient}
-          // claimInputs={}
-          // isEditMode={!!selectedPatient}
-          selectedTab={"Enhancement"}
-        />
-      )}
       {activeTab === 3 && (
         <CreateFormPopup
           open={openPatientDialog}
@@ -276,6 +283,19 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}
+        />
+      )}
+      {activeTab === 2 && (
+        <CreateEnhancementPopup
+          open={openPatientDialog}
+          onOpenChange={setOpenPatientDialog}
+          // onSubmit={handleSubmitPatient}
+          // defaultData={selectedPatient}
+          // claimInputs={}
+          // isEditMode={!!selectedPatient}
+          data={claims}
+          claimId={claims.id}
+          selectedTab={"Enhancement"}
         />
       )}
     </SidebarLayout>

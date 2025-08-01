@@ -10,6 +10,9 @@ import { logout } from "@/services/auth";
 import { logoImage, logoSvg, patientImage, userImage } from "../assets";
 import Image from "next/image";
 import { StaticImageData } from "next/image";
+import { NotificationPopover } from "./NotificationPopover";
+import { recent, unread } from "@/constants/dummy";
+import { ProfilePopover } from "./ProfilePopover";
 
 type Props = {
   children: React.ReactNode;
@@ -82,7 +85,6 @@ const SidebarItem = ({
 
 export default function SidebarLayout({ children }: Props) {
   const loggedInUserName = localStorage.getItem("userName");
-
   const [isOpen, setIsOpen] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
@@ -159,17 +161,31 @@ export default function SidebarLayout({ children }: Props) {
 
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="flex justify-center items-center gap-2 ml-auto">
-              <button className="">
-                <Bell size={20} className="text-[#3E79D6] text-center" />
-              </button>
-              <span className=" w-10 h-10 flex justify-center items-center mb-2">
+              <NotificationPopover
+                unreadNotifications={unread}
+                recentNotifications={recent}
+                unreadCount={unread.length}
+                // setOpenNotification={setOpenNotification}
+                // openNotification={openNotification}
+              />
+              <ProfilePopover
+                userName="Dr. Aamir"
+                // avatarUrl="/path-to-avatar.jpg"
+                hospitalName="Hospital Name"
+                address="101, Kanchan Sagar, 18/1, Near Industry House"
+                loggedInUserName={loggedInUserName}
+              />
+              {/* <span
+                onClick={() => setOpenProfile(true)}
+                className=" w-10 h-10 flex justify-center items-center mb-2"
+              >
                 <Image
                   src={userImage}
                   alt="Logout"
                   className="mx-auto w-7 h-7 "
                 />
-              </span>
-              <span className="text-sm font-medium">{loggedInUserName}</span>
+              </span> */}
+              {/* <span className="text-sm font-medium">{loggedInUserName}</span> */}
             </div>
             {/* mobile view */}
             <div className="md:hidden flex justify-between h-[calc(100%-120px)] w-90 overflow-scroll">
