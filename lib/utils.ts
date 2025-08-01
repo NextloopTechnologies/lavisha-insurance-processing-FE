@@ -1,3 +1,5 @@
+import { statusOptions } from "@/constants/menu";
+import { StatusType } from "@/types/claims";
 import { clsx, type ClassValue } from "clsx";
 import { addDays, subMonths, subYears } from "date-fns";
 import { twMerge } from "tailwind-merge";
@@ -67,4 +69,31 @@ export  function formatDateTime(isoString) {
 
   return { date, time };
 }
+
+
+export const getStatusVisibility = (currentStatus: string) => {
+  const index = statusOptions.findIndex((s) => s.key === currentStatus);
+
+  if (index === -1) return [];
+
+  if(currentStatus === StatusType.QUERIED) {
+    return statusOptions.slice(index, index + 3)
+  }
+  if (currentStatus === StatusType.APPROVED) {
+    return statusOptions.slice(index); // from approved to settled
+  }
+
+  return statusOptions.slice(index, index + 2); // current and next
+};
+
+export const statusMaxIndexMap: Record<string, number> = {
+  PENDING: 1,
+  SENT_TO_TPA: 1,
+  QUERIED: 2,
+  DENIED: 2,
+  APPROVED: 2,
+  ENHANCEMENT: 3,
+  DISCHARGED: 4,
+  SETTLED: 5,
+};
 
