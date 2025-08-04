@@ -23,6 +23,7 @@ type NavItem = {
   label: string;
   path?: string;
   icon?: string | StaticImageData;
+  activeIcon?: string | StaticImageData;
 
   children?: NavItem[];
 };
@@ -56,7 +57,15 @@ const SidebarItem = ({
             className="flex justify-start items-center gap-x-2 w-full "
           >
             <span>
-              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
+              {isActive ? (
+                <Image
+                  src={item.activeIcon}
+                  alt="active-logo"
+                  className="mx-auto w-4 h-4"
+                />
+              ) : (
+                <Image src={item.icon} alt="Logo" className="mx-auto w-4 h-4" />
+              )}
             </span>
             <span>{item.label}</span>
           </Link>

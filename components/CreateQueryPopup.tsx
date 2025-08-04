@@ -48,7 +48,7 @@ export default function CreateQueryPopup({
   const [loading, setLoading] = useState(false);
   const [queryInputs, setQueryInputs] = useState<any>({
     doctorName: "",
-    status: "SETTLED",
+    status: "QUERIED",
     OTHER: "",
     ICP: "",
     notes: "",
@@ -78,17 +78,17 @@ export default function CreateQueryPopup({
       return acc;
     }, {});
 
-    // setQueryInputs({
-    //   notes: selectedQuery?.notes,
-    //   OTHER: documentMap.OTHER || [],
-    //   ICP: documentMap.ICP || "",
-    //   EXCEL_REPORT: documentMap.EXCEL_REPORT || "",
-    //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+    setQueryInputs({
+      notes: selectedQuery?.notes,
+      OTHER: documentMap.OTHER || [],
+      ICP: documentMap.ICP || "",
+      EXCEL_REPORT: documentMap.EXCEL_REPORT || "",
+      CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
 
-    //   //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
-    //   //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
-    //   //   SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-    // });
+      //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+      //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
+      //   SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+    });
   }, [selectedQuery]);
   const handleSelectChange = (value: string | boolean, name: string) => {
     setQueryInputs((prev) => {
@@ -163,6 +163,7 @@ export default function CreateQueryPopup({
       const payload = {
         ...others,
         insuranceRequestId: claimId,
+        status,
         documents: [
           ICP,
           CURRENT_INVESTIGATION,

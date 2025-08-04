@@ -28,6 +28,7 @@ export const config = {
     "/",
     "/dashboard",
     "/claims",
+    "/newClaim",
     "/patients",
     "/queries",
     "/settlements",

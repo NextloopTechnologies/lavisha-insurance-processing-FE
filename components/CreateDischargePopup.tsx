@@ -48,7 +48,7 @@ export default function CreateDischargePopup({
     doctorName: "",
     tpaName: "",
     insuranceCompany: "",
-    status: "SETTLED",
+    status: "DICHARGED",
     description: "",
     preAuth: "",
     OTHER: "",
@@ -167,7 +167,7 @@ export default function CreateDischargePopup({
         OTHER,
         ICP,
         preAuth,
-        // SETTLEMENT_LETTER,
+        SETTLEMENT_LETTER,
         ...others
       } = claimInputs;
       const payload = {
@@ -178,7 +178,7 @@ export default function CreateDischargePopup({
           //   ICP,
           //   PAST_INVESTIGATION,
           //   CURRENT_INVESTIGATION,
-        //   SETTLEMENT_LETTER,
+          //   SETTLEMENT_LETTER,
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
@@ -218,7 +218,6 @@ export default function CreateDischargePopup({
                     handleSelectChange(e.target.value, "doctorName")
                   }
                 /> */}
-                
               </div>
 
               <div className="my-4">
@@ -243,7 +242,9 @@ export default function CreateDischargePopup({
               /> */}
 
               <FileDrag
-                title={"Miscellaneous Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"}
+                title={
+                  "Miscellaneous Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"
+                }
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}

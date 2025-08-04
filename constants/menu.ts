@@ -12,6 +12,11 @@ import {
   growthIcon,
   dischargeIcon,
   settledIcon,
+  dashboardActive,
+  claim,
+  claimActive,
+  patient,
+  patientActive,
 } from "../assets";
 
 export const navItems = [
@@ -19,16 +24,19 @@ export const navItems = [
     label: "Dashboard",
     path: "/",
     icon: dashboardImage,
+    activeIcon: dashboardActive,
   },
   {
     label: "Claims",
     path: "/claims",
-    icon: claimsImage,
+    icon: claim,
+    activeIcon: claimActive,
   },
   {
     label: "Patients",
     path: "/patients",
-    icon: patientImage,
+     icon: patient,
+    activeIcon: patientActive,
   },
   // {
   //   label: "User",
