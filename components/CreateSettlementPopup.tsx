@@ -29,6 +29,7 @@ interface CreateSettlementPopupProps {
   selectedTab: string;
   data?: any;
   claimId: ParamValue;
+  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
 }
 
 export default function CreateSettlementPopup({
@@ -40,6 +41,7 @@ export default function CreateSettlementPopup({
   selectedTab,
   data,
   claimId,
+  updateClaimStatusAfterModalSuccess
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -185,6 +187,7 @@ export default function CreateSettlementPopup({
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res.status == 200) {
+        await updateClaimStatusAfterModalSuccess("SETTLED");
         setLoading(false);
         onOpenChange(!open);
       }
