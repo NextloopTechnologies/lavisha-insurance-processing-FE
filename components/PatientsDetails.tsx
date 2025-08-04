@@ -42,7 +42,7 @@ export default function PatientDetails({ data, show }) {
       ? [
           {
             key: "Number of Days",
-            value: 5,
+            value: data?.numberOfDays,
           },
         ]
       : []),
@@ -70,12 +70,14 @@ export default function PatientDetails({ data, show }) {
 
       <div className="col-span-2 p-4 border rounded-md bg-white">
         <label className="text-xs text-gray-500">Description</label>
-        <p className="text-sm mt-1 text-gray-700">{data?.description}</p>
+        <p className="text-sm mt-1 text-gray-700">
+          {data?.description }
+        </p>
       </div>
 
       <div className="col-span-2 p-4 border rounded-md bg-white">
         <label className="text-xs text-gray-500">Additional Notes</label>
-        <p className="text-sm mt-1 text-gray-700">{data?.additionalNotes}</p>
+        <p className="text-sm mt-1 text-gray-700">{data?.additionalNotes|| data?.notes}</p>
       </div>
     </div>
   );

@@ -30,6 +30,7 @@ interface CreateEnhancementPopupProps {
   selectedTab: string;
   data?: any;
   claimId: ParamValue;
+  selectedEnhancement: any;
 }
 
 export default function CreateEnhancementPopup({
@@ -41,6 +42,7 @@ export default function CreateEnhancementPopup({
   selectedTab,
   data,
   claimId,
+  selectedEnhancement,
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
@@ -52,10 +54,10 @@ export default function CreateEnhancementPopup({
     notes: "",
   });
   useEffect(() => {
-    if (!data) return;
+    if (!selectedEnhancement) return;
 
     // Map documents by their type
-    const documentMap = data.documents.reduce((acc, doc) => {
+    const documentMap = selectedEnhancement.documents.reduce((acc, doc) => {
       if (doc.type === "OTHER") {
         acc[doc.type] = acc[doc.type] || [];
         acc[doc.type].push({
@@ -73,25 +75,19 @@ export default function CreateEnhancementPopup({
       }
       return acc;
     }, {});
+    console.log("documentMap", documentMap);
 
-    // setEnhancementInputs({
-    //   isPreAuth: data.isPreAuth,
-    //   patientId: data.patientId,
-    //   doctorName: data.doctorName,
-    //   tpaName: data.tpaName,
-    //   insuranceCompany: data.insuranceCompany,
-    //   status: data.status,
-    //   description: data.description,
-    //   preAuth: "", // You can derive if needed
-    //   additionalNotes: data.additionalNotes || "",
-    //   OTHER: documentMap.OTHER || [],
-    //   CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
-    //   ICP: documentMap.ICP || "",
-    //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
-    //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
-    //   SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-    // });
-  }, [data]);
+    setEnhancementInputs({
+      
+      doctorName: selectedEnhancement.doctorName,
+      notes: selectedEnhancement?.notes,
+      numberOfDays: selectedEnhancement?.numberOfDays,
+
+      OTHER: documentMap.OTHER || [],
+      ICP: documentMap.ICP || "",
+    
+    });
+  }, [selectedEnhancement]);
   const handleSelectChange = (value: string | boolean, name: string) => {
     setEnhancementInputs((prev) => {
       return {
@@ -232,7 +228,7 @@ export default function CreateEnhancementPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"ICP"}
-                //   claimInputs={claimInputs.SETTLEMENT_LETTER}
+                claimInputs={enhancementInputs?.ICP}
               />
 
               <FileDrag
@@ -240,7 +236,7 @@ export default function CreateEnhancementPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-                // claimInputs={enhancementInputs.OTHER}
+                claimInputs={enhancementInputs?.OTHER}
               />
 
               {/* Action Buttons */}

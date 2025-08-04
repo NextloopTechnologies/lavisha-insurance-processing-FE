@@ -13,6 +13,7 @@ import { StaticImageData } from "next/image";
 import { NotificationPopover } from "./NotificationPopover";
 import { recent, unread } from "@/constants/dummy";
 import { ProfilePopover } from "./ProfilePopover";
+import { ProfileEditModal } from "./ProfileEditModal";
 
 type Props = {
   children: React.ReactNode;
@@ -36,6 +37,7 @@ const SidebarItem = ({
   pathname?: string;
 }) => {
   const [open, setOpen] = useState(true);
+
   const hasChildren = item.children && item.children.length > 0;
   const isActive = pathname === item.path;
   return (
@@ -86,6 +88,8 @@ const SidebarItem = ({
 export default function SidebarLayout({ children }: Props) {
   const loggedInUserName = localStorage.getItem("userName");
   const [isOpen, setIsOpen] = useState(true);
+  const [openEditProfile, setOpenEditProfile] = useState(false);
+
   const router = useRouter();
   const pathname = usePathname();
   const handleLogout = () => {
@@ -174,6 +178,11 @@ export default function SidebarLayout({ children }: Props) {
                 hospitalName="Hospital Name"
                 address="101, Kanchan Sagar, 18/1, Near Industry House"
                 loggedInUserName={loggedInUserName}
+                setOpenEditProfile={setOpenEditProfile}
+              />
+              <ProfileEditModal
+                openEditProfile={openEditProfile}
+                setOpenEditProfile={setOpenEditProfile}
               />
               {/* <span
                 onClick={() => setOpenProfile(true)}

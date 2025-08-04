@@ -1,9 +1,16 @@
 // import { documents } from "@/constants/menu";
 import { getFileIconType } from "@/lib/utils";
 import { Eye, Image } from "lucide-react";
+import ImagePreview from "./ImagePreview";
+import { useState } from "react";
 
 export default function DocumentDetails({ data, type }) {
-  const filteredDocs = data?.documents?.filter((doc) => {
+  const [modalOpen, setModalOpen] = useState(false);
+  const [imagePreview, setImagePreview] = useState<{
+    fileURL: File | null | string;
+    file: string;
+  }>({ fileURL: null, file: "" });
+  const filteredDocs = data?.filter((doc) => {
     if (type === "all") return true;
     if (Array.isArray(type)) return type.includes(doc.type);
     return doc.type === type;
@@ -16,7 +23,13 @@ export default function DocumentDetails({ data, type }) {
           className="relative flex flex-col justify-between items-center border rounded-md p-4  bg-white shadow-sm"
         >
           {getFileIconType(doc?.fileName) == "image" ? (
-            <Image className="h-18 w-18 text-blue-500" />
+            <Image
+              onClick={() => {
+                setModalOpen(true);
+                setImagePreview({ fileURL: doc?.url, file: doc?.fileName });
+              }}
+              className="h-18 w-18 text-blue-500"
+            />
           ) : (
             <div className="h-12 mb-2" />
           )}
@@ -26,6 +39,12 @@ export default function DocumentDetails({ data, type }) {
           </span>
         </div>
       ))}
+      <ImagePreview
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        file={imagePreview.fileURL}
+        documentName={imagePreview.file}
+      />
     </div>
   );
 }

@@ -29,7 +29,7 @@ import PatientFormDialog from "@/components/CreateEdit";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import CreateClaim from "@/components/CreateClaim";
 
-export default function AddClaimForm() {
+export default function EditClaimForm() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState<any>(null);
   const [claimInputs, setClaimInputs] = useState({
@@ -98,6 +98,48 @@ export default function AddClaimForm() {
     fetchClaims();
   }, []);
 
+  useEffect(() => {
+    if (!claims) return;
+
+    // Map documents by their type
+    const documentMap = claims.documents.reduce((acc, doc) => {
+      if (doc.type === "OTHER") {
+        acc[doc.type] = acc[doc.type] || [];
+        acc[doc.type].push({
+          id: doc.id,
+          fileName: doc.fileName,
+          type: doc.type,
+          remark: doc.remark,
+        });
+      } else {
+        acc[doc.type] = {
+          id: doc.id,
+          fileName: doc.fileName,
+          type: doc.type,
+        };
+      }
+      return acc;
+    }, {});
+
+    setClaimInputs({
+      isPreAuth: claims.isPreAuth,
+      patientId: claims.patientId,
+      doctorName: claims.doctorName,
+      tpaName: claims.tpaName,
+      insuranceCompany: claims.insuranceCompany,
+      status: claims.status,
+      description: claims.description,
+      preAuth: "", // You can derive if needed
+      additionalNotes: claims.additionalNotes || "",
+      OTHER: documentMap.OTHER || [],
+      CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
+      ICP: documentMap.ICP || "",
+      CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+      PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
+      // SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+    });
+  }, [claims]);
+
   return (
     <SidebarLayout>
       {loading && <LoadingOverlay />}
@@ -107,6 +149,8 @@ export default function AddClaimForm() {
         setLoading={setLoading}
         claimInputs={claimInputs}
         setClaimInputs={setClaimInputs}
+          isEditMode = {true}
+
       />
     </SidebarLayout>
   );
