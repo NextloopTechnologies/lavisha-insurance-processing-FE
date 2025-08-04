@@ -88,7 +88,7 @@ export const statusOptions = [
     key: StatusType.ENHANCEMENT,
   },
   {
-    name: "Dishcharged",
+    name: "Discharged",
     icon: dischargeIcon,
     key: StatusType.DISCHARGED,
   },

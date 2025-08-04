@@ -32,6 +32,7 @@ interface CreateEnhancementPopupProps {
   claimId: ParamValue;
   selectedEnhancement: any;
   fetchEnhancement:any
+  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
 }
 
 export default function CreateEnhancementPopup({
@@ -45,6 +46,7 @@ export default function CreateEnhancementPopup({
   claimId,
   selectedEnhancement,
   fetchEnhancement
+  updateClaimStatusAfterModalSuccess
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
@@ -167,6 +169,7 @@ export default function CreateEnhancementPopup({
       setLoading(true);
       const res = await createEnhancements(payload);
       if (res.status == 201) {
+        await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
         setLoading(false);
         onOpenChange(!open);
         fetchEnhancement()
