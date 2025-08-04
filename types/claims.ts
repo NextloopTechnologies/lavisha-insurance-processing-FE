@@ -1,0 +1,11 @@
+export enum StatusType {
+    DRAFT = 'DRAFT',
+    PENDING = 'PENDING',
+    SENT_TO_TPA = 'SENT_TO_TPA',
+    QUERIED = 'QUERIED',
+    DENIED = 'DENIED',
+    APPROVED = 'APPROVED',
+    ENHANCEMENT = 'ENHANCEMENT',
+    DISCHARGED = 'DISCHARGED',
+    SETTLED = 'SETTLED'
+}

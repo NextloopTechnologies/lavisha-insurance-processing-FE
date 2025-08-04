@@ -16,7 +16,7 @@ import { getPatientById } from "@/services/patients";
 import { MultiSelect } from "@/components/MultiSelect";
 import { statusOptions } from "@/constants/menu";
 import CreateFormPopup from "@/components/CreateFormPopup";
-import { getClaims, getClaimsById } from "@/services/claims";
+import { getClaimsById, updateClaims } from "@/services/claims";
 import Comments from "@/components/Comments";
 import CreateSettlementPopup from "@/components/CreateSettlementPopup";
 import { Pencil } from "lucide-react";
@@ -24,12 +24,13 @@ import CreateEnhancementPopup from "@/components/CreateEnhancementPopup";
 import EnhancementDateDropdown from "@/components/EnhancementDateDropdown";
 import CreateQueryPopup from "@/components/CreateQueryPopup";
 import CreateDischargePopup from "@/components/CreateDischargePopup";
+import { getStatusVisibility, statusMaxIndexMap } from "@/lib/utils";
 
-const tabLabels = [
+const allTabLabels = [
   "Details",
   "Comments/History",
-  "Enhancement",
   "Queried",
+  "Enhancement",
   "Discharge",
   "Settlement",
 ];
@@ -41,6 +42,9 @@ export default function PatientClaimDetails() {
   const [patients, setPatients] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [filteredStatusOptions, setFilteredStatusOptions] =
+    useState(statusOptions);
+  const [visibleTabLabels, setVisibleTabLabels] = useState<string[]>([]);
   const [claims, setClaims] = useState<any>([]);
   const [selectedEnhancementId, setSelectedEnhancementId] = useState("");
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
@@ -90,14 +94,21 @@ export default function PatientClaimDetails() {
   }, [id]);
 
   const fetchClaims = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       const res = await getClaimsById(id);
+      if (res.status !== 200) throw new Error("Failed to get claims list!");
+
       setClaims(res.data);
-      setLoading(false);
+      const currentStatus = res.data.status;
+      setSelectedStatuses(currentStatus);
+      setFilteredStatusOptions(getStatusVisibility(currentStatus));
+      const maxIndex = statusMaxIndexMap[currentStatus];
+      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1));
     } catch (err) {
-      setLoading(false);
       console.error("Failed to fetch claims:", err);
+    } finally {
+      setLoading(false);
     }
   };
   const fetchEnhancement = async () => {
@@ -124,6 +135,24 @@ export default function PatientClaimDetails() {
     setOpenPatientDialog(true);
     setSelectedEnhancement(filteredEnhancement);
   };
+  // need memoization with MultiSelect in future performances
+  const updateClaimStatus = async (status: string) => {
+    try {
+      setLoading(true);
+      const res = await updateClaims({ status }, id);
+      if (res.status !== 200) throw new Error("Failed to update status!");
+
+      setSelectedStatuses([status]);
+      setFilteredStatusOptions(getStatusVisibility(status));
+      const maxIndex = statusMaxIndexMap[status];
+      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1));
+      setClaims((prev: any) => ({ ...prev, status }));
+    } catch (error) {
+      console.error("catch eror", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <SidebarLayout>
@@ -142,20 +171,21 @@ export default function PatientClaimDetails() {
           <MultiSelect
             mode="single"
             selectedStatuses={selectedStatuses}
-            status={statusOptions}
+            status={filteredStatusOptions}
             toggleStatus={toggleStatus}
             setSelectedStatuses={setSelectedStatuses}
+            updateClaimStatus={updateClaimStatus}
           />
         </div>
 
         <Tabs
-          labels={tabLabels}
+          labels={visibleTabLabels}
           activeTab={activeTab}
           onTabChange={setActiveTab}
         />
 
         <div className="mt-6">
-          {activeTab === 0 && (
+          {visibleTabLabels[activeTab] === "Details" && (
             <>
               <PatientDetails
                 data={claims}
@@ -170,12 +200,31 @@ export default function PatientClaimDetails() {
               <DocumentDetails data={claims?.documents} type="all" />
             </>
           )}
-          {activeTab === 1 && (
+
+          {visibleTabLabels[activeTab] === "Comments/History" && (
             <div>
               <Comments claimId={claims.id} />
             </div>
           )}
-          {activeTab === 2 && (
+
+          {visibleTabLabels[activeTab] === "Queried" && (
+            <div>
+              <>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setOpenPatientDialog(true)}
+                    className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                  >
+                    Create Queried
+                  </button>
+                </div>
+                <PatientDetails />
+                <DocumentDetails type={["ICP", "SETTLEMENT_LETTER", "OTHER"]} />
+              </>
+            </div>
+          )}
+
+          {visibleTabLabels[activeTab] === "Enhancement" && (
             <div>
               <>
                 <div className="flex justify-between">
@@ -221,7 +270,7 @@ export default function PatientClaimDetails() {
             </div>
           )}
 
-          {activeTab === 3 && (
+          {visibleTabLabels[activeTab] === "Queried" && (
             <div>
               <>
                 <div className="flex justify-between">
@@ -266,7 +315,7 @@ export default function PatientClaimDetails() {
             </div>
           )}
 
-          {activeTab === 4 && (
+          {visibleTabLabels[activeTab] === "Discharge" && (
             <div>
               <>
                 <div className="flex justify-end">
@@ -294,7 +343,7 @@ export default function PatientClaimDetails() {
               </>
             </div>
           )}
-          {activeTab === 5 && (
+          {visibleTabLabels[activeTab] === "Settlement" && (
             <div>
               <>
                 <div className="flex justify-end">
@@ -324,7 +373,7 @@ export default function PatientClaimDetails() {
           )}
         </div>
       </div>
-      {activeTab === 2 && (
+      {visibleTabLabels[activeTab] === "Enhancement" && (
         <CreateEnhancementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -339,7 +388,7 @@ export default function PatientClaimDetails() {
         />
       )}
 
-      {activeTab === 3 && (
+      {visibleTabLabels[activeTab] === "Queried" && (
         <CreateQueryPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -354,7 +403,7 @@ export default function PatientClaimDetails() {
         />
       )}
 
-      {activeTab === 4 && (
+      {visibleTabLabels[activeTab] === "Discharge" && (
         <CreateDischargePopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -367,7 +416,7 @@ export default function PatientClaimDetails() {
           selectedTab={"Discharge"}
         />
       )}
-      {activeTab === 5 && (
+      {visibleTabLabels[activeTab] === "Settlement" && (
         <CreateSettlementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}

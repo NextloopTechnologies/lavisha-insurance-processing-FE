@@ -1,3 +1,4 @@
+import { StatusType } from "@/types/claims";
 import {
   dashboardImage,
   claimsImage,
@@ -44,54 +45,49 @@ export const navItems = [
 
 export const statusOptions = [
   {
+    name: "Draft",
+    icon: draftIcon,
+    key: StatusType.DRAFT,
+  },
+  {
     name: "Pending",
     icon: pendingIcon,
-    key: "status",
+    key: StatusType.PENDING,
   },
   {
     name: "Send to TPA",
     icon: send1Icon,
-
-    key: "tpa",
-  },
-  {
-    name: "Draft",
-    icon: draftIcon,
-
-    key: "draft",
+    key: StatusType.SENT_TO_TPA,
   },
   {
     name: "Queried",
     icon: faqIcon,
-
-    key: "query",
-  },
-  {
-    name: "Approved",
-    icon: approveIcon,
-    key: "approved",
+    key: StatusType.QUERIED,
   },
   {
     name: "Denied",
     icon: cancelIcon,
-    key: "denied",
+    key: StatusType.DENIED,
+  },
+  {
+    name: "Approved",
+    icon: approveIcon,
+    key: StatusType.APPROVED,
   },
   {
     name: "Enhancement",
     icon: growthIcon,
-
-    key: "enhancement",
+    key: StatusType.ENHANCEMENT,
   },
   {
     name: "Dishcharged",
     icon: dischargeIcon,
-
-    key: "discharged",
+    key: StatusType.DISCHARGED,
   },
   {
     name: "Settled",
     icon: settledIcon,
-    key: "settled",
+    key: StatusType.SETTLED,
   },
 ];
 
