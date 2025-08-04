@@ -30,6 +30,7 @@ import { useMemo, useState } from "react";
 import { MultiSelect } from "./MultiSelect";
 import Link from "next/link";
 import { statusOptions } from "@/constants/menu";
+import DeletePopup from "./DeletePopup";
 import { StatusType } from "@/types/claims";
 
 type User = {
@@ -60,85 +61,27 @@ type DATA = {
   };
 };
 
-const users: User[] = [
-  {
-    id: 1,
-    patientName: "Hemant Rajput",
-    description: "Description",
-    status: "Pending",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-  {
-    id: 2,
-    patientName: "Md Nizam",
-    description: "Description",
-    status: "Pending",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-  {
-    id: 3,
-    patientName: "Hemant Rajput",
-    description: "Description",
-    status: "Pending",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-  {
-    id: 4,
-    patientName: "Hemant Rajput",
-    description: "Description",
-    status: "Pending",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-  {
-    id: 5,
-    patientName: "Sanad Khan",
-    description: "Description",
-    status: "Pending",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-  {
-    id: 6,
-    patientName: "Hemant Rajput",
-    description: "Description",
-    status: "Queried",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-  {
-    id: 7,
-    patientName: "Vaibhav Kharode",
-    description: "Description",
-    status: "Draft",
-    claimId: "ID25325871",
-    createdDate: "10/11/2025",
-    doctor: "Dr. Rajesh panda",
-    preAuthStatus: "........",
-  },
-];
-
-export function DataTable({ data }: { data: DATA[] }) {
+export function DataTable({
+  data,
+  sortByClaim,
+  page,
+  setPage,
+  total,
+  handleDeleteClaim,
+}: {
+  data: DATA[];
+  sortByClaim: any;
+  page: number;
+  setPage: any;
+  total: number;
+  handleDeleteClaim: any;
+}) {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+
   const router = useRouter();
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) =>
@@ -167,13 +110,12 @@ export function DataTable({ data }: { data: DATA[] }) {
     });
   }, [searchTerm, selectedStatuses, statusFilter, data]);
 
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const totalPages = Math.ceil(total);
 
   const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
@@ -189,7 +131,7 @@ export function DataTable({ data }: { data: DATA[] }) {
                 setCurrentPage(1); // reset to page 1 when filtering
               }}
             />
-            <span className="absolute left-3 top-2.5 text-yellow-500">
+            <span className="absolute left-3 top-2.5 text-[#3E79D6]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -260,7 +202,7 @@ export function DataTable({ data }: { data: DATA[] }) {
             {/* <br /> */}
             <div className="mb-2 block"></div>
             <TableBody className="bg-white">
-              {paginatedData.map((row, index) => (
+              {filteredData?.map((row, index) => (
                 <TableRow key={index} className="">
                   {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
@@ -288,7 +230,7 @@ export function DataTable({ data }: { data: DATA[] }) {
                       <Link href={`/claims/${row.refNumber}`}>
                         <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                       </Link>
-                      <Trash2 className="w-4 h-4 hover:text-red-600 cursor-pointer" />
+                      <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" />
                       {row.status!==StatusType.DRAFT && (
                         <>
                           <Link href={`/claims/${row.refNumber}`}>
@@ -309,22 +251,26 @@ export function DataTable({ data }: { data: DATA[] }) {
         </div>
         <div className="flex justify-between items-center mt-4">
           <button
-            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-            disabled={currentPage === 1}
+            onClick={() => {
+              setPage((prev) => Math.max(prev - 1, 1));
+              // setCurrentPage((prev) => Math.max(prev - 1, 1));
+            }}
+            disabled={page > 1 ? false : true}
             className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
           >
             Previous
           </button>
 
           <span className="text-sm">
-            Page {currentPage} of {totalPages}
+            Page {page} of {totalPages}
           </span>
 
           <button
-            onClick={() =>
-              setCurrentPage((prev) => Math.min(prev + 1, totalPages))
-            }
-            disabled={currentPage === totalPages}
+            onClick={() => {
+              setPage((prev) => prev + 1);
+              // setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+            }}
+            disabled={page < total ? false : true}
             className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
           >
             Next

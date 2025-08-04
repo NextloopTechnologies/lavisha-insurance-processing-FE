@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Tabs } from "@/components/Tabs";
 import SidebarLayout from "@/components/SidebarLayout";
 import PatientDetails from "@/components/PatientsDetails";
@@ -21,6 +21,9 @@ import Comments from "@/components/Comments";
 import CreateSettlementPopup from "@/components/CreateSettlementPopup";
 import { Pencil } from "lucide-react";
 import CreateEnhancementPopup from "@/components/CreateEnhancementPopup";
+import EnhancementDateDropdown from "@/components/EnhancementDateDropdown";
+import CreateQueryPopup from "@/components/CreateQueryPopup";
+import CreateDischargePopup from "@/components/CreateDischargePopup";
 import { getStatusVisibility, statusMaxIndexMap } from "@/lib/utils";
 
 const allTabLabels = [
@@ -39,9 +42,15 @@ export default function PatientClaimDetails() {
   const [patients, setPatients] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
-  const [filteredStatusOptions, setFilteredStatusOptions] = useState(statusOptions);
+  const [filteredStatusOptions, setFilteredStatusOptions] =
+    useState(statusOptions);
   const [visibleTabLabels, setVisibleTabLabels] = useState<string[]>([]);
   const [claims, setClaims] = useState<any>([]);
+  const [selectedEnhancementId, setSelectedEnhancementId] = useState("");
+  const [selectedEnhancement, setSelectedEnhancement] = useState(null);
+  const [selectedQuery, setSelectedQuery] = useState(null);
+
+  console.log("selectedEnhancementId", selectedEnhancementId);
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -88,14 +97,14 @@ export default function PatientClaimDetails() {
     try {
       setLoading(true);
       const res = await getClaimsById(id);
-      if(res.status!==200) throw new Error("Failed to get claims list!")
-      
+      if (res.status !== 200) throw new Error("Failed to get claims list!");
+
       setClaims(res.data);
       const currentStatus = res.data.status;
       setSelectedStatuses(currentStatus);
       setFilteredStatusOptions(getStatusVisibility(currentStatus));
       const maxIndex = statusMaxIndexMap[currentStatus];
-      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1))
+      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1));
     } catch (err) {
       console.error("Failed to fetch claims:", err);
     } finally {
@@ -118,24 +127,32 @@ export default function PatientClaimDetails() {
     fetchEnhancement();
   }, []);
 
+  const filteredEnhancement = claims?.enhancements?.filter(
+    (item) => item?.id == selectedEnhancementId
+  )[0];
+
+  const handleEditEnhancement = () => {
+    setOpenPatientDialog(true);
+    setSelectedEnhancement(filteredEnhancement);
+  };
   // need memoization with MultiSelect in future performances
-  const updateClaimStatus = async(status: string) => {
+  const updateClaimStatus = async (status: string) => {
     try {
-      setLoading(true)
+      setLoading(true);
       const res = await updateClaims({ status }, id);
-      if(res.status!==200) throw new Error("Failed to update status!")
-    
+      if (res.status !== 200) throw new Error("Failed to update status!");
+
       setSelectedStatuses([status]);
       setFilteredStatusOptions(getStatusVisibility(status));
       const maxIndex = statusMaxIndexMap[status];
-      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1))
+      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1));
       setClaims((prev: any) => ({ ...prev, status }));
     } catch (error) {
-      console.error("catch eror", error)
+      console.error("catch eror", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  } 
+  };
 
   return (
     <SidebarLayout>
@@ -180,11 +197,11 @@ export default function PatientClaimDetails() {
                   notes: true,
                 }}
               />
-              <DocumentDetails data={claims} type="all" />
+              <DocumentDetails data={claims?.documents} type="all" />
             </>
           )}
 
-          {visibleTabLabels[activeTab] === "Comments/History" &&(
+          {visibleTabLabels[activeTab] === "Comments/History" && (
             <div>
               <Comments claimId={claims.id} />
             </div>
@@ -210,57 +227,95 @@ export default function PatientClaimDetails() {
           {visibleTabLabels[activeTab] === "Enhancement" && (
             <div>
               <>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setOpenPatientDialog(true)}
-                    className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
-                  >
-                    Create Another Enhancement
-                    {/* <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" /> */}
-                  </button>
+                <div className="flex justify-between">
+                  <div>
+                    <EnhancementDateDropdown
+                      enhancements={claims?.enhancements}
+                      selectedId={selectedEnhancementId}
+                      onChange={setSelectedEnhancementId}
+                    />
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => handleEditEnhancement()}
+                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                    >
+                      <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer mr-4" />
+                    </button>
+                    <button
+                      onClick={() => setOpenPatientDialog(true)}
+                      className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                    >
+                      Create Another Enhancement
+                      {/* <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" /> */}
+                    </button>
+                  </div>
                 </div>
                 <PatientDetails
-                  data={claims}
+                  data={filteredEnhancement}
                   show={{
                     drName: true,
                     name: false,
                     tpaName: false,
                     icName: false,
-                    notes: false,
+                    notes: true,
                     noOfDays: true,
                   }}
                 />
-                <DocumentDetails data={claims} type={["ICP", "OTHER"]} />
+                <DocumentDetails
+                  data={filteredEnhancement?.documents}
+                  type={["ICP", "OTHER"]}
+                />
               </>
             </div>
           )}
-      
-          {visibleTabLabels[activeTab] === "Discharge" && (
+
+          {visibleTabLabels[activeTab] === "Queried" && (
             <div>
               <>
-                {/* <div className="flex justify-end">
-                  <button
-                    onClick={() => setOpenPatientDialog(true)}
-                    className="rounded-sm bg-blue-500 px-3 py-2 text-white"
-                  >
-                    Create Discharge
-                  </button>
-                </div> */}
+                <div className="flex justify-between">
+                  <div>
+                    <EnhancementDateDropdown
+                      enhancements={claims?.enhancements}
+                      selectedId={selectedEnhancementId}
+                      onChange={setSelectedEnhancementId}
+                    />
+                  </div>
+                  <div className="flex justify-start items-center">
+                    <button
+                      onClick={() => handleEditEnhancement()}
+                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                    >
+                      <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-4" />
+                    </button>
+                    <button
+                      onClick={() => setOpenPatientDialog(true)}
+                      className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                    >
+                      Create Query
+                    </button>
+                  </div>
+                </div>
                 <PatientDetails
-                  data={claims}
+                  data={filteredEnhancement}
                   show={{
                     drName: true,
                     name: false,
                     tpaName: false,
                     icName: false,
-                    notes: false,
+                    notes: true,
+                    noOfDays: false,
                   }}
                 />
-                <DocumentDetails data={claims} type={["ICP", "OTHER"]} />
+                <DocumentDetails
+                  data={filteredEnhancement?.documents}
+                  type={["ICP", "OTHER"]}
+                />
               </>
             </div>
           )}
-          {visibleTabLabels[activeTab] === "Settlement" && (
+
+          {visibleTabLabels[activeTab] === "Discharge" && (
             <div>
               <>
                 <div className="flex justify-end">
@@ -268,7 +323,7 @@ export default function PatientClaimDetails() {
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
+                    <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-2" />
                   </button>
                 </div>
                 <PatientDetails
@@ -282,27 +337,83 @@ export default function PatientClaimDetails() {
                   }}
                 />
                 <DocumentDetails
+                  data={claims?.documents}
+                  type={["ICP", "OTHER"]}
+                />
+              </>
+            </div>
+          )}
+          {visibleTabLabels[activeTab] === "Settlement" && (
+            <div>
+              <>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setOpenPatientDialog(true)}
+                    // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                  >
+                    <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-2" />
+                  </button>
+                </div>
+                <PatientDetails
                   data={claims}
+                  show={{
+                    drName: true,
+                    name: false,
+                    tpaName: false,
+                    icName: false,
+                    notes: false,
+                  }}
+                />
+                <DocumentDetails
+                  data={claims?.documents}
                   type={["ICP", "SETTLEMENT_LETTER", "OTHER"]}
                 />
               </>
             </div>
           )}
-
-          {/* {activeTab === 4 && <p>Queried content</p>}
-
-          {activeTab === 4 && <p>Queried content</p>} */}
         </div>
       </div>
+      {visibleTabLabels[activeTab] === "Enhancement" && (
+        <CreateEnhancementPopup
+          open={openPatientDialog}
+          onOpenChange={setOpenPatientDialog}
+          // onSubmit={handleSubmitPatient}
+          // defaultData={selectedPatient}
+          selectedEnhancement={selectedQuery}
+          // claimInputs={}
+          // isEditMode={!!selectedPatient}
+          data={claims}
+          claimId={claims.id}
+          selectedTab={"Enhancement"}
+        />
+      )}
+
       {visibleTabLabels[activeTab] === "Queried" && (
-        <CreateFormPopup
+        <CreateQueryPopup
+          open={openPatientDialog}
+          onOpenChange={setOpenPatientDialog}
+          // onSubmit={handleSubmitPatient}
+          // defaultData={selectedPatient}
+          selectedQuery={selectedEnhancement}
+          // claimInputs={}
+          // isEditMode={!!selectedPatient}
+          data={claims}
+          claimId={claims.id}
+          selectedTab={"Query"}
+        />
+      )}
+
+      {visibleTabLabels[activeTab] === "Discharge" && (
+        <CreateDischargePopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
           // claimInputs={}
-          // isEditMode={!!selectedPatient}
-          selectedTab={"Queried"}
+          isEditMode={true}
+          data={claims}
+          claimId={id}
+          selectedTab={"Discharge"}
         />
       )}
       {visibleTabLabels[activeTab] === "Settlement" && (
@@ -316,19 +427,6 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}
-        />
-      )}
-      {visibleTabLabels[activeTab] === "Enhancement"&& (
-        <CreateEnhancementPopup
-          open={openPatientDialog}
-          onOpenChange={setOpenPatientDialog}
-          // onSubmit={handleSubmitPatient}
-          // defaultData={selectedPatient}
-          // claimInputs={}
-          // isEditMode={!!selectedPatient}
-          data={claims}
-          claimId={claims.id}
-          selectedTab={"Enhancement"}
         />
       )}
     </SidebarLayout>

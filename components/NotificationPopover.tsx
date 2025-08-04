@@ -5,7 +5,8 @@ import {
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Bell, Folder } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getNotificationsByParams } from "@/services/notification";
 
 type Notification = {
   name: string;
@@ -28,7 +29,23 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
   unreadCount = 0,
 }) => {
   const [openNotification, setOpenNotification] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const[notificationData,setNotificationData]=useState([])
 
+  const getNotifications = async () => {
+    setLoading(true);
+    try {
+      const res = await getNotificationsByParams({ isRead: true });
+      setNotificationData(res.data.data);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch patients:", err);
+    }
+  };
+  useEffect(() => {
+    getNotifications();
+  }, []);
   return (
     <Popover open={openNotification} onOpenChange={setOpenNotification}>
       <PopoverTrigger asChild>

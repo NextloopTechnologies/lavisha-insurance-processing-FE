@@ -35,22 +35,21 @@ export const predefinedRanges = [
   },
 ];
 
-export function getFileIconType(fileName:string) {
-  const extension = fileName.split('.').pop().toLowerCase();
+export function getFileIconType(fileName: string) {
+  const extension = fileName.split(".").pop().toLowerCase();
 
-  const imageExtensions = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
-  const pdfExtensions = ['pdf'];
-  const excelExtensions = ['xls', 'xlsx'];
+  const imageExtensions = ["jpg", "jpeg", "png", "webp", "gif"];
+  const pdfExtensions = ["pdf"];
+  const excelExtensions = ["xls", "xlsx"];
 
-  if (imageExtensions.includes(extension)) return 'image';    // use 🖼️ or an <ImageIcon />
-  if (pdfExtensions.includes(extension)) return 'pdf';         // use 📄 or a <PdfIcon />
-  if (excelExtensions.includes(extension)) return 'excel';     // use 📊 or a <ExcelIcon />
-  
-  return 'file'; // default generic file 📁
+  if (imageExtensions.includes(extension)) return "image"; // use 🖼️ or an <ImageIcon />
+  if (pdfExtensions.includes(extension)) return "pdf"; // use 📄 or a <PdfIcon />
+  if (excelExtensions.includes(extension)) return "excel"; // use 📊 or a <ExcelIcon />
+
+  return "file"; // default generic file 📁
 }
 
-
-export  function formatDateTime(isoString) {
+export function formatDateTime(isoString) {
   if (!isoString) return { date: "", time: "" };
 
   const dateObj = new Date(isoString);
@@ -70,6 +69,13 @@ export  function formatDateTime(isoString) {
   return { date, time };
 }
 
+export function formatRaisedDate(dateStr: string): string {
+  const date = new Date(dateStr);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-indexed
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
 
 export const getStatusVisibility = (currentStatus: string) => {
   const index = statusOptions.findIndex((s) => s.key === currentStatus);

@@ -31,10 +31,15 @@ export const navItems = [
     icon: patientImage,
   },
   // {
-  //   label: "Queries",
+  //   label: "User",
+  //   icon: patientImage,
+  //   path: "/user",
+  // },
+  // {
+  //   //  path: "/settlements",
+  //   label: "Settlements",
   //   icon: patientImage,
   // },
-  // { path: "/settlements", label: "Settlements", icon: patientImage },
   // { path: "/enhancements", label: "Enhancements", icon: patientImage },
 ];
 

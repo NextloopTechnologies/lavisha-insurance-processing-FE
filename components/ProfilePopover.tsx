@@ -4,7 +4,7 @@ import {
   PopoverContent,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Pencil, Eye } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import Image from "next/image";
 import { userImage } from "@/assets";
@@ -15,6 +15,7 @@ interface UserPopoverProps {
   hospitalName: string;
   address: string;
   loggedInUserName: string;
+  setOpenEditProfile: any;
 }
 
 export const ProfilePopover: React.FC<UserPopoverProps> = ({
@@ -24,6 +25,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
   address,
 
   loggedInUserName,
+  setOpenEditProfile,
 }) => {
   const [openProfile, setOpenProfile] = useState(false);
 
@@ -48,12 +50,21 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
           <div>
             <h4 className="font-semibold text-sm">{hospitalName}</h4>
             <p className="text-xs text-muted-foreground">{address}</p>
-            <a
-              href="#"
-              className="text-blue-600 text-xs font-medium mt-1 block"
+            <div className="flex justify-start items-start gap-x-2 my-1 px-4 py-2 hover:bg-[#3E79D6]">
+              <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />{" "}
+              <a href="#" className="text-xs font-medium  block">
+                View Rate list
+              </a>
+            </div>
+            <div
+              onClick={() => setOpenEditProfile(true)}
+              className="flex justify-start items-start gap-x-2 px-4 py-2 bg-[#3E79D6]"
             >
-              View Rate list
-            </a>
+              <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer text-[#FFFFFF]" />
+              <a href="#" className="text-xs font-medium  block text-white">
+                Edit Profile
+              </a>
+            </div>
           </div>
         </div>
       </PopoverContent>

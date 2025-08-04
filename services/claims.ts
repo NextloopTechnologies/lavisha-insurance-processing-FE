@@ -8,3 +8,14 @@ export const updateClaims = (data: any, id: ParamValue) =>
   api.patch(`/claims/${id}`, data);
 
 export const deleteClaims = (id: string) => api.delete(`/claims/${id}`);
+
+export const getClaimsByParams = (params: {
+  skip?: number;
+  take?: number;
+  sortBy?: string;
+  cursor?: string;
+  sortOrder?: 'asc' | 'desc';
+}) => {
+  return api.get('/claims', { params });
+};
+

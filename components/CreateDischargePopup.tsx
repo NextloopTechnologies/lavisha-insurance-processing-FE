@@ -31,7 +31,7 @@ interface CreateSettlementPopupProps {
   claimId: ParamValue;
 }
 
-export default function CreateSettlementPopup({
+export default function CreateDischargePopup({
   open,
   onOpenChange,
   onSubmit,
@@ -158,7 +158,7 @@ export default function CreateSettlementPopup({
     }
   };
 
-  const handleCreateSettlement = async () => {
+  const handleCreateClaim = async () => {
     try {
       const {
         CLINIC_PAPER,
@@ -167,18 +167,18 @@ export default function CreateSettlementPopup({
         OTHER,
         ICP,
         preAuth,
-        SETTLEMENT_LETTER,
+        // SETTLEMENT_LETTER,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
-        status: "SETTLED",
+        status: "DISCHARGED",
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
           //   PAST_INVESTIGATION,
           //   CURRENT_INVESTIGATION,
-          SETTLEMENT_LETTER,
+        //   SETTLEMENT_LETTER,
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
@@ -210,14 +210,15 @@ export default function CreateSettlementPopup({
           <div className="realtive w-full">
             <div className="bg-white  w-full  mx-auto mt-4">
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                <Input
+                {/* <Input
                   placeholder="Doctor Name"
                   className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
                   value={claimInputs.doctorName}
                   onChange={(e) =>
                     handleSelectChange(e.target.value, "doctorName")
                   }
-                />
+                /> */}
+                
               </div>
 
               <div className="my-4">
@@ -233,16 +234,16 @@ export default function CreateSettlementPopup({
 
               {/* Upload Fields */}
 
-              <FileDrag
+              {/* <FileDrag
                 title={"Settlement"}
                 multiple={false}
                 onChange={handleFileChange}
                 name={"SETTLEMENT_LETTER"}
                 //   claimInputs={claimInputs.SETTLEMENT_LETTER}
-              />
+              /> */}
 
               <FileDrag
-                title={"Miscellaneous Documents"}
+                title={"Miscellaneous Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"}
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
@@ -260,7 +261,7 @@ export default function CreateSettlementPopup({
                 </Button>
 
                 <Button
-                  onClick={handleCreateSettlement}
+                  onClick={handleCreateClaim}
                   className="bg-[#3E79D6] px-4"
                 >
                   Create

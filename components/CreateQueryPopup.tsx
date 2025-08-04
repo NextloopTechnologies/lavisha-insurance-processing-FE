@@ -20,7 +20,9 @@ import FileDrag from "./FileDrag";
 import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
-interface CreateSettlementPopupProps {
+import { createEnhancements } from "@/services/enhancement";
+import { createQuery } from "@/services/query";
+interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit?: (data: { name: string; age: number; image?: string }) => void;
@@ -29,9 +31,10 @@ interface CreateSettlementPopupProps {
   selectedTab: string;
   data?: any;
   claimId: ParamValue;
+  selectedQuery: any;
 }
 
-export default function CreateSettlementPopup({
+export default function CreateQueryPopup({
   open,
   onOpenChange,
   onSubmit,
@@ -40,31 +43,23 @@ export default function CreateSettlementPopup({
   selectedTab,
   data,
   claimId,
-}: CreateSettlementPopupProps) {
+  selectedQuery,
+}: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
-  const [claimInputs, setClaimInputs] = useState<any>({
-    isPreAuth: false,
-    patientId: "",
+  const [queryInputs, setQueryInputs] = useState<any>({
     doctorName: "",
-    tpaName: "",
-    insuranceCompany: "",
     status: "SETTLED",
-    description: "",
-    preAuth: "",
     OTHER: "",
-    additionalNotes: "",
-    PAST_INVESTIGATION: "",
-    CURRENT_INVESTIGATION: "",
-    CLINIC_PAPER: "",
     ICP: "",
-    SETTLEMENT_LETTER: "",
+    notes: "",
+    EXCEL_REPORT: "",
+    CURRENT_INVESTIGATION: "",
   });
-
   useEffect(() => {
-    if (!data) return;
+    if (!selectedQuery) return;
 
     // Map documents by their type
-    const documentMap = data.documents.reduce((acc, doc) => {
+    const documentMap = selectedQuery.documents.reduce((acc, doc) => {
       if (doc.type === "OTHER") {
         acc[doc.type] = acc[doc.type] || [];
         acc[doc.type].push({
@@ -83,26 +78,20 @@ export default function CreateSettlementPopup({
       return acc;
     }, {});
 
-    setClaimInputs({
-      isPreAuth: data.isPreAuth,
-      patientId: data.patientId,
-      doctorName: data.doctorName,
-      tpaName: data.tpaName,
-      insuranceCompany: data.insuranceCompany,
-      status: data.status,
-      description: data.description,
-      preAuth: "", // You can derive if needed
-      additionalNotes: data.additionalNotes || "",
-      OTHER: documentMap.OTHER || [],
-      CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
-      ICP: documentMap.ICP || "",
-      CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
-      PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
-      SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-    });
-  }, [data]);
+    // setQueryInputs({
+    //   notes: selectedQuery?.notes,
+    //   OTHER: documentMap.OTHER || [],
+    //   ICP: documentMap.ICP || "",
+    //   EXCEL_REPORT: documentMap.EXCEL_REPORT || "",
+    //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+
+    //   //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+    //   //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
+    //   //   SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+    // });
+  }, [selectedQuery]);
   const handleSelectChange = (value: string | boolean, name: string) => {
-    setClaimInputs((prev) => {
+    setQueryInputs((prev) => {
       return {
         ...prev,
         [name]: value,
@@ -130,7 +119,7 @@ export default function CreateSettlementPopup({
           ...(name === "OTHER" && { remark: "custom remark" }),
         }));
 
-        setClaimInputs((prev) => ({
+        setQueryInputs((prev) => ({
           ...prev,
           [name]: uploadedFiles,
         }));
@@ -144,7 +133,7 @@ export default function CreateSettlementPopup({
 
       try {
         const res = await uploadFiles(formData);
-        setClaimInputs((prev) => ({
+        setQueryInputs((prev) => ({
           ...prev,
           [name]: {
             fileName: res?.data?.key,
@@ -158,33 +147,32 @@ export default function CreateSettlementPopup({
     }
   };
 
-  const handleCreateSettlement = async () => {
+  const handleCreateQuery = async () => {
     try {
       const {
-        CLINIC_PAPER,
-        PAST_INVESTIGATION,
-        CURRENT_INVESTIGATION,
         OTHER,
         ICP,
-        preAuth,
-        SETTLEMENT_LETTER,
+        insuranceRequestId,
+        status,
+        numberOfDays,
+        CURRENT_INVESTIGATION,
+        EXCEL_REPORT,
+        doctorName,
         ...others
-      } = claimInputs;
+      } = queryInputs;
       const payload = {
         ...others,
-        status: "SETTLED",
+        insuranceRequestId: claimId,
         documents: [
-          //   CLINIC_PAPER,
-          //   ICP,
-          //   PAST_INVESTIGATION,
-          //   CURRENT_INVESTIGATION,
-          SETTLEMENT_LETTER,
+          ICP,
+          CURRENT_INVESTIGATION,
+          EXCEL_REPORT,
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
       setLoading(true);
-      const res = await updateClaims(payload, claimId);
-      if (res.status == 200) {
+      const res = await createQuery(payload);
+      if (res.status == 201) {
         setLoading(false);
         onOpenChange(!open);
       }
@@ -201,31 +189,39 @@ export default function CreateSettlementPopup({
     <>
       {loading && <LoadingOverlay />}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="min-w-5xl max-w-md text-center p-8 rounded-lg">
+        <DialogContent className="min-w-5xl max-w-md text-center  p-8 rounded-lg ">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
             </DialogTitle>
           </DialogHeader>
-          <div className="realtive w-full">
+          <div className="realtive  w-full h-[calc(100vh-250px)] overflow-y-auto">
             <div className="bg-white  w-full  mx-auto mt-4">
               <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
-                <Input
+                {/* <Input
                   placeholder="Doctor Name"
                   className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
-                  value={claimInputs.doctorName}
+                  value={queryInputs.doctorName}
                   onChange={(e) =>
                     handleSelectChange(e.target.value, "doctorName")
                   }
-                />
+                /> */}
+
+                {/* <Input
+                  type="number"
+                  placeholder="Number of Days"
+                  className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
+                  value={queryInputs.numberOfDays}
+                  onChange={(e) =>
+                    handleSelectChange(e.target.value, "numberOfDays")
+                  }
+                /> */}
               </div>
 
               <div className="my-4">
                 <textarea
-                  value={claimInputs.description}
-                  onChange={(e) =>
-                    handleSelectChange(e.target.value, "description")
-                  }
+                  value={queryInputs.notes}
+                  onChange={(e) => handleSelectChange(e.target.value, "notes")}
                   placeholder="Description"
                   className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
                 />
@@ -234,11 +230,26 @@ export default function CreateSettlementPopup({
               {/* Upload Fields */}
 
               <FileDrag
-                title={"Settlement"}
+                title={"Excel Report"}
                 multiple={false}
                 onChange={handleFileChange}
-                name={"SETTLEMENT_LETTER"}
-                //   claimInputs={claimInputs.SETTLEMENT_LETTER}
+                name={"EXCEL_REPORT"}
+                claimInputs={queryInputs?.EXCEL_REPORT}
+              />
+
+              <FileDrag
+                title={"ICP"}
+                multiple={false}
+                onChange={handleFileChange}
+                name={"ICP"}
+                claimInputs={queryInputs?.ICP}
+              />
+              <FileDrag
+                title={"Investigation"}
+                multiple={false}
+                onChange={handleFileChange}
+                name={"CURRENT_INVESTIGATION"}
+                claimInputs={queryInputs?.CURRENT_INVESTIGATION}
               />
 
               <FileDrag
@@ -246,7 +257,7 @@ export default function CreateSettlementPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-                claimInputs={claimInputs.OTHER}
+                claimInputs={queryInputs?.OTHER}
               />
 
               {/* Action Buttons */}
@@ -260,7 +271,7 @@ export default function CreateSettlementPopup({
                 </Button>
 
                 <Button
-                  onClick={handleCreateSettlement}
+                  onClick={handleCreateQuery}
                   className="bg-[#3E79D6] px-4"
                 >
                   Create

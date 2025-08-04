@@ -31,12 +31,12 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     setFiles(updatedFiles);
     onChange?.(updatedFiles, name, multiple);
   };
-  // useEffect(() => {
-  //   if (!claimInputs) {
-  //     return;
-  //   }
-  //   setFiles(claimInputs);
-  // }, [claimInputs]);
+  useEffect(() => {
+    if (!claimInputs) {
+      return;
+    }
+    setFiles(claimInputs);
+  }, [claimInputs]);
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
