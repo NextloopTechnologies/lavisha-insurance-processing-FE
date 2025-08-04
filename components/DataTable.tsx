@@ -226,7 +226,7 @@ export function DataTable({
                     {row.isPreAuth ? "True" : "False"}
                   </TableCell>
                   <TableCell className=" border p-5">
-                    <div className="flex gap-2 justify-center text-muted-foreground">
+                    <div className="flex gap-2 justify-start text-muted-foreground">
                       <Link href={`/claims/${row.refNumber}`}>
                         <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                       </Link>

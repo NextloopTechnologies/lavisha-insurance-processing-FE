@@ -35,6 +35,13 @@ const allTabLabels = [
   "Settlement",
 ];
 
+const statusToTabLabel: Record<string, string> = {
+  QUERIED: "Queried",
+  ENHANCEMENT: "Enhancement",
+  DISCHARGED: "Discharge",
+  SETTLED: "Settlement",
+};
+
 export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
 
@@ -139,20 +146,50 @@ export default function PatientClaimDetails() {
   const updateClaimStatus = async (status: string) => {
     try {
       setLoading(true);
-      const res = await updateClaims({ status }, id);
-      if (res.status !== 200) throw new Error("Failed to update status!");
-
-      setSelectedStatuses([status]);
-      setFilteredStatusOptions(getStatusVisibility(status));
+      if(['SENT_TO_TPA','DENIED', 'APPROVED'].includes(status)){
+        const res = await updateClaims({ status }, id);
+        if (res.status !== 200) throw new Error("Failed to update status!");
+        setSelectedStatuses([status]);
+        setFilteredStatusOptions(getStatusVisibility(status));
+        setClaims((prev: any) => ({ ...prev, status }));
+      }
+      
       const maxIndex = statusMaxIndexMap[status];
-      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1));
-      setClaims((prev: any) => ({ ...prev, status }));
+      const updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1);
+      setVisibleTabLabels(updatedVisibleTabs);
+
+      if(['QUERIED','ENHANCEMENT', 'DISCHARGED', 'SETTLED'].includes(status)) {
+         // Set active tab to the one matching the status
+        const indexToSet = updatedVisibleTabs.findIndex(
+          (label) =>
+            label.toLowerCase() === statusToTabLabel[status].toLowerCase()
+        );
+        setActiveTab(indexToSet !== -1 ? indexToSet : 0);
+        setOpenPatientDialog(true)
+      }
     } catch (error) {
       console.error("catch eror", error);
     } finally {
       setLoading(false);
     }
   };
+
+  const updateClaimStatusAfterModalSuccess = async(status: string) => {
+    try {
+      setLoading(true)
+       if(['QUERIED','ENHANCEMENT', 'DISCHARGED', 'SETTLED'].includes(status)){
+        const res = await updateClaims({ status }, id);
+        if (res.status !== 200) throw new Error("Failed to update status!");
+        setSelectedStatuses([status]);
+        setFilteredStatusOptions(getStatusVisibility(status));
+        setClaims((prev: any) => ({ ...prev, status }));
+      }
+    } catch (error) {
+      console.log("UPDATE_STATUS_AFTER_MODAL", error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <SidebarLayout>
@@ -385,6 +422,7 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={claims.id}
           selectedTab={"Enhancement"}
+          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
         />
       )}
 
@@ -400,6 +438,7 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={claims.id}
           selectedTab={"Query"}
+          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
         />
       )}
 
@@ -414,6 +453,7 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Discharge"}
+          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
         />
       )}
       {visibleTabLabels[activeTab] === "Settlement" && (
@@ -427,6 +467,7 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}
+          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
         />
       )}
     </SidebarLayout>
