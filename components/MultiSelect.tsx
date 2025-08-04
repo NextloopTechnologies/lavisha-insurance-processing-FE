@@ -15,6 +15,7 @@ export function MultiSelect({
   setSelectedStatuses,
   toggleStatus,
   mode = "multi",
+  updateClaimStatus
 }: {
   selectedStatuses: string[] | string;
   toggleStatus: (value: string) => void;
@@ -25,6 +26,7 @@ export function MultiSelect({
     key: string;
   }[];
   mode?: "multi" | "single";
+  updateClaimStatus?:(value: string) => void
 }) {
   const isMulti = mode === "multi";
   const selectedArray = Array.isArray(selectedStatuses)
@@ -36,7 +38,7 @@ export function MultiSelect({
     if (isAllSelected) {
       setSelectedStatuses([]);
     } else {
-      setSelectedStatuses(status.map((s) => s.name));
+      setSelectedStatuses(status.map((s) => s.key));
     }
   };
 
@@ -45,8 +47,10 @@ export function MultiSelect({
       toggleStatus(value);
     } else {
       setSelectedStatuses(value);
+      if(updateClaimStatus) updateClaimStatus(value);
     }
   };
+
 
   return (
     <Popover>
@@ -55,8 +59,14 @@ export function MultiSelect({
           variant="outline"
           className="md:w-[220px] justify-start bg-white rounded-md font-normal"
         >
-          {selectedArray.length > 0
+          {/* {selectedArray.length > 0
             ? selectedArray.join(", ")
+            : "Select Status"} */}
+            {selectedArray.length > 0
+            ? status
+                .filter((s) => selectedArray.includes(s.key))
+                .map((s) => s.name)
+                .join(", ")
             : "Select Status"}
         </Button>
       </PopoverTrigger>
@@ -78,8 +88,8 @@ export function MultiSelect({
               className="flex items-center gap-2 cursor-pointer"
             >
               <Checkbox
-                checked={selectedArray.includes(item.name)}
-                onCheckedChange={() => handleChange(item.name)}
+                checked={selectedArray.includes(item.key)}
+                onCheckedChange={() => handleChange(item.key)}
               />
               <Image src={item.icon} alt={item.name} className="w-3" />
               <span className="text-sm">{item.name}</span>

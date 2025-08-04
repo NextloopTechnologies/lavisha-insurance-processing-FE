@@ -30,6 +30,7 @@ import { useMemo, useState } from "react";
 import { MultiSelect } from "./MultiSelect";
 import Link from "next/link";
 import { statusOptions } from "@/constants/menu";
+import { StatusType } from "@/types/claims";
 
 type User = {
   id: number;
@@ -285,16 +286,20 @@ export function DataTable({ data }: { data: DATA[] }) {
                   <TableCell className=" border p-5">
                     <div className="flex gap-2 justify-center text-muted-foreground">
                       <Link href={`/claims/${row.refNumber}`}>
-                        <Eye
-                          // onClick={() => row.patient.id}
-                          className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                        />
-                      </Link>
-                      <Link href={`/claims/${row.refNumber}`}>
                         <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                       </Link>
                       <Trash2 className="w-4 h-4 hover:text-red-600 cursor-pointer" />
-                      <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
+                      {row.status!==StatusType.DRAFT && (
+                        <>
+                          <Link href={`/claims/${row.refNumber}`}>
+                          <Eye
+                            // onClick={() => row.patient.id}
+                            className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                            />
+                          </Link>
+                          <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
+                        </>
+                      )}
                     </div>
                   </TableCell>
                 </TableRow>
