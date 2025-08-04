@@ -31,12 +31,12 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     setFiles(updatedFiles);
     onChange?.(updatedFiles, name, multiple);
   };
-  useEffect(() => {
-    if (!claimInputs) {
-      return;
-    }
-    setFiles(claimInputs);
-  }, [claimInputs]);
+  // useEffect(() => {
+  //   if (!claimInputs) {
+  //     return;
+  //   }
+  //   setFiles(claimInputs);
+  // }, [claimInputs]);
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -119,7 +119,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
               {title}
             </div>
             <button
-              onClick={openFileDialog}
+              // onClick={openFileDialog}
               className="text-sm text-blue-600 hover:underline flex items-center justify-between gap-1"
             >
               <UploadCloud className="h-4 w-4" />

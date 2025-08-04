@@ -1,6 +1,16 @@
 export { default as chatImage } from "./chat.png";
 export { default as claimsImage } from "./claims.png";
 export { default as dashboardImage } from "./dashboard.png";
+export { default as dashboardActive } from "./menu/dashboard-active-icon.svg";
+export { default as dashboard } from "./menu/dashboard.svg";
+
+export { default as claimActive } from "./menu/claim-active-icon.svg";
+
+export { default as claim } from "./menu/claim.svg";
+
+export { default as patient } from "./menu/patient.svg";
+export { default as patientActive } from "./menu/patient-active-icon.svg";
+
 export { default as deleteImage } from "./delete.png";
 export { default as doctorBgImage } from "./doctor-bg.jpg";
 export { default as editImage } from "./edit.png";
@@ -27,6 +37,6 @@ export { default as cancelIcon } from "./cancel.svg";
 export { default as settledIcon } from "./settled.svg";
 export { default as vectorIcon } from "./Vector.svg";
 export { default as trailLoading } from "./loader/trail-loading.gif";
-export {default as userRound} from "./userRound.png";
-export {default as editIcon} from "./edit_icon.png";
-export {default as doctorBriefcase} from "./doctor-briefcase.png";
+export { default as userRound } from "./userRound.png";
+export { default as editIcon } from "./edit_icon.png";
+export { default as doctorBriefcase } from "./doctor-briefcase.png";

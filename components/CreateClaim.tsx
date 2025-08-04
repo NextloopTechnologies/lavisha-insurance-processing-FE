@@ -319,13 +319,15 @@ export default function CreateClaim({
           <Button className="text-[#3E79D6]" variant="outline">
             Cancel
           </Button>
-          {claimInputs.status !== "PENDING" && (
+          {claimInputs.status == "DRAFT" ? (
+            ""
+          ) : (
             <Button variant="outline" className="text-[#3E79D6]">
               Save as Draft
             </Button>
           )}
           <Button onClick={handleCreateClaim} className="bg-[#3E79D6] px-4">
-            Create
+            {isEditMode ? "Update Claim" : "Create Claim"}
           </Button>
         </div>
       </div>

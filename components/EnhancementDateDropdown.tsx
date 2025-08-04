@@ -4,25 +4,26 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"
-import { formatRaisedDate } from "@/lib/utils"
+} from "@/components/ui/select";
+import { formatRaisedDate } from "@/lib/utils";
 
 type Enhancement = {
-  id: string
-  raisedAt: string
-}
+  id: string;
+  raisedAt: string;
+};
 
 type EnhancementSelectProps = {
-  enhancements: Enhancement[]
-  selectedId: string
-  onChange: (id: string) => void
-}
+  enhancements: Enhancement[];
+  selectedId: string;
+  onChange: (id: string) => void;
+};
 
 export default function EnhancementDateDropdown({
   enhancements,
   selectedId,
   onChange,
 }: EnhancementSelectProps) {
+  console.log("enhancements", enhancements);
   return (
     <Select onValueChange={onChange} value={selectedId}>
       <SelectTrigger className="w-[220px]">
@@ -36,5 +37,5 @@ export default function EnhancementDateDropdown({
         ))}
       </SelectContent>
     </Select>
-  )
+  );
 }

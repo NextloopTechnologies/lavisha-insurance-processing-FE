@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { INSURANCE_COMPANIES, TPA_OPTIONS } from "@/constants/menu";
-import { createClaims, getClaimsById } from "@/services/claims";
+import { createClaims, getClaimsById, updateClaims } from "@/services/claims";
 import { bulkUploadFiles, uploadFiles } from "@/services/files";
 import { getPatientById, getPatients } from "@/services/patients";
 import { useRouter } from "next/navigation";
@@ -52,6 +52,44 @@ export default function EditClaimForm() {
   const params = useParams();
   const id = params.id;
   const handleCreateClaim = async () => {
+    if (!!claims) {
+      try {
+        const {
+          CLINIC_PAPER,
+          PAST_INVESTIGATION,
+          CURRENT_INVESTIGATION,
+          OTHER,
+          ICP,
+          preAuth,
+          status,
+          ...others
+        } = claimInputs;
+        const payload = {
+          ...others,
+          status: "DRAFT",
+          documents: [
+            CLINIC_PAPER,
+            ICP,
+            PAST_INVESTIGATION,
+            CURRENT_INVESTIGATION,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await updateClaims(payload, id);
+        if (res.status == 200) {
+          setLoading(false);
+          router.push("/claims");
+        }
+      } catch (error) {
+        setLoading(false);
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
+      }
+    } else {
+    }
+
     try {
       const {
         CLINIC_PAPER,
@@ -60,10 +98,12 @@ export default function EditClaimForm() {
         OTHER,
         ICP,
         preAuth,
+        status,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
+        status: "DRAFT",
         documents: [
           CLINIC_PAPER,
           ICP,
@@ -76,9 +116,10 @@ export default function EditClaimForm() {
       const res = await createClaims(payload);
       if (res.status == 201) {
         setLoading(false);
-        router.push("/");
+        router.push("/claims");
       }
     } catch (error) {
+      setLoading(false);
       console.error("Upload error:", error);
     } finally {
       // setLoading(false);
@@ -149,8 +190,7 @@ export default function EditClaimForm() {
         setLoading={setLoading}
         claimInputs={claimInputs}
         setClaimInputs={setClaimInputs}
-          isEditMode = {true}
-
+        isEditMode={!!claims}
       />
     </SidebarLayout>
   );

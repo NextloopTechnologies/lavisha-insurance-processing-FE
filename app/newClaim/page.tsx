@@ -60,10 +60,12 @@ export default function AddClaimForm() {
         OTHER,
         ICP,
         preAuth,
+        status,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
+        status: "DRAFT",
         documents: [
           CLINIC_PAPER,
           ICP,
@@ -76,7 +78,7 @@ export default function AddClaimForm() {
       const res = await createClaims(payload);
       if (res.status == 201) {
         setLoading(false);
-        router.push("/");
+        router.push("/claims");
       }
     } catch (error) {
       console.error("Upload error:", error);

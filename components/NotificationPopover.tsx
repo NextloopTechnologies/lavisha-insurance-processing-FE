@@ -30,7 +30,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
 }) => {
   const [openNotification, setOpenNotification] = useState(false);
   const [loading, setLoading] = useState(false);
-  const[notificationData,setNotificationData]=useState([])
+  const [notificationData, setNotificationData] = useState([]);
 
   const getNotifications = async () => {
     setLoading(true);
@@ -51,9 +51,9 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
       <PopoverTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <Bell size={20} className="text-[#3E79D6] text-center" />
-          {unreadCount > 0 && (
+          {notificationData?.length > 0 && (
             <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-              {unreadCount}
+              {notificationData?.length}
             </span>
           )}
         </Button>
@@ -63,10 +63,10 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
           Notifications
         </h3>
         <div className="border-b" />
-        {unreadNotifications.length > 0 && (
+        {notificationData.length > 0 && (
           <div className="border-b my-4">
             <p className="text-xs text-gray-700 my-4 pl-4">Unread</p>
-            {unreadNotifications.map((item, index) => (
+            {notificationData.map((item, index) => (
               <div
                 key={index}
                 className="flex gap-4 items-start bg-[#0061FE14]  px-4"
@@ -93,10 +93,10 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
           </div>
         )}
 
-        {recentNotifications.length > 0 && (
+        {notificationData.length > 0 && (
           <div>
             <p className="text-xs text-gray-700 my-4 pl-4">Recent</p>
-            {recentNotifications.map((item, index) => (
+            {notificationData.map((item, index) => (
               <div key={index} className="flex gap-2 items-start px-4">
                 <div className="w-8 h-8 text-center block rounded-full bg-black text-white overflow-hidden">
                   <span className="text-[20px] font-semibold text-center">

@@ -56,8 +56,8 @@ export default function PatientClaimDetails() {
   const [selectedEnhancementId, setSelectedEnhancementId] = useState("");
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState(null);
-
-  console.log("selectedEnhancementId", selectedEnhancementId);
+  const [selectedQueryId, setQueryId] = useState("");
+  console.log("selectedQueryId", { selectedQueryId, selectedQuery });
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -138,9 +138,18 @@ export default function PatientClaimDetails() {
     (item) => item?.id == selectedEnhancementId
   )[0];
 
+  const filteredQueries = claims?.queries?.filter(
+    (item) => item?.id == selectedQueryId
+  )[0];
+
   const handleEditEnhancement = () => {
     setOpenPatientDialog(true);
     setSelectedEnhancement(filteredEnhancement);
+  };
+
+  const handleEditQuery = () => {
+    setOpenPatientDialog(true);
+    setSelectedQuery(filteredQueries);
   };
   // need memoization with MultiSelect in future performances
   const updateClaimStatus = async (status: string) => {
@@ -244,7 +253,7 @@ export default function PatientClaimDetails() {
             </div>
           )}
 
-          {visibleTabLabels[activeTab] === "Queried" && (
+          {/* {visibleTabLabels[activeTab] === "Queried" && (
             <div>
               <>
                 <div className="flex justify-end">
@@ -259,26 +268,30 @@ export default function PatientClaimDetails() {
                 <DocumentDetails type={["ICP", "SETTLEMENT_LETTER", "OTHER"]} />
               </>
             </div>
-          )}
+          )} */}
 
           {visibleTabLabels[activeTab] === "Enhancement" && (
             <div>
               <>
                 <div className="flex justify-between">
                   <div>
-                    <EnhancementDateDropdown
-                      enhancements={claims?.enhancements}
-                      selectedId={selectedEnhancementId}
-                      onChange={setSelectedEnhancementId}
-                    />
+                    {claims?.enhancements?.length > 0 && (
+                      <EnhancementDateDropdown
+                        enhancements={claims?.enhancements}
+                        selectedId={selectedEnhancementId}
+                        onChange={setSelectedEnhancementId}
+                      />
+                    )}
                   </div>
                   <div>
-                    <button
-                      onClick={() => handleEditEnhancement()}
-                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
-                    >
-                      <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer mr-4" />
-                    </button>
+                    {selectedEnhancementId && (
+                      <button
+                        onClick={() => handleEditEnhancement()}
+                        // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      >
+                        <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer mr-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setOpenPatientDialog(true)}
                       className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
@@ -312,19 +325,23 @@ export default function PatientClaimDetails() {
               <>
                 <div className="flex justify-between">
                   <div>
-                    <EnhancementDateDropdown
-                      enhancements={claims?.enhancements}
-                      selectedId={selectedEnhancementId}
-                      onChange={setSelectedEnhancementId}
-                    />
+                    {claims?.queries?.length > 0 && (
+                      <EnhancementDateDropdown
+                        enhancements={claims?.queries}
+                        selectedId={selectedQueryId}
+                        onChange={setQueryId}
+                      />
+                    )}
                   </div>
                   <div className="flex justify-start items-center">
-                    <button
-                      onClick={() => handleEditEnhancement()}
-                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
-                    >
-                      <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-4" />
-                    </button>
+                    {selectedQueryId && (
+                      <button
+                        onClick={() => handleEditQuery()}
+                        // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      >
+                        <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setOpenPatientDialog(true)}
                       className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
@@ -334,9 +351,9 @@ export default function PatientClaimDetails() {
                   </div>
                 </div>
                 <PatientDetails
-                  data={filteredEnhancement}
+                  data={filteredQueries}
                   show={{
-                    drName: true,
+                    drName: false,
                     name: false,
                     tpaName: false,
                     icName: false,
@@ -345,8 +362,13 @@ export default function PatientClaimDetails() {
                   }}
                 />
                 <DocumentDetails
-                  data={filteredEnhancement?.documents}
-                  type={["ICP", "OTHER"]}
+                  data={filteredQueries?.documents}
+                  type={[
+                    "ICP",
+                    "OTHER",
+                    "CURRENT_INVESTIGATION",
+                    "EXCEL_REPORT",
+                  ]}
                 />
               </>
             </div>
@@ -416,9 +438,10 @@ export default function PatientClaimDetails() {
           onOpenChange={setOpenPatientDialog}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
-          selectedEnhancement={selectedQuery}
+          selectedEnhancement={selectedEnhancement}
           // claimInputs={}
           // isEditMode={!!selectedPatient}
+          fetchEnhancement={fetchEnhancement}
           data={claims}
           claimId={claims.id}
           selectedTab={"Enhancement"}
@@ -432,9 +455,9 @@ export default function PatientClaimDetails() {
           onOpenChange={setOpenPatientDialog}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
-          selectedQuery={selectedEnhancement}
+          selectedQuery={selectedQuery}
           // claimInputs={}
-          // isEditMode={!!selectedPatient}
+          isEditMode={!!selectedQueryId}
           data={claims}
           claimId={claims.id}
           selectedTab={"Query"}

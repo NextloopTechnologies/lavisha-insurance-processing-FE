@@ -68,16 +68,18 @@ export default function PatientDetails({ data, show }) {
         </div>
       ))}
 
-      <div className="col-span-2 p-4 border rounded-md bg-white">
-        <label className="text-xs text-gray-500">Description</label>
-        <p className="text-sm mt-1 text-gray-700">
-          {data?.description }
-        </p>
-      </div>
+      {data?.description && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Description</label>
+          <p className="text-sm mt-1 text-gray-700">{data?.description}</p>
+        </div>
+      )}
 
       <div className="col-span-2 p-4 border rounded-md bg-white">
         <label className="text-xs text-gray-500">Additional Notes</label>
-        <p className="text-sm mt-1 text-gray-700">{data?.additionalNotes|| data?.notes}</p>
+        <p className="text-sm mt-1 text-gray-700">
+          {data?.additionalNotes || data?.notes}
+        </p>
       </div>
     </div>
   );

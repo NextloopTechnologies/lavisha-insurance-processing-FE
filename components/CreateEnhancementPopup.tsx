@@ -31,6 +31,7 @@ interface CreateEnhancementPopupProps {
   data?: any;
   claimId: ParamValue;
   selectedEnhancement: any;
+  fetchEnhancement:any
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
 }
 
@@ -44,12 +45,13 @@ export default function CreateEnhancementPopup({
   data,
   claimId,
   selectedEnhancement,
+  fetchEnhancement
   updateClaimStatusAfterModalSuccess
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
     doctorName: "",
-    status: "SETTLED",
+    status: "ENHANCEMENT",
     OTHER: "",
     ICP: "",
     numberOfDays: "",
@@ -77,17 +79,14 @@ export default function CreateEnhancementPopup({
       }
       return acc;
     }, {});
-    console.log("documentMap", documentMap);
 
     setEnhancementInputs({
-      
       doctorName: selectedEnhancement.doctorName,
       notes: selectedEnhancement?.notes,
       numberOfDays: selectedEnhancement?.numberOfDays,
 
       OTHER: documentMap.OTHER || [],
       ICP: documentMap.ICP || "",
-    
     });
   }, [selectedEnhancement]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -159,6 +158,7 @@ export default function CreateEnhancementPopup({
       } = enhancementInputs;
       const payload = {
         ...others,
+        status,
         insuranceRequestId: claimId,
         numberOfDays: Number(numberOfDays),
         documents: [
@@ -172,6 +172,7 @@ export default function CreateEnhancementPopup({
         await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
         setLoading(false);
         onOpenChange(!open);
+        fetchEnhancement()
       }
     } catch (error) {
       console.error("Upload error:", error);
