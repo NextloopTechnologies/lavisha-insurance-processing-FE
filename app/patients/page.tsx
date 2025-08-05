@@ -15,6 +15,7 @@ import {
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Link from "next/link";
 import Avtar from "@/components/Avtar";
+import { useRouter } from "next/navigation";
 
 export default function Patients() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -23,7 +24,7 @@ export default function Patients() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const router = useRouter();
   const [patients, setPatients] = useState([]);
   const fetchPatients = async () => {
     setLoading(true);
@@ -116,6 +117,10 @@ export default function Patients() {
     });
   }, [searchTerm, patients]);
 
+  const handleClaimView = (id: string) => {
+    router.push(`/claims?name=${encodeURIComponent(id)}`);
+  };
+
   return (
     <SidebarLayout>
       <div className="h-[calc(100vh-80px)] bg-gray-100 p-6 overflow-y-scroll">
@@ -197,11 +202,14 @@ export default function Patients() {
                 </div>
 
                 {/* View Claims Button */}
-                <Link href={`/claims/${patient.id}`}>
-                  <button className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]">
-                    View Claims
-                  </button>
-                </Link>
+                {/* <Link href={`/claims/${patient.id}`}> */}
+                <button
+                  onClick={() => handleClaimView(patient.name)}
+                  className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
+                >
+                  View Claims
+                </button>
+                {/* </Link> */}
               </div>
             ))
           ) : (

@@ -20,7 +20,7 @@ import FileDrag from "./FileDrag";
 import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
-import { createEnhancements } from "@/services/enhancement";
+import { createEnhancements, updateEnhancements } from "@/services/enhancement";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,7 +31,7 @@ interface CreateEnhancementPopupProps {
   data?: any;
   claimId: ParamValue;
   selectedEnhancement: any;
-  fetchEnhancement:any
+  fetchEnhancement: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
 }
 
@@ -45,8 +45,8 @@ export default function CreateEnhancementPopup({
   data,
   claimId,
   selectedEnhancement,
-  fetchEnhancement
-  updateClaimStatusAfterModalSuccess
+  fetchEnhancement,
+  updateClaimStatusAfterModalSuccess,
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
@@ -145,8 +145,42 @@ export default function CreateEnhancementPopup({
       }
     }
   };
-
   const handleCreateEnhancement = async () => {
+    if (selectedEnhancement?.id) {
+      try {
+        const {
+          OTHER,
+          ICP,
+          insuranceRequestId,
+          status,
+          numberOfDays,
+          ...others
+        } = enhancementInputs;
+        const payload = {
+          ...others,
+          status: "ENHANCEMENT",
+          insuranceRequestId: claimId,
+          numberOfDays: Number(numberOfDays),
+          documents: [
+            ICP,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await updateEnhancements(payload, selectedEnhancement?.id);
+        if (res.status == 201) {
+          await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
+          setLoading(false);
+          onOpenChange(!open);
+          fetchEnhancement();
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
+      }
+    } else {
+    }
     try {
       const {
         OTHER,
@@ -158,7 +192,7 @@ export default function CreateEnhancementPopup({
       } = enhancementInputs;
       const payload = {
         ...others,
-        status,
+        status: "ENHANCEMENT",
         insuranceRequestId: claimId,
         numberOfDays: Number(numberOfDays),
         documents: [
@@ -172,7 +206,7 @@ export default function CreateEnhancementPopup({
         await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
         setLoading(false);
         onOpenChange(!open);
-        fetchEnhancement()
+        fetchEnhancement();
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -190,7 +224,7 @@ export default function CreateEnhancementPopup({
         <DialogContent className="min-w-5xl max-w-md text-center  p-8 rounded-lg ">
           <DialogHeader>
             <DialogTitle>
-              {isEditMode ? "Edit Patient" : `Create ${selectedTab}`}
+              {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
             </DialogTitle>
           </DialogHeader>
           <div className="realtive  w-full h-[calc(100vh-250px)] overflow-y-auto">
@@ -257,7 +291,9 @@ export default function CreateEnhancementPopup({
                   onClick={handleCreateEnhancement}
                   className="bg-[#3E79D6] px-4"
                 >
-                  Create
+                  {isEditMode
+                    ? `Update ${selectedTab}`
+                    : `Create ${selectedTab}`}
                 </Button>
               </div>
             </div>

@@ -23,7 +23,6 @@ export default function EnhancementDateDropdown({
   selectedId,
   onChange,
 }: EnhancementSelectProps) {
-  console.log("enhancements", enhancements);
   return (
     <Select onValueChange={onChange} value={selectedId}>
       <SelectTrigger className="w-[220px]">

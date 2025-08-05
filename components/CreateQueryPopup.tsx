@@ -21,7 +21,7 @@ import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { createEnhancements } from "@/services/enhancement";
-import { createQuery } from "@/services/query";
+import { createQuery, updateQuery } from "@/services/query";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,6 +33,7 @@ interface CreateEnhancementPopupProps {
   claimId: ParamValue;
   selectedQuery: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  fetchEnhancement: any;
 }
 
 export default function CreateQueryPopup({
@@ -46,6 +47,7 @@ export default function CreateQueryPopup({
   claimId,
   selectedQuery,
   updateClaimStatusAfterModalSuccess,
+  fetchEnhancement,
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [queryInputs, setQueryInputs] = useState<any>({
@@ -150,6 +152,43 @@ export default function CreateQueryPopup({
   };
 
   const handleCreateQuery = async () => {
+    if (selectedQuery?.id) {
+      try {
+        const {
+          OTHER,
+          ICP,
+          insuranceRequestId,
+          status,
+          numberOfDays,
+          CURRENT_INVESTIGATION,
+          EXCEL_REPORT,
+          doctorName,
+          ...others
+        } = queryInputs;
+        const payload = {
+          ...others,
+          insuranceRequestId: claimId,
+          documents: [
+            ICP,
+            CURRENT_INVESTIGATION,
+            EXCEL_REPORT,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await updateQuery(payload, selectedQuery?.id);
+        if (res.status == 201) {
+          await updateClaimStatusAfterModalSuccess("QUERIED");
+          setLoading(false);
+          onOpenChange(!open);
+          fetchEnhancement();
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
+      }
+    }
     try {
       const {
         OTHER,
@@ -165,7 +204,6 @@ export default function CreateQueryPopup({
       const payload = {
         ...others,
         insuranceRequestId: claimId,
-        status,
         documents: [
           ICP,
           CURRENT_INVESTIGATION,
@@ -179,6 +217,7 @@ export default function CreateQueryPopup({
         await updateClaimStatusAfterModalSuccess("QUERIED");
         setLoading(false);
         onOpenChange(!open);
+        fetchEnhancement();
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -278,7 +317,9 @@ export default function CreateQueryPopup({
                   onClick={handleCreateQuery}
                   className="bg-[#3E79D6] px-4"
                 >
-                  Create
+                  {isEditMode
+                    ? `Update ${selectedTab}`
+                    : `Create ${selectedTab}`}
                 </Button>
               </div>
             </div>

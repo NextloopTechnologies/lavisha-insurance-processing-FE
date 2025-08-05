@@ -82,8 +82,8 @@ export const getStatusVisibility = (currentStatus: string) => {
 
   if (index === -1) return [];
 
-  if(currentStatus === StatusType.QUERIED) {
-    return statusOptions.slice(index, index + 3)
+  if (currentStatus === StatusType.QUERIED) {
+    return statusOptions.slice(index, index + 3);
   }
   if (currentStatus === StatusType.APPROVED) {
     return statusOptions.slice(index); // from approved to settled
@@ -103,3 +103,14 @@ export const statusMaxIndexMap: Record<string, number> = {
   SETTLED: 5,
 };
 
+export const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  SENT_TO_TPA: "Sent to TPA",
+  QUERIED: "Queried",
+  DENIED: "Denied",
+  ENHANCEMENT: "Enhancement",
+  DISCHARGED: "Dishcharged",
+  SETTLED: "Settled",
+};

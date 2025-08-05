@@ -65,7 +65,6 @@ export default function AddClaimForm() {
       } = claimInputs;
       const payload = {
         ...others,
-        status: "DRAFT",
         documents: [
           CLINIC_PAPER,
           ICP,
