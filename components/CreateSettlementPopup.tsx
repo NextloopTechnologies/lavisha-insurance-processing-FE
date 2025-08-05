@@ -30,6 +30,7 @@ interface CreateSettlementPopupProps {
   data?: any;
   claimId: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  onClose?: () => void;
 }
 
 export default function CreateSettlementPopup({
@@ -41,7 +42,8 @@ export default function CreateSettlementPopup({
   selectedTab,
   data,
   claimId,
-  updateClaimStatusAfterModalSuccess
+  updateClaimStatusAfterModalSuccess,
+  onClose
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -198,6 +200,7 @@ export default function CreateSettlementPopup({
     }
   };
   const handleClose = () => {
+    onClose?.()
     onOpenChange(!open);
   };
   return (

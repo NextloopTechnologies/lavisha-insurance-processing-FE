@@ -33,6 +33,7 @@ interface CreateEnhancementPopupProps {
   claimId: ParamValue;
   selectedQuery: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  onClose?: () => void;
 }
 
 export default function CreateQueryPopup({
@@ -46,6 +47,7 @@ export default function CreateQueryPopup({
   claimId,
   selectedQuery,
   updateClaimStatusAfterModalSuccess,
+  onClose
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [queryInputs, setQueryInputs] = useState<any>({
@@ -186,6 +188,7 @@ export default function CreateQueryPopup({
     }
   };
   const handleClose = () => {
+    onClose?.()
     onOpenChange(!open);
   };
   return (
