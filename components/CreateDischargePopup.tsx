@@ -41,7 +41,7 @@ export default function CreateDischargePopup({
   selectedTab,
   data,
   claimId,
-  updateClaimStatusAfterModalSuccess
+  updateClaimStatusAfterModalSuccess,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -60,6 +60,7 @@ export default function CreateDischargePopup({
     CLINIC_PAPER: "",
     ICP: "",
     SETTLEMENT_LETTER: "",
+    dischargeSummary: "",
   });
 
   useEffect(() => {
@@ -101,6 +102,7 @@ export default function CreateDischargePopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      dischargeSummary: data?.dischargeSummary,
     });
   }, [data]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -169,12 +171,16 @@ export default function CreateDischargePopup({
         OTHER,
         ICP,
         preAuth,
+        status,
+        description,
+        dischargeSummary,
         SETTLEMENT_LETTER,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
-        status: "DISCHARGED",
+        dischargeSummary,
+
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
@@ -223,16 +229,18 @@ export default function CreateDischargePopup({
                 /> */}
               </div>
 
-              <div className="my-4">
-                <textarea
-                  value={claimInputs.description}
-                  onChange={(e) =>
-                    handleSelectChange(e.target.value, "description")
-                  }
-                  placeholder="Description"
-                  className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
-                />
-              </div>
+              {
+                <div className="my-4">
+                  <textarea
+                    value={claimInputs.dischargeSummary}
+                    onChange={(e) =>
+                      handleSelectChange(e.target.value, "dischargeSummary")
+                    }
+                    placeholder="Description"
+                    className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
+                  />
+                </div>
+              }
 
               {/* Upload Fields */}
 

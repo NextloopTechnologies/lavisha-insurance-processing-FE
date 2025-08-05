@@ -103,7 +103,6 @@ export default function EditClaimForm() {
       } = claimInputs;
       const payload = {
         ...others,
-        status: "DRAFT",
         documents: [
           CLINIC_PAPER,
           ICP,

@@ -57,7 +57,6 @@ export default function PatientClaimDetails() {
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState(null);
   const [selectedQueryId, setQueryId] = useState("");
-  console.log("selectedQueryId", { selectedQueryId, selectedQuery });
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -155,26 +154,28 @@ export default function PatientClaimDetails() {
   const updateClaimStatus = async (status: string) => {
     try {
       setLoading(true);
-      if(['SENT_TO_TPA','DENIED', 'APPROVED'].includes(status)){
+      if (["SENT_TO_TPA", "DENIED", "APPROVED"].includes(status)) {
         const res = await updateClaims({ status }, id);
         if (res.status !== 200) throw new Error("Failed to update status!");
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
       }
-      
+
       const maxIndex = statusMaxIndexMap[status];
       const updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1);
       setVisibleTabLabels(updatedVisibleTabs);
 
-      if(['QUERIED','ENHANCEMENT', 'DISCHARGED', 'SETTLED'].includes(status)) {
-         // Set active tab to the one matching the status
+      if (
+        ["QUERIED", "ENHANCEMENT", "DISCHARGED", "SETTLED"].includes(status)
+      ) {
+        // Set active tab to the one matching the status
         const indexToSet = updatedVisibleTabs.findIndex(
           (label) =>
             label.toLowerCase() === statusToTabLabel[status].toLowerCase()
         );
         setActiveTab(indexToSet !== -1 ? indexToSet : 0);
-        setOpenPatientDialog(true)
+        setOpenPatientDialog(true);
       }
     } catch (error) {
       console.error("catch eror", error);
@@ -183,10 +184,12 @@ export default function PatientClaimDetails() {
     }
   };
 
-  const updateClaimStatusAfterModalSuccess = async(status: string) => {
+  const updateClaimStatusAfterModalSuccess = async (status: string) => {
     try {
-      setLoading(true)
-       if(['QUERIED','ENHANCEMENT', 'DISCHARGED', 'SETTLED'].includes(status)){
+      setLoading(true);
+      if (
+        ["QUERIED", "ENHANCEMENT", "DISCHARGED", "SETTLED"].includes(status)
+      ) {
         const res = await updateClaims({ status }, id);
         if (res.status !== 200) throw new Error("Failed to update status!");
         setSelectedStatuses([status]);
@@ -194,11 +197,11 @@ export default function PatientClaimDetails() {
         setClaims((prev: any) => ({ ...prev, status }));
       }
     } catch (error) {
-      console.log("UPDATE_STATUS_AFTER_MODAL", error)
+      console.log("UPDATE_STATUS_AFTER_MODAL", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <SidebarLayout>
@@ -241,6 +244,8 @@ export default function PatientClaimDetails() {
                   tpaName: true,
                   icName: true,
                   notes: true,
+                  additionalNotes: true,
+                  description: true,
                 }}
               />
               <DocumentDetails data={claims?.documents} type="all" />
@@ -310,6 +315,8 @@ export default function PatientClaimDetails() {
                     icName: false,
                     notes: true,
                     noOfDays: true,
+                    additionalNotes: true,
+                    description: true,
                   }}
                 />
                 <DocumentDetails
@@ -359,6 +366,8 @@ export default function PatientClaimDetails() {
                     icName: false,
                     notes: true,
                     noOfDays: false,
+                    additionalNotes: true,
+                    description: true,
                   }}
                 />
                 <DocumentDetails
@@ -393,6 +402,9 @@ export default function PatientClaimDetails() {
                     tpaName: false,
                     icName: false,
                     notes: false,
+                    dischargeSummary: true,
+                    additionalNotes: false,
+                    description: false,
                   }}
                 />
                 <DocumentDetails
@@ -421,6 +433,9 @@ export default function PatientClaimDetails() {
                     tpaName: false,
                     icName: false,
                     notes: false,
+                    additionalNotes: true,
+                    description: true,
+                    settlementSummary: true,
                   }}
                 />
                 <DocumentDetails
@@ -440,12 +455,14 @@ export default function PatientClaimDetails() {
           // defaultData={selectedPatient}
           selectedEnhancement={selectedEnhancement}
           // claimInputs={}
-          // isEditMode={!!selectedPatient}
+          isEditMode={!!selectedEnhancement}
           fetchEnhancement={fetchEnhancement}
           data={claims}
           claimId={claims.id}
           selectedTab={"Enhancement"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
 
@@ -461,7 +478,10 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={claims.id}
           selectedTab={"Query"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          fetchEnhancement={fetchEnhancement}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
 
@@ -476,7 +496,9 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Discharge"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
       {visibleTabLabels[activeTab] === "Settlement" && (
@@ -490,7 +512,9 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
     </SidebarLayout>

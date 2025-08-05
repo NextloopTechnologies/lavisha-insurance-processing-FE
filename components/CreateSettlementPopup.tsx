@@ -41,7 +41,7 @@ export default function CreateSettlementPopup({
   selectedTab,
   data,
   claimId,
-  updateClaimStatusAfterModalSuccess
+  updateClaimStatusAfterModalSuccess,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -60,6 +60,7 @@ export default function CreateSettlementPopup({
     CLINIC_PAPER: "",
     ICP: "",
     SETTLEMENT_LETTER: "",
+    settlementSummary: "",
   });
 
   useEffect(() => {
@@ -93,6 +94,7 @@ export default function CreateSettlementPopup({
       insuranceCompany: data.insuranceCompany,
       status: data.status,
       description: data.description,
+      settlementSummary: data?.settlementSummary,
       preAuth: "", // You can derive if needed
       additionalNotes: data.additionalNotes || "",
       OTHER: documentMap.OTHER || [],
@@ -169,12 +171,15 @@ export default function CreateSettlementPopup({
         OTHER,
         ICP,
         preAuth,
+        status,
         SETTLEMENT_LETTER,
+        description,
+        settlementSummary,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
-        status: "SETTLED",
+        settlementSummary,
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
@@ -225,9 +230,9 @@ export default function CreateSettlementPopup({
 
               <div className="my-4">
                 <textarea
-                  value={claimInputs.description}
+                  value={claimInputs.settlementSummary}
                   onChange={(e) =>
-                    handleSelectChange(e.target.value, "description")
+                    handleSelectChange(e.target.value, "settlementSummary")
                   }
                   placeholder="Description"
                   className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"

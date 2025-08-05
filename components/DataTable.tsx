@@ -32,6 +32,8 @@ import Link from "next/link";
 import { statusOptions } from "@/constants/menu";
 import DeletePopup from "./DeletePopup";
 import { StatusType } from "@/types/claims";
+import { format } from "date-fns";
+import { STATUS_LABELS } from "@/lib/utils";
 
 type User = {
   id: number;
@@ -81,7 +83,6 @@ export function DataTable({
   const [statusFilter, setStatusFilter] = useState("All");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-
   const router = useRouter();
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) =>
@@ -92,23 +93,35 @@ export function DataTable({
   };
   const itemsPerPage = 10;
   const filteredData = useMemo(() => {
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    const formattedSelectedDate = selectedDate
+      ? format(selectedDate, "yyyy-MM-dd")
+      : null;
+
     return data.filter((row) => {
-      const matchesSearch = Object.values(row).some((val) =>
-        val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      const patientName = row.patient?.name?.toLowerCase() || "";
+      const refNumber = row.refNumber?.toLowerCase() || "";
+      const doctorName = row.doctorName?.toLowerCase() || "";
+      const status = row.status?.toLowerCase() || "";
+      const createdDate = row.createdAt
+        ? format(new Date(row.createdAt), "yyyy-MM-dd")
+        : "";
 
-      // const matchesStatus =
-      //   statusFilter === "All" || row.status === statusFilter;
+      const matchesSearch =
+        patientName.includes(normalizedSearch) ||
+        refNumber.includes(normalizedSearch) ||
+        doctorName.includes(normalizedSearch) ||
+        status.includes(normalizedSearch);
+
       const matchesStatus =
-        selectedStatuses.length === 0 ||
-        selectedStatuses
-          ?.toString()
-          .toLowerCase()
-          .includes(row.status?.toLowerCase());
+        selectedStatuses.length === 0 || selectedStatuses.includes(row.status);
 
-      return matchesSearch && matchesStatus;
+      const matchesDate =
+        !formattedSelectedDate || createdDate === formattedSelectedDate;
+
+      return matchesSearch && matchesStatus && matchesDate;
     });
-  }, [searchTerm, selectedStatuses, statusFilter, data]);
+  }, [data, searchTerm, selectedStatuses, selectedDate]);
 
   const totalPages = Math.ceil(total);
 
@@ -116,6 +129,8 @@ export function DataTable({
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  console.log("filteredData", filteredData);
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
@@ -215,9 +230,11 @@ export function DataTable({
                   <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
                     {row.description}
                   </TableCell>
-                  <TableCell className=" border p-5 ">{row.status}</TableCell>
                   <TableCell className=" border p-5 ">
-                    {row.createdAt}
+                    {STATUS_LABELS[row.status]}
+                  </TableCell>
+                  <TableCell className=" border p-5 ">
+                    {format(new Date(row.createdAt), "yyyy/MM/dd")}
                   </TableCell>
                   <TableCell className=" border p-5 ">
                     {row.doctorName}

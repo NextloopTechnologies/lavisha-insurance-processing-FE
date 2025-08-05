@@ -3,9 +3,15 @@ import { DataTable } from "@/components/DataTable";
 import DeletePopup from "@/components/DeletePopup";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import SidebarLayout from "@/components/SidebarLayout";
-import { deleteClaims, getClaims, getClaimsByParams } from "@/services/claims";
+import {
+  deleteClaims,
+  getClaims,
+  getClaimsById,
+  getClaimsByParams,
+} from "@/services/claims";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function Claims() {
   const [loading, setLoading] = useState(false);
@@ -15,7 +21,8 @@ export default function Claims() {
   const [total, setTotal] = useState(0);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
+  const searchParams = useSearchParams();
+  const id = searchParams.get("name");
   const sortByClaim = () => {};
   const fetchClaims = async () => {
     setLoading(true);
