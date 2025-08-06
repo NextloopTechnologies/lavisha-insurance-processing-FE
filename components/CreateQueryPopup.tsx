@@ -34,6 +34,7 @@ interface CreateEnhancementPopupProps {
   claimId: ParamValue;
   selectedQuery: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  onClose?: () => void;
   fetchClaimsById: any;
   setSelectedQuery: any;
 }
@@ -49,6 +50,7 @@ export default function CreateQueryPopup({
   claimId,
   selectedQuery,
   updateClaimStatusAfterModalSuccess,
+  onClose,
   fetchClaimsById,
   setSelectedQuery,
 }: CreateEnhancementPopupProps) {
@@ -242,10 +244,12 @@ export default function CreateQueryPopup({
       }
     }
   };
+
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
       setSelectedQuery(null);
     }
+    onClose?.()
     onOpenChange(isOpen);
   };
   return (

@@ -80,13 +80,16 @@ export function formatRaisedDate(
   return `${day}/${month}/${year}`;
 }
 
-export const getStatusVisibility = (currentStatus: string) => {
+export const getStatusVisibility = (currentStatus: StatusType) => {
   const index = statusOptions.findIndex((s) => s.key === currentStatus);
 
   if (index === -1) return [];
 
-  if (currentStatus === StatusType.QUERIED) {
-    return statusOptions.slice(index, index + 3);
+  if(currentStatus === StatusType.SENT_TO_TPA) {
+    return statusOptions.slice(index, index + 4)
+  }
+  if(currentStatus === StatusType.QUERIED) {
+    return statusOptions.slice(index, index + 3)
   }
   if (currentStatus === StatusType.APPROVED) {
     return statusOptions.slice(index); // from approved to settled

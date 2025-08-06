@@ -15,7 +15,8 @@ export function MultiSelect({
   setSelectedStatuses,
   toggleStatus,
   mode = "multi",
-  updateClaimStatus
+  updateClaimStatus,
+  isClaimDetailsSelect
 }: {
   selectedStatuses: string[] | string;
   toggleStatus: (value: string) => void;
@@ -26,7 +27,8 @@ export function MultiSelect({
     key: string;
   }[];
   mode?: "multi" | "single";
-  updateClaimStatus?:(value: string) => void
+  updateClaimStatus?:(value: string) => void,
+  isClaimDetailsSelect?: boolean
 }) {
   const isMulti = mode === "multi";
   const selectedArray = Array.isArray(selectedStatuses)
@@ -46,7 +48,12 @@ export function MultiSelect({
     if (isMulti) {
       toggleStatus(value);
     } else {
-      setSelectedStatuses(value);
+      // set status for multi mode
+      if(!isClaimDetailsSelect) setSelectedStatuses(value)
+      // for claim details select
+      if(['SENT_TO_TPA','DENIED', 'APPROVED'].includes(value)){   
+        setSelectedStatuses(value);
+      }  
       if(updateClaimStatus) updateClaimStatus(value);
     }
   };

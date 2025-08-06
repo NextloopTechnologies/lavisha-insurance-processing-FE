@@ -34,6 +34,7 @@ interface CreateEnhancementPopupProps {
   selectedEnhancement: any;
   fetchClaimsById: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  onClose?: () => void;
   setSelectedEnhancement: any;
 }
 
@@ -47,6 +48,7 @@ export default function CreateEnhancementPopup({
   data,
   claimId,
   selectedEnhancement,
+  onClose,
   fetchClaimsById,
   updateClaimStatusAfterModalSuccess,
   setSelectedEnhancement,
@@ -228,10 +230,12 @@ export default function CreateEnhancementPopup({
       }
     }
   };
+
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
       setSelectedEnhancement(null);
     }
+    onClose?.()
     onOpenChange(isOpen);
   };
   return (
