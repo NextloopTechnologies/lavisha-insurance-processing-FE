@@ -7,7 +7,7 @@ import { navItems } from "@/constants/menu";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { logout } from "@/services/auth";
-import { logoImage, logoSvg, patientImage, userImage } from "../assets";
+import { appLogoImage, logoImage, logoSvg, patientImage, userImage } from "../assets";
 import Image from "next/image";
 import { StaticImageData } from "next/image";
 import { NotificationPopover } from "./NotificationPopover";
@@ -23,6 +23,7 @@ type NavItem = {
   label: string;
   path?: string;
   icon?: string | StaticImageData;
+  activeIcon?: string | StaticImageData;
 
   children?: NavItem[];
 };
@@ -56,7 +57,15 @@ const SidebarItem = ({
             className="flex justify-start items-center gap-x-2 w-full "
           >
             <span>
-              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
+              {isActive ? (
+                <Image
+                  src={item.activeIcon}
+                  alt="active-logo"
+                  className="mx-auto w-4 h-4"
+                />
+              ) : (
+                <Image src={item.icon} alt="Logo" className="mx-auto w-4 h-4" />
+              )}
             </span>
             <span>{item.label}</span>
           </Link>
@@ -109,8 +118,8 @@ export default function SidebarLayout({ children }: Props) {
         )}
       >
         <div className="w-full flex justify-center border-b-1 border-gray-500">
-          <div className="w-24 h-24">
-            <Image src={logoSvg} alt="Logo" className="w-full h-full" />
+          <div className="w-16 h-16">
+            <Image src={appLogoImage} alt="Logo" className="w-full h-full" />
           </div>
         </div>
 

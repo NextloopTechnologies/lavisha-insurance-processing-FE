@@ -65,8 +65,8 @@ export default function PatientClaimDetails() {
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState(null);
   const [modalProcessingStatus, setModalProcessingStatus] = useState<StatusType|"">("");
+  const [selectedQueryId, setQueryId] = useState("");
 
-  console.log("selectedEnhancementId", selectedEnhancementId);
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -127,7 +127,7 @@ export default function PatientClaimDetails() {
       setLoading(false);
     }
   };
-  const fetchEnhancement = async () => {
+  const fetchClaimsById = async () => {
     setLoading(true);
     try {
       const res = await getClaimsById(id);
@@ -140,16 +140,35 @@ export default function PatientClaimDetails() {
   };
   useEffect(() => {
     fetchClaims();
-    fetchEnhancement();
+    fetchClaimsById();
   }, []);
 
   const filteredEnhancement = claims?.enhancements?.filter(
     (item) => item?.id == selectedEnhancementId
   )[0];
+  useEffect(() => {
+    if (claims?.enhancements?.length) {
+      setSelectedEnhancementId(claims?.enhancements[0]?.id);
+    }
+  }, [claims]);
+
+  const filteredQueries = claims?.queries?.filter(
+    (item) => item?.id == selectedQueryId
+  )[0];
+  useEffect(() => {
+    if (claims?.queries?.length) {
+      setQueryId(claims?.queries[0]?.id);
+    }
+  }, [claims]);
 
   const handleEditEnhancement = () => {
     setOpenPatientDialog(true);
     setSelectedEnhancement(filteredEnhancement);
+  };
+
+  const handleEditQuery = () => {
+    setOpenPatientDialog(true);
+    setSelectedQuery(filteredQueries);
   };
   // need memoization with MultiSelect in future performances
   const updateClaimStatus = async (status: StatusType) => {
@@ -200,11 +219,11 @@ export default function PatientClaimDetails() {
         setModalProcessingStatus("")
       }
     } catch (error) {
-      console.log("UPDATE_STATUS_AFTER_MODAL", error)
+      console.log("UPDATE_STATUS_AFTER_MODAL", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <SidebarLayout>
@@ -312,6 +331,8 @@ export default function PatientClaimDetails() {
                   tpaName: true,
                   icName: true,
                   notes: true,
+                  additionalNotes: true,
+                  description: true,
                 }}
               />
               <DocumentDetails data={claims?.documents} type="all" />
@@ -324,7 +345,7 @@ export default function PatientClaimDetails() {
             </div>
           )}
 
-          {visibleTabLabels[activeTab] === "Queried" && (
+          {/* {visibleTabLabels[activeTab] === "Queried" && (
             <div>
               <>
                 <div className="flex justify-end">
@@ -339,26 +360,30 @@ export default function PatientClaimDetails() {
                 <DocumentDetails type={["ICP", "SETTLEMENT_LETTER", "OTHER"]} />
               </>
             </div>
-          )}
+          )} */}
 
           {visibleTabLabels[activeTab] === "Enhancement" && (
             <div>
               <>
                 <div className="flex justify-between">
                   <div>
-                    <EnhancementDateDropdown
-                      enhancements={claims?.enhancements}
-                      selectedId={selectedEnhancementId}
-                      onChange={setSelectedEnhancementId}
-                    />
+                    {claims?.enhancements?.length > 0 && (
+                      <EnhancementDateDropdown
+                        enhancements={claims?.enhancements}
+                        selectedId={selectedEnhancementId}
+                        onChange={setSelectedEnhancementId}
+                      />
+                    )}
                   </div>
                   <div>
-                    <button
-                      onClick={() => handleEditEnhancement()}
-                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
-                    >
-                      <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer mr-4" />
-                    </button>
+                    {selectedEnhancementId && (
+                      <button
+                        onClick={() => handleEditEnhancement()}
+                        // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      >
+                        <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setOpenPatientDialog(true)}
                       className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
@@ -377,6 +402,8 @@ export default function PatientClaimDetails() {
                     icName: false,
                     notes: true,
                     noOfDays: true,
+                    additionalNotes: true,
+                    description: true,
                   }}
                 />
                 <DocumentDetails
@@ -392,19 +419,23 @@ export default function PatientClaimDetails() {
               <>
                 <div className="flex justify-between">
                   <div>
-                    <EnhancementDateDropdown
-                      enhancements={claims?.enhancements}
-                      selectedId={selectedEnhancementId}
-                      onChange={setSelectedEnhancementId}
-                    />
+                    {claims?.queries?.length > 0 && (
+                      <EnhancementDateDropdown
+                        enhancements={claims?.queries}
+                        selectedId={selectedQueryId}
+                        onChange={setQueryId}
+                      />
+                    )}
                   </div>
                   <div className="flex justify-start items-center">
-                    <button
-                      onClick={() => handleEditEnhancement()}
-                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
-                    >
-                      <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-4" />
-                    </button>
+                    {selectedQueryId && (
+                      <button
+                        onClick={() => handleEditQuery()}
+                        // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      >
+                        <Pencil className="w-6 h-6 text-[#3E79D6] hover:text-[#3E79D6] cursor-pointer mr-4" />
+                      </button>
+                    )}
                     <button
                       onClick={() => setOpenPatientDialog(true)}
                       className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
@@ -414,19 +445,26 @@ export default function PatientClaimDetails() {
                   </div>
                 </div>
                 <PatientDetails
-                  data={filteredEnhancement}
+                  data={filteredQueries}
                   show={{
-                    drName: true,
+                    drName: false,
                     name: false,
                     tpaName: false,
                     icName: false,
                     notes: true,
                     noOfDays: false,
+                    additionalNotes: true,
+                    description: true,
                   }}
                 />
                 <DocumentDetails
-                  data={filteredEnhancement?.documents}
-                  type={["ICP", "OTHER"]}
+                  data={filteredQueries?.documents}
+                  type={[
+                    "ICP",
+                    "OTHER",
+                    "CURRENT_INVESTIGATION",
+                    "EXCEL_REPORT",
+                  ]}
                 />
               </>
             </div>
@@ -440,7 +478,7 @@ export default function PatientClaimDetails() {
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-2" />
+                    <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-2" />
                   </button>
                 </div>
                 <PatientDetails
@@ -451,6 +489,9 @@ export default function PatientClaimDetails() {
                     tpaName: false,
                     icName: false,
                     notes: false,
+                    dischargeSummary: true,
+                    additionalNotes: false,
+                    description: false,
                   }}
                 />
                 <DocumentDetails
@@ -468,7 +509,7 @@ export default function PatientClaimDetails() {
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-2" />
+                    <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-2" />
                   </button>
                 </div>
                 <PatientDetails
@@ -479,6 +520,9 @@ export default function PatientClaimDetails() {
                     tpaName: false,
                     icName: false,
                     notes: false,
+                    additionalNotes: false,
+                    description: false,
+                    settlementSummary: true,
                   }}
                 />
                 <DocumentDetails
@@ -494,15 +538,19 @@ export default function PatientClaimDetails() {
         <CreateEnhancementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
+          setSelectedEnhancement={setSelectedEnhancement}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
-          selectedEnhancement={selectedQuery}
+          selectedEnhancement={selectedEnhancement}
           // claimInputs={}
-          // isEditMode={!!selectedPatient}
+          isEditMode={!!selectedEnhancement}
+          fetchClaimsById={fetchClaimsById}
           data={claims}
           claimId={claims.id}
           selectedTab={"Enhancement"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
 
@@ -512,13 +560,17 @@ export default function PatientClaimDetails() {
           onOpenChange={setOpenPatientDialog}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
-          selectedQuery={selectedEnhancement}
+          setSelectedQuery={setSelectedQuery}
+          selectedQuery={selectedQuery}
           // claimInputs={}
-          // isEditMode={!!selectedPatient}
+          isEditMode={!!selectedQueryId}
           data={claims}
           claimId={claims.id}
           selectedTab={"Query"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          fetchClaimsById={fetchClaimsById}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
 
@@ -533,7 +585,10 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Discharge"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          fetchClaimsById={fetchClaimsById}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
       {visibleTabLabels[activeTab] === "Settlement" && (
@@ -547,7 +602,10 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}
-          updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+          fetchClaimsById={fetchClaimsById}
+          updateClaimStatusAfterModalSuccess={
+            updateClaimStatusAfterModalSuccess
+          }
         />
       )}
     </SidebarLayout>

@@ -31,6 +31,7 @@ interface CreateSettlementPopupProps {
   claimId: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
   onClose?: () => void;
+  fetchClaimsById: any;
 }
 
 export default function CreateDischargePopup({
@@ -43,7 +44,8 @@ export default function CreateDischargePopup({
   data,
   claimId,
   updateClaimStatusAfterModalSuccess,
-  onClose
+  onClose,
+  fetchClaimsById,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -52,7 +54,7 @@ export default function CreateDischargePopup({
     doctorName: "",
     tpaName: "",
     insuranceCompany: "",
-    status: "SETTLED",
+    status: "DICHARGED",
     description: "",
     preAuth: "",
     OTHER: "",
@@ -62,6 +64,7 @@ export default function CreateDischargePopup({
     CLINIC_PAPER: "",
     ICP: "",
     SETTLEMENT_LETTER: "",
+    dischargeSummary: "",
   });
 
   useEffect(() => {
@@ -103,6 +106,7 @@ export default function CreateDischargePopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      dischargeSummary: data?.dischargeSummary,
     });
   }, [data]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -171,18 +175,22 @@ export default function CreateDischargePopup({
         OTHER,
         ICP,
         preAuth,
-        // SETTLEMENT_LETTER,
+        status,
+        description,
+        dischargeSummary,
+        SETTLEMENT_LETTER,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
-        status: "DISCHARGED",
+        dischargeSummary,
+
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
           //   PAST_INVESTIGATION,
           //   CURRENT_INVESTIGATION,
-        //   SETTLEMENT_LETTER,
+          //   SETTLEMENT_LETTER,
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
@@ -192,6 +200,7 @@ export default function CreateDischargePopup({
         await updateClaimStatusAfterModalSuccess("DISCHARGED");
         setLoading(false);
         onOpenChange(!open);
+        fetchClaimsById();
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -224,19 +233,20 @@ export default function CreateDischargePopup({
                     handleSelectChange(e.target.value, "doctorName")
                   }
                 /> */}
-                
               </div>
 
-              <div className="my-4">
-                <textarea
-                  value={claimInputs.description}
-                  onChange={(e) =>
-                    handleSelectChange(e.target.value, "description")
-                  }
-                  placeholder="Description"
-                  className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
-                />
-              </div>
+              {
+                <div className="my-4">
+                  <textarea
+                    value={claimInputs.dischargeSummary}
+                    onChange={(e) =>
+                      handleSelectChange(e.target.value, "dischargeSummary")
+                    }
+                    placeholder="Description"
+                    className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
+                  />
+                </div>
+              }
 
               {/* Upload Fields */}
 
@@ -249,7 +259,9 @@ export default function CreateDischargePopup({
               /> */}
 
               <FileDrag
-                title={"Miscellaneous Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"}
+                title={
+                  "Miscellaneous Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"
+                }
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
@@ -257,7 +269,7 @@ export default function CreateDischargePopup({
               />
 
               {/* Action Buttons */}
-              <div className="mt-6 flex justify-end space-x-4 absolute bottom-0 right-5">
+              <div className="mt-6 flex justify-end space-x-4 absolute bottom-2 right-5">
                 <Button
                   onClick={handleClose}
                   className="text-[#3E79D6]"

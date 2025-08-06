@@ -106,3 +106,14 @@ export const statusMaxIndexMap: Record<string, number> = {
   SETTLED: 5,
 };
 
+export const STATUS_LABELS: Record<string, string> = {
+  DRAFT: "Draft",
+  PENDING: "Pending",
+  APPROVED: "Approved",
+  SENT_TO_TPA: "Sent to TPA",
+  QUERIED: "Queried",
+  DENIED: "Denied",
+  ENHANCEMENT: "Enhancement",
+  DISCHARGED: "Dishcharged",
+  SETTLED: "Settled",
+};

@@ -21,7 +21,8 @@ import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { createEnhancements } from "@/services/enhancement";
-import { createQuery } from "@/services/query";
+import { createQuery, updateQuery } from "@/services/query";
+import { DialogClose } from "@radix-ui/react-dialog";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -34,6 +35,8 @@ interface CreateEnhancementPopupProps {
   selectedQuery: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
   onClose?: () => void;
+  fetchClaimsById: any;
+  setSelectedQuery: any;
 }
 
 export default function CreateQueryPopup({
@@ -47,12 +50,14 @@ export default function CreateQueryPopup({
   claimId,
   selectedQuery,
   updateClaimStatusAfterModalSuccess,
-  onClose
+  onClose,
+  fetchClaimsById,
+  setSelectedQuery,
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [queryInputs, setQueryInputs] = useState<any>({
     doctorName: "",
-    status: "SETTLED",
+    status: "QUERIED",
     OTHER: "",
     ICP: "",
     notes: "",
@@ -60,39 +65,49 @@ export default function CreateQueryPopup({
     CURRENT_INVESTIGATION: "",
   });
   useEffect(() => {
-    if (!selectedQuery) return;
+    if (!selectedQuery) {
+      setQueryInputs({
+        doctorName: "",
+        status: "QUERIED",
+        OTHER: "",
+        ICP: "",
+        notes: "",
+        EXCEL_REPORT: "",
+        CURRENT_INVESTIGATION: "",
+      });
+    } else {
+      // Map documents by their type
+      const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
+        if (doc.type === "OTHER") {
+          acc[doc.type] = acc[doc.type] || [];
+          acc[doc.type].push({
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            remark: doc.remark,
+          });
+        } else {
+          acc[doc.type] = {
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+          };
+        }
+        return acc;
+      }, {});
 
-    // Map documents by their type
-    const documentMap = selectedQuery.documents.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
-        acc[doc.type] = acc[doc.type] || [];
-        acc[doc.type].push({
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          remark: doc.remark,
-        });
-      } else {
-        acc[doc.type] = {
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-        };
-      }
-      return acc;
-    }, {});
+      setQueryInputs({
+        notes: selectedQuery?.notes,
+        OTHER: documentMap.OTHER || [],
+        ICP: documentMap.ICP || "",
+        EXCEL_REPORT: documentMap.EXCEL_REPORT || "",
+        CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
 
-    // setQueryInputs({
-    //   notes: selectedQuery?.notes,
-    //   OTHER: documentMap.OTHER || [],
-    //   ICP: documentMap.ICP || "",
-    //   EXCEL_REPORT: documentMap.EXCEL_REPORT || "",
-    //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
-
-    //   //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
-    //   //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
-    //   //   SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-    // });
+        //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+        //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
+        //   SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      });
+    }
   }, [selectedQuery]);
   const handleSelectChange = (value: string | boolean, name: string) => {
     setQueryInputs((prev) => {
@@ -152,49 +167,92 @@ export default function CreateQueryPopup({
   };
 
   const handleCreateQuery = async () => {
-    try {
-      const {
-        OTHER,
-        ICP,
-        insuranceRequestId,
-        status,
-        numberOfDays,
-        CURRENT_INVESTIGATION,
-        EXCEL_REPORT,
-        doctorName,
-        ...others
-      } = queryInputs;
-      const payload = {
-        ...others,
-        insuranceRequestId: claimId,
-        documents: [
+    if (selectedQuery?.id) {
+      try {
+        const {
+          OTHER,
           ICP,
+          insuranceRequestId,
+          status,
+          numberOfDays,
           CURRENT_INVESTIGATION,
           EXCEL_REPORT,
-          ...(OTHER || []), // if OTHER is an array, ensure it's not null
-        ].filter(Boolean),
-      };
-      setLoading(true);
-      const res = await createQuery(payload);
-      if (res.status == 201) {
-        await updateClaimStatusAfterModalSuccess("QUERIED");
-        setLoading(false);
-        onOpenChange(!open);
+          doctorName,
+          ...others
+        } = queryInputs;
+        const payload = {
+          ...others,
+          insuranceRequestId: claimId,
+          documents: [
+            ICP,
+            CURRENT_INVESTIGATION,
+            EXCEL_REPORT,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await updateQuery(payload, selectedQuery?.id);
+        if (res.status == 201) {
+          await updateClaimStatusAfterModalSuccess("QUERIED");
+          setLoading(false);
+          onOpenChange(!open);
+          fetchClaimsById();
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-    } finally {
-      // setLoading(false);
+    } else {
+      try {
+        const {
+          OTHER,
+          ICP,
+          insuranceRequestId,
+          status,
+          numberOfDays,
+          CURRENT_INVESTIGATION,
+          EXCEL_REPORT,
+          doctorName,
+          ...others
+        } = queryInputs;
+        const payload = {
+          ...others,
+          insuranceRequestId: claimId,
+          documents: [
+            ICP,
+            CURRENT_INVESTIGATION,
+            EXCEL_REPORT,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await createQuery(payload);
+        if (res.status == 201) {
+          await updateClaimStatusAfterModalSuccess("QUERIED");
+          setLoading(false);
+          onOpenChange(!open);
+          fetchClaimsById();
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
+      }
     }
   };
-  const handleClose = () => {
+
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      setSelectedQuery(null);
+    }
     onClose?.()
-    onOpenChange(!open);
+    onOpenChange(isOpen);
   };
   return (
     <>
       {loading && <LoadingOverlay />}
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="min-w-5xl max-w-md text-center  p-8 rounded-lg ">
           <DialogHeader>
             <DialogTitle>
@@ -267,20 +325,24 @@ export default function CreateQueryPopup({
               />
 
               {/* Action Buttons */}
-              <div className="mt-6 flex justify-end space-x-4 absolute bottom-0 right-5">
-                <Button
-                  onClick={handleClose}
-                  className="text-[#3E79D6]"
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
+              <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 right-5">
+                <DialogClose asChild>
+                  <Button
+                    // onClick={handleClose}
+                    className="text-[#3E79D6]"
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
 
                 <Button
                   onClick={handleCreateQuery}
-                  className="bg-[#3E79D6] px-4"
+                  className="bg-[#3E79D6]  px-4"
                 >
-                  Create
+                  {isEditMode
+                    ? `Update ${selectedTab}`
+                    : `Create ${selectedTab}`}
                 </Button>
               </div>
             </div>

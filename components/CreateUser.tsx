@@ -42,7 +42,6 @@ export default function CreateUser() {
   };
 
   const handleCreate = () => {
-    console.log("Creating user:", user);
   };
 
   return (

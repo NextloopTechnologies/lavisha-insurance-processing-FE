@@ -61,24 +61,43 @@ export default function PatientDetails({ data, show }) {
               />
             </span>
             <div>
-              <div className="font-medium">{key}</div>
-              <label className="text-xs text-gray-500">{value}</label>
+              <div className="text-xs text-gray-500 ">{key}</div>
+              <label className="font-medium">{value}</label>
             </div>
           </div>
         </div>
       ))}
 
-      <div className="col-span-2 p-4 border rounded-md bg-white">
-        <label className="text-xs text-gray-500">Description</label>
-        <p className="text-sm mt-1 text-gray-700">
-          {data?.description }
-        </p>
-      </div>
+      {show?.description && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Description</label>
+          <p className="text-sm mt-1 text-gray-700">{data?.description}</p>
+        </div>
+      )}
+      {show?.dischargeSummary && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Discharge Summary</label>
+          <p className="text-sm mt-1 text-gray-700">{data?.dischargeSummary}</p>
+        </div>
+      )}
 
-      <div className="col-span-2 p-4 border rounded-md bg-white">
-        <label className="text-xs text-gray-500">Additional Notes</label>
-        <p className="text-sm mt-1 text-gray-700">{data?.additionalNotes|| data?.notes}</p>
-      </div>
+      {show?.settlementSummary && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Settlement Summary</label>
+          <p className="text-sm mt-1 text-gray-700">
+            {data?.settlementSummary}
+          </p>
+        </div>
+      )}
+
+      {show?.additionalNotes && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Additional Notes</label>
+          <p className="text-sm mt-1 text-gray-700">
+            {data?.additionalNotes || data?.notes}
+          </p>
+        </div>
+      )}
     </div>
   );
 }

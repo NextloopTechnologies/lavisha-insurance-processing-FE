@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DeletePopup from "@/components/DeletePopup";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PatientFormDialog from "@/components/CreateEdit";
 import {
   createPatient,
@@ -15,6 +15,7 @@ import {
 import LoadingOverlay from "@/components/LoadingOverlay";
 import Link from "next/link";
 import Avtar from "@/components/Avtar";
+import { useRouter } from "next/navigation";
 
 export default function Patients() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -22,7 +23,8 @@ export default function Patients() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [loading, setLoading] = useState(false);
-
+  const [searchTerm, setSearchTerm] = useState("");
+  const router = useRouter();
   const [patients, setPatients] = useState([]);
   const fetchPatients = async () => {
     setLoading(true);
@@ -96,6 +98,29 @@ export default function Patients() {
     }
   };
 
+  const filteredPatientData = useMemo(() => {
+    return patients.filter((row) => {
+      const matchesSearch = Object.values(row).some((val) =>
+        val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      );
+
+      // const matchesStatus =
+      //   statusFilter === "All" || row.status === statusFilter;
+      // const matchesStatus =
+      //   selectedStatuses.length === 0 ||
+      //   selectedStatuses
+      //     ?.toString()
+      //     .toLowerCase()
+      //     .includes(row.status?.toLowerCase());
+
+      return matchesSearch;
+    });
+  }, [searchTerm, patients]);
+
+  const handleClaimView = (id: string) => {
+    router.push(`/claims?name=${encodeURIComponent(id)}`);
+  };
+
   return (
     <SidebarLayout>
       <div className="h-[calc(100vh-80px)] bg-gray-100 p-6 overflow-y-scroll">
@@ -107,13 +132,12 @@ export default function Patients() {
             <Input
               placeholder="Search here"
               className="pl-10 w-56 bg-white rounded-4xl"
-              //   value={searchTerm}
-              //   onChange={(e) => {
-              //     setSearchTerm(e.target.value);
-              //     setCurrentPage(1); // reset to page 1 when filtering
-              //   }}
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
             />
-            <span className="absolute left-3 top-2.5 text-yellow-500">
+            <span className="absolute left-3 top-2.5 text-[#3E79D6]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 width="16"
@@ -136,50 +160,61 @@ export default function Patients() {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {patients?.map((patient, index) => (
-            <div
-              key={index}
-              className="relative bg-white rounded-2xl shadow-md p-16 text-center"
-            >
-              {/* Edit/Delete */}
-              <div className="absolute top-3 right-3 flex gap-2">
-                <Pencil
-                  onClick={() => handleEditPatient(patient.id)}
-                  className="w-4 h-4 text-gray-500 hover:text-blue-600 cursor-pointer"
-                />
-                <Trash2
-                  onClick={() => handleDelete(patient.id)}
-                  className="w-4 h-4 text-gray-500 hover:text-red-600 cursor-pointer"
-                />
-              </div>
-
-              {/* Avatar */}
-              <div className="w-24 h-24 mx-auto rounded-full bg-gray-300 mb-4 text-center flex justify-center items-center overflow-hidden">
-                {patient.url ? (
-                  <img
-                    src={patient?.url}
-                    alt="profile"
-                    className="object-cover w-full h-full"
+          {filteredPatientData?.length > 0 ? (
+            filteredPatientData?.map((patient, index) => (
+              <div
+                key={index}
+                className="relative bg-white rounded-2xl shadow-md p-16 text-center"
+              >
+                {/* Edit/Delete */}
+                <div className="absolute top-3 right-3 flex gap-2">
+                  <Pencil
+                    onClick={() => handleEditPatient(patient.id)}
+                    className="w-4 h-4 text-gray-500 hover:text-blue-600 cursor-pointer"
                   />
-                ) : (
-                  <span className="text-[50px] font-semibold text-[#3E79D6] ">
-                    {patient.name.charAt(0)}
-                  </span>
-                )}
-              </div>
+                  <Trash2
+                    onClick={() => handleDelete(patient.id)}
+                    className="w-4 h-4 text-gray-500 hover:text-red-600 cursor-pointer"
+                  />
+                </div>
 
-              {/* Patient Info */}
-              <div className="text-gray-800 font-semibold">{patient.name}</div>
-              <div className="text-gray-600 mb-10">Age: {patient.age} year</div>
+                {/* Avatar */}
+                <div className="w-24 h-24 mx-auto rounded-full bg-gray-300 mb-4 text-center flex justify-center items-center overflow-hidden">
+                  {patient.url ? (
+                    <img
+                      src={patient?.url}
+                      alt="profile"
+                      className="object-cover w-full h-full"
+                    />
+                  ) : (
+                    <span className="text-[50px] font-semibold text-[#3E79D6] ">
+                      {patient.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
 
-              {/* View Claims Button */}
-              <Link href={`/claims/${patient.id}`}>
-                <button className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]">
+                {/* Patient Info */}
+                <div className="text-gray-800 font-semibold">
+                  {patient.name}
+                </div>
+                <div className="text-gray-600 mb-10">
+                  Age: {patient.age} year
+                </div>
+
+                {/* View Claims Button */}
+                {/* <Link href={`/claims/${patient.id}`}> */}
+                <button
+                  onClick={() => handleClaimView(patient.name)}
+                  className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
+                >
                   View Claims
                 </button>
-              </Link>
-            </div>
-          ))}
+                {/* </Link> */}
+              </div>
+            ))
+          ) : (
+            <span>No Patients Found</span>
+          )}
         </div>
         <PatientFormDialog
           open={openPatientDialog}
