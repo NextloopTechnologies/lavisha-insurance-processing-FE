@@ -80,6 +80,7 @@ export function DateRangePicker({ date, setDate }: DateRangePickerProps) {
             selected={date}
             onSelect={(range) => range && setDate(range)}
             initialFocus
+            disabled={(date) => date > new Date()}
           />
         </div>
       </PopoverContent>

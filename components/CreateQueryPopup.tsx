@@ -54,7 +54,7 @@ export default function CreateQueryPopup({
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [queryInputs, setQueryInputs] = useState<any>({
-    doctorName: "",
+    doctorName: "Dr. ",
     status: "QUERIED",
     OTHER: "",
     ICP: "",
@@ -65,7 +65,7 @@ export default function CreateQueryPopup({
   useEffect(() => {
     if (!selectedQuery) {
       setQueryInputs({
-        doctorName: "",
+        doctorName: "Dr. ",
         status: "QUERIED",
         OTHER: "",
         ICP: "",
@@ -107,6 +107,7 @@ export default function CreateQueryPopup({
       });
     }
   }, [selectedQuery]);
+
   const handleSelectChange = (value: string | boolean, name: string) => {
     setQueryInputs((prev) => {
       return {
@@ -190,11 +191,12 @@ export default function CreateQueryPopup({
         };
         setLoading(true);
         const res = await updateQuery(payload, selectedQuery?.id);
-        if (res.status == 201) {
+        if (res.status == 200) {
           await updateClaimStatusAfterModalSuccess("QUERIED");
           setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();
+          setSelectedQuery(null);
         }
       } catch (error) {
         console.error("Upload error:", error);
@@ -231,6 +233,7 @@ export default function CreateQueryPopup({
           setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();
+          setSelectedQuery(null);
         }
       } catch (error) {
         console.error("Upload error:", error);

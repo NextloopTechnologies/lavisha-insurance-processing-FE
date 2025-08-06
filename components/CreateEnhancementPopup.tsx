@@ -53,7 +53,7 @@ export default function CreateEnhancementPopup({
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
-    doctorName: "",
+    doctorName: "DR. ",
     status: "ENHANCEMENT",
     OTHER: "",
     ICP: "",
@@ -63,7 +63,7 @@ export default function CreateEnhancementPopup({
   useEffect(() => {
     if (!selectedEnhancement) {
       setEnhancementInputs({
-        doctorName: "",
+        doctorName: "Dr. ",
         status: "ENHANCEMENT",
         OTHER: "",
         ICP: "",
@@ -180,11 +180,12 @@ export default function CreateEnhancementPopup({
         };
         setLoading(true);
         const res = await updateEnhancements(payload, selectedEnhancement?.id);
-        if (res.status == 201) {
+        if (res.status == 200) {
           await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
           setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();
+          setSelectedEnhancement(null);
         }
       } catch (error) {
         console.error("Upload error:", error);
@@ -215,6 +216,7 @@ export default function CreateEnhancementPopup({
         const res = await createEnhancements(payload);
         if (res.status == 201) {
           await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
+          setSelectedEnhancement(null);
           setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();

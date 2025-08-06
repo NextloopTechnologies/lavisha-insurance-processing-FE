@@ -1,6 +1,7 @@
 "use client";
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -14,11 +15,16 @@ import InputComponent from "./InputComponent";
 import FileDrag from "./FileDrag";
 import { uploadFiles } from "@/services/files";
 import { getProfileById, updateProfile } from "@/services/profile";
+import Image from "next/image";
 
-export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
+export function ProfileEditModal({
+  openEditProfile,
+  setOpenEditProfile,
+  profileData,
+}) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [profileData, setProfileData] = useState([]);
+  // const [profileData, setProfileData] = useState([]);
   const loggedInUserId = localStorage.getItem("userId");
   const loggedInUserName = localStorage.getItem("userName");
 
@@ -27,12 +33,33 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
     address: "",
     hospitalName: "",
     rateListFileName: "",
+    profileFileName: "",
+    profileUrl: "",
   });
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setImagePreview(url);
+    if (!file) return;
+
+    setLoading(true);
+    setImagePreview(URL.createObjectURL(file));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "profiles"); // static folder key
+
+    try {
+      const res = await uploadFiles(formData);
+      setProfileInput((prev) => {
+        return {
+          ...prev,
+          profileFileName: res?.data?.key,
+          profileUrl: res.data?.url,
+        };
+      });
+    } catch (error) {
+      console.error("Upload error:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,21 +72,6 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
     });
   };
 
-  const fetchProfileData = async () => {
-    setLoading(true);
-    try {
-      const res = await getProfileById(loggedInUserId);
-      setProfileData(res.data.data);
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      console.error("Failed to fetch patients:", err);
-    }
-  };
-  useEffect(() => {
-    fetchProfileData();
-  }, [loggedInUserId]);
-
   useEffect(() => {
     if (!profileData?.length) {
       setProfileInput({
@@ -67,6 +79,8 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
         address: "",
         hospitalName: "",
         rateListFileName: "",
+        profileFileName: "",
+        profileUrl: "",
       });
     } else {
       // Map documents by their type
@@ -93,7 +107,9 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
         name: profileData[0]?.name || loggedInUserName,
         address: profileData[0]?.address,
         hospitalName: profileData[0]?.hospitalName,
-        rateListFileName: profileData[0]?.rateListFileName,
+        rateListFileName: profileData[0]?.rateListUrl,
+        profileFileName: profileData[0]?.profileFileName,
+        profileUrl: profileData[0]?.profileUrl,
       });
     }
   }, [profileData]);
@@ -101,7 +117,7 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
     formData.append("file", value[0]);
-    formData.append("folder", "profiles");
+    formData.append("folder", "hospitals");
 
     try {
       setLoading(true);
@@ -109,11 +125,7 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
       setLoading(false);
       setProfileInput((prev) => ({
         ...prev,
-        [name]: {
-          fileName: res?.data?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        },
+        rateListFileName: res?.data?.key,
       }));
     } catch (error) {
       setLoading(false);
@@ -131,6 +143,7 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
         const res = await updateProfile(payload, loggedInUserId);
         if (res.status == 200) {
           setLoading(false);
+          setOpenEditProfile(false);
         }
       } catch (error) {
         console.error("Upload error:", error);
@@ -139,8 +152,13 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
       }
     }
   };
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
+    }
+    setOpenEditProfile(isOpen);
+  };
   return (
-    <Dialog open={openEditProfile} onOpenChange={setOpenEditProfile}>
+    <Dialog open={openEditProfile} onOpenChange={handleClose}>
       <DialogContent className="max-w-md rounded-2xl px-6 py-8">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
@@ -150,12 +168,14 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
 
         <div className="flex flex-col items-center justify-center gap-3 my-4">
           <label htmlFor="profile-photo" className="cursor-pointer">
-            {imagePreview ? (
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-24 h-24 object-cover rounded-full border"
-              />
+            {profileInput?.profileUrl ? (
+              <div className="w-full flex justify-center items-center">
+                <img
+                  src={profileInput?.profileUrl}
+                  alt="Preview"
+                  className="w-24 h-24 object-cover rounded-full border"
+                />
+              </div>
             ) : (
               <div className="w-24 h-24 flex items-center justify-center rounded-full border ">
                 {/* <Eye className="w-8 h-8 text-gray-400" /> */}
@@ -169,9 +189,9 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
               type="file"
               accept="image/*"
               className="hidden"
-              onChange={handleImageChange}
+              onChange={handleImageUpload}
             />
-            <p className="text-sm text-center mt-2 text-gray-600">
+            <p className="text-sm text-center mt-2 text-gray-600 w-full">
               Change Profile Photo
             </p>
           </label>
@@ -205,13 +225,19 @@ export function ProfileEditModal({ openEditProfile, setOpenEditProfile }) {
           multiple={false}
           onChange={handleFileChange}
           name={"rateListFileName"}
-          claimInputs={profileInput?.rateListFileName}
+          claimInputs={[profileInput?.rateListFileName]}
         />
 
         <div className="flex justify-center gap-4 w-full">
-          <Button variant="outline" className="bg-[#F2F7FC] text-[#3E79D6]">
-            Cancel
-          </Button>
+          <DialogClose asChild>
+            <Button
+              // onClick={handleClose}
+              className="text-[#3E79D6]"
+              variant="outline"
+            >
+              Cancel
+            </Button>
+          </DialogClose>
           <Button onClick={handleUpdateProfile} className=" bg-[#3E79D6]">
             Save
           </Button>
