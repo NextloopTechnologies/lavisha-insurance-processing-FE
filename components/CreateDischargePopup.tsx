@@ -30,6 +30,7 @@ interface CreateSettlementPopupProps {
   data?: any;
   claimId: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  fetchClaimsById: any;
 }
 
 export default function CreateDischargePopup({
@@ -42,6 +43,7 @@ export default function CreateDischargePopup({
   data,
   claimId,
   updateClaimStatusAfterModalSuccess,
+  fetchClaimsById,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -196,6 +198,7 @@ export default function CreateDischargePopup({
         await updateClaimStatusAfterModalSuccess("DISCHARGED");
         setLoading(false);
         onOpenChange(!open);
+        fetchClaimsById();
       }
     } catch (error) {
       console.error("Upload error:", error);
@@ -263,7 +266,7 @@ export default function CreateDischargePopup({
               />
 
               {/* Action Buttons */}
-              <div className="mt-6 flex justify-end space-x-4 absolute bottom-0 right-5">
+              <div className="mt-6 flex justify-end space-x-4 absolute bottom-2 right-5">
                 <Button
                   onClick={handleClose}
                   className="text-[#3E79D6]"

@@ -1,6 +1,8 @@
 export { default as chatImage } from "./chat.png";
 export { default as claimsImage } from "./claims.png";
 export { default as dashboardImage } from "./dashboard.png";
+export { default as appLogoImage } from "./logo/logo.png";
+
 export { default as dashboardActive } from "./menu/dashboard-active-icon.svg";
 export { default as dashboard } from "./menu/dashboard.svg";
 

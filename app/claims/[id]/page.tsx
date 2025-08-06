@@ -117,7 +117,7 @@ export default function PatientClaimDetails() {
       setLoading(false);
     }
   };
-  const fetchEnhancement = async () => {
+  const fetchClaimsById = async () => {
     setLoading(true);
     try {
       const res = await getClaimsById(id);
@@ -130,16 +130,26 @@ export default function PatientClaimDetails() {
   };
   useEffect(() => {
     fetchClaims();
-    fetchEnhancement();
+    fetchClaimsById();
   }, []);
 
   const filteredEnhancement = claims?.enhancements?.filter(
     (item) => item?.id == selectedEnhancementId
   )[0];
+  useEffect(() => {
+    if (claims?.enhancements?.length) {
+      setSelectedEnhancementId(claims?.enhancements[0]?.id);
+    }
+  }, [claims]);
 
   const filteredQueries = claims?.queries?.filter(
     (item) => item?.id == selectedQueryId
   )[0];
+  useEffect(() => {
+    if (claims?.queries?.length) {
+      setQueryId(claims?.queries[0]?.id);
+    }
+  }, [claims]);
 
   const handleEditEnhancement = () => {
     setOpenPatientDialog(true);
@@ -294,7 +304,7 @@ export default function PatientClaimDetails() {
                         onClick={() => handleEditEnhancement()}
                         // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                       >
-                        <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer mr-4" />
+                        <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-4" />
                       </button>
                     )}
                     <button
@@ -346,7 +356,7 @@ export default function PatientClaimDetails() {
                         onClick={() => handleEditQuery()}
                         // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                       >
-                        <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-4" />
+                        <Pencil className="w-6 h-6 text-[#3E79D6] hover:text-[#3E79D6] cursor-pointer mr-4" />
                       </button>
                     )}
                     <button
@@ -391,7 +401,7 @@ export default function PatientClaimDetails() {
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-2" />
+                    <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-2" />
                   </button>
                 </div>
                 <PatientDetails
@@ -422,7 +432,7 @@ export default function PatientClaimDetails() {
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-6 h-6 hover:text-blue-600 cursor-pointer mr-2" />
+                    <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-2" />
                   </button>
                 </div>
                 <PatientDetails
@@ -433,8 +443,8 @@ export default function PatientClaimDetails() {
                     tpaName: false,
                     icName: false,
                     notes: false,
-                    additionalNotes: true,
-                    description: true,
+                    additionalNotes: false,
+                    description: false,
                     settlementSummary: true,
                   }}
                 />
@@ -451,12 +461,13 @@ export default function PatientClaimDetails() {
         <CreateEnhancementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
+          setSelectedEnhancement={setSelectedEnhancement}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
           selectedEnhancement={selectedEnhancement}
           // claimInputs={}
           isEditMode={!!selectedEnhancement}
-          fetchEnhancement={fetchEnhancement}
+          fetchClaimsById={fetchClaimsById}
           data={claims}
           claimId={claims.id}
           selectedTab={"Enhancement"}
@@ -472,13 +483,14 @@ export default function PatientClaimDetails() {
           onOpenChange={setOpenPatientDialog}
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
+          setSelectedQuery={setSelectedQuery}
           selectedQuery={selectedQuery}
           // claimInputs={}
           isEditMode={!!selectedQueryId}
           data={claims}
           claimId={claims.id}
           selectedTab={"Query"}
-          fetchEnhancement={fetchEnhancement}
+          fetchClaimsById={fetchClaimsById}
           updateClaimStatusAfterModalSuccess={
             updateClaimStatusAfterModalSuccess
           }
@@ -496,6 +508,7 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Discharge"}
+          fetchClaimsById={fetchClaimsById}
           updateClaimStatusAfterModalSuccess={
             updateClaimStatusAfterModalSuccess
           }
@@ -512,6 +525,7 @@ export default function PatientClaimDetails() {
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}
+          fetchClaimsById={fetchClaimsById}
           updateClaimStatusAfterModalSuccess={
             updateClaimStatusAfterModalSuccess
           }

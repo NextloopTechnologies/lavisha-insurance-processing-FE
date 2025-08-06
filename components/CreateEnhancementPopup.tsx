@@ -1,5 +1,6 @@
 import {
   Dialog,
+  DialogClose,
   DialogContent,
   DialogHeader,
   DialogTitle,
@@ -31,8 +32,9 @@ interface CreateEnhancementPopupProps {
   data?: any;
   claimId: ParamValue;
   selectedEnhancement: any;
-  fetchEnhancement: any;
+  fetchClaimsById: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  setSelectedEnhancement: any;
 }
 
 export default function CreateEnhancementPopup({
@@ -45,8 +47,9 @@ export default function CreateEnhancementPopup({
   data,
   claimId,
   selectedEnhancement,
-  fetchEnhancement,
+  fetchClaimsById,
   updateClaimStatusAfterModalSuccess,
+  setSelectedEnhancement,
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
@@ -58,36 +61,45 @@ export default function CreateEnhancementPopup({
     notes: "",
   });
   useEffect(() => {
-    if (!selectedEnhancement) return;
+    if (!selectedEnhancement) {
+      setEnhancementInputs({
+        doctorName: "",
+        status: "ENHANCEMENT",
+        OTHER: "",
+        ICP: "",
+        numberOfDays: "",
+        notes: "",
+      });
+    } else {
+      // Map documents by their type
+      const documentMap = selectedEnhancement.documents.reduce((acc, doc) => {
+        if (doc.type === "OTHER") {
+          acc[doc.type] = acc[doc.type] || [];
+          acc[doc.type].push({
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            remark: doc.remark,
+          });
+        } else {
+          acc[doc.type] = {
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+          };
+        }
+        return acc;
+      }, {});
 
-    // Map documents by their type
-    const documentMap = selectedEnhancement.documents.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
-        acc[doc.type] = acc[doc.type] || [];
-        acc[doc.type].push({
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          remark: doc.remark,
-        });
-      } else {
-        acc[doc.type] = {
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-        };
-      }
-      return acc;
-    }, {});
+      setEnhancementInputs({
+        doctorName: selectedEnhancement.doctorName,
+        notes: selectedEnhancement?.notes,
+        numberOfDays: selectedEnhancement?.numberOfDays,
 
-    setEnhancementInputs({
-      doctorName: selectedEnhancement.doctorName,
-      notes: selectedEnhancement?.notes,
-      numberOfDays: selectedEnhancement?.numberOfDays,
-
-      OTHER: documentMap.OTHER || [],
-      ICP: documentMap.ICP || "",
-    });
+        OTHER: documentMap.OTHER || [],
+        ICP: documentMap.ICP || "",
+      });
+    }
   }, [selectedEnhancement]);
   const handleSelectChange = (value: string | boolean, name: string) => {
     setEnhancementInputs((prev) => {
@@ -172,7 +184,7 @@ export default function CreateEnhancementPopup({
           await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
           setLoading(false);
           onOpenChange(!open);
-          fetchEnhancement();
+          fetchClaimsById();
         }
       } catch (error) {
         console.error("Upload error:", error);
@@ -180,47 +192,50 @@ export default function CreateEnhancementPopup({
         // setLoading(false);
       }
     } else {
-    }
-    try {
-      const {
-        OTHER,
-        ICP,
-        insuranceRequestId,
-        status,
-        numberOfDays,
-        ...others
-      } = enhancementInputs;
-      const payload = {
-        ...others,
-        status: "ENHANCEMENT",
-        insuranceRequestId: claimId,
-        numberOfDays: Number(numberOfDays),
-        documents: [
+      try {
+        const {
+          OTHER,
           ICP,
-          ...(OTHER || []), // if OTHER is an array, ensure it's not null
-        ].filter(Boolean),
-      };
-      setLoading(true);
-      const res = await createEnhancements(payload);
-      if (res.status == 201) {
-        await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
-        setLoading(false);
-        onOpenChange(!open);
-        fetchEnhancement();
+          insuranceRequestId,
+          status,
+          numberOfDays,
+          ...others
+        } = enhancementInputs;
+        const payload = {
+          ...others,
+          status: "ENHANCEMENT",
+          insuranceRequestId: claimId,
+          numberOfDays: Number(numberOfDays),
+          documents: [
+            ICP,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await createEnhancements(payload);
+        if (res.status == 201) {
+          await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
+          setLoading(false);
+          onOpenChange(!open);
+          fetchClaimsById();
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-    } finally {
-      // setLoading(false);
     }
   };
-  const handleClose = () => {
-    onOpenChange(!open);
+  const handleClose = (isOpen: boolean) => {
+    if (!isOpen) {
+      setSelectedEnhancement(null);
+    }
+    onOpenChange(isOpen);
   };
   return (
     <>
       {loading && <LoadingOverlay />}
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="min-w-5xl max-w-md text-center  p-8 rounded-lg ">
           <DialogHeader>
             <DialogTitle>
@@ -278,14 +293,16 @@ export default function CreateEnhancementPopup({
               />
 
               {/* Action Buttons */}
-              <div className="mt-6 flex justify-end space-x-4 absolute bottom-0 right-5">
-                <Button
-                  onClick={handleClose}
-                  className="text-[#3E79D6]"
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
+              <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 right-5">
+                <DialogClose asChild>
+                  <Button
+                    // onClick={handleClose}
+                    className="text-[#3E79D6]"
+                    variant="outline"
+                  >
+                    Cancel
+                  </Button>
+                </DialogClose>
 
                 <Button
                   onClick={handleCreateEnhancement}

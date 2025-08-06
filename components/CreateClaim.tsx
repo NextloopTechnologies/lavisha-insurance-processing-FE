@@ -16,17 +16,23 @@ import {
 import { INSURANCE_COMPANIES, TPA_OPTIONS } from "@/constants/menu";
 import { createClaims } from "@/services/claims";
 import { bulkUploadFiles, uploadFiles } from "@/services/files";
-import { getPatientById, getPatients } from "@/services/patients";
+import {
+  createPatient,
+  getPatientById,
+  getPatients,
+} from "@/services/patients";
 import { useRouter } from "next/navigation";
 
 // import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, UploadCloud } from "lucide-react";
+import { Plus, Search, UploadCloud, UserIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { userRound } from "@/assets";
 import PatientFormDialog from "@/components/CreateEdit";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import InputComponent from "./InputComponent";
+import SelectComponent from "./SelectComponent";
 
 export default function CreateClaim({
   handleCreateClaim,
@@ -81,7 +87,9 @@ export default function CreateClaim({
       formData.append("folder", "claims");
 
       try {
+        setLoading(true);
         const res = await bulkUploadFiles(formData); // Single API call
+        setLoading(false);
 
         const uploadedFiles = res?.data?.map((file) => ({
           fileName: file?.key,
@@ -94,6 +102,7 @@ export default function CreateClaim({
           [name]: uploadedFiles,
         }));
       } catch (error) {
+        setLoading(false);
         console.error("Bulk upload failed:", error);
       }
     } else {
@@ -102,7 +111,9 @@ export default function CreateClaim({
       formData.append("folder", "claims");
 
       try {
+        setLoading(true);
         const res = await uploadFiles(formData);
+        setLoading(false);
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
@@ -112,6 +123,7 @@ export default function CreateClaim({
           },
         }));
       } catch (error) {
+        setLoading(false);
         console.error("Single upload failed:", error);
       }
     }
@@ -134,9 +146,33 @@ export default function CreateClaim({
     patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleCreatePatient = () => {
-    setSelectedPatient(null);
-    setOpenPatientDialog(true);
+  // const handleCreatePatient = () => {
+  //   setSelectedPatient(null);
+  //   setOpenPatientDialog(true);
+  // };
+
+  const handleCreatePatient = async (payload) => {
+    const { name, age, fileName, url } = payload;
+    try {
+      setLoading(true);
+      const response = await createPatient({ name, age, fileName, url });
+      if (response.status == 201) {
+        setLoading(false);
+        fetchPatients();
+        setClaimInputs((prev) => {
+          return {
+            ...prev,
+            ["patientId"]: response?.data?.id,
+          };
+        });
+      }
+    } catch (error: any) {
+      setLoading(false);
+      console.error(
+        "Error creating patient:",
+        error.response?.data || error.message
+      );
+    }
   };
 
   return (
@@ -177,7 +213,7 @@ export default function CreateClaim({
                 />
               </div>
               <button
-                onClick={handleCreatePatient}
+                onClick={() => setOpenPatientDialog(true)}
                 className="flex items-center w-full hover:bg-gray-100 rounded p-2"
               >
                 <Plus size={16} className="mr-2 text-[#3E79D6]" />
@@ -202,46 +238,30 @@ export default function CreateClaim({
             </SelectContent>
           </Select>
 
-          <Input
-            placeholder="Doctor Name"
-            className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
+          <InputComponent
+            placeHolder={"Dr. Name"}
+            Icon={UserIcon}
             value={claimInputs.doctorName}
             onChange={(e) => handleSelectChange(e.target.value, "doctorName")}
           />
 
-          <Select
+          <SelectComponent
             value={claimInputs.tpaName}
             onValueChange={(value) => handleSelectChange(value, "tpaName")}
-          >
-            <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black">
-              <SelectValue placeholder="TPA Name" />
-            </SelectTrigger>
-            <SelectContent>
-              {TPA_OPTIONS.map((tpa) => (
-                <SelectItem key={tpa} value={tpa}>
-                  {tpa}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            selectOption={TPA_OPTIONS}
+            Icon={UserIcon}
+            label={"TPA Name"}
+          />
 
-          <Select
+          <SelectComponent
             value={claimInputs.insuranceCompany}
             onValueChange={(value) =>
               handleSelectChange(value, "insuranceCompany")
             }
-          >
-            <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black">
-              <SelectValue placeholder="Insurance Company" />
-            </SelectTrigger>
-            <SelectContent>
-              {INSURANCE_COMPANIES.map((company) => (
-                <SelectItem key={company} value={company}>
-                  {company}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            selectOption={INSURANCE_COMPANIES}
+            Icon={UserIcon}
+            label={"Insurance Company"}
+          />
         </div>
 
         <div className="my-4">
@@ -319,14 +339,21 @@ export default function CreateClaim({
           <Button className="text-[#3E79D6]" variant="outline">
             Cancel
           </Button>
-          {claimInputs.status == "DRAFT" ? (
-            ""
-          ) : (
-            <Button variant="outline" className="text-[#3E79D6]">
+          {claimInputs.status == "" && (
+            <Button
+              disabled={loading}
+              onClick={() => handleCreateClaim("DRAFT")}
+              variant="outline"
+              className="text-[#3E79D6]"
+            >
               Save as Draft
             </Button>
           )}
-          <Button onClick={handleCreateClaim} className="bg-[#3E79D6] px-4">
+          <Button
+            disabled={loading}
+            onClick={handleCreateClaim}
+            className="bg-[#3E79D6] px-4"
+          >
             {isEditMode ? "Update Claim" : "Create Claim"}
           </Button>
         </div>

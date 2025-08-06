@@ -66,7 +66,6 @@ export default function EditClaimForm() {
         } = claimInputs;
         const payload = {
           ...others,
-          status: "DRAFT",
           documents: [
             CLINIC_PAPER,
             ICP,
@@ -88,40 +87,39 @@ export default function EditClaimForm() {
         // setLoading(false);
       }
     } else {
-    }
-
-    try {
-      const {
-        CLINIC_PAPER,
-        PAST_INVESTIGATION,
-        CURRENT_INVESTIGATION,
-        OTHER,
-        ICP,
-        preAuth,
-        status,
-        ...others
-      } = claimInputs;
-      const payload = {
-        ...others,
-        documents: [
+      try {
+        const {
           CLINIC_PAPER,
-          ICP,
           PAST_INVESTIGATION,
           CURRENT_INVESTIGATION,
-          ...(OTHER || []), // if OTHER is an array, ensure it's not null
-        ].filter(Boolean),
-      };
-      setLoading(true);
-      const res = await createClaims(payload);
-      if (res.status == 201) {
+          OTHER,
+          ICP,
+          preAuth,
+          status,
+          ...others
+        } = claimInputs;
+        const payload = {
+          ...others,
+          documents: [
+            CLINIC_PAPER,
+            ICP,
+            PAST_INVESTIGATION,
+            CURRENT_INVESTIGATION,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await createClaims(payload);
+        if (res.status == 201) {
+          setLoading(false);
+          router.push("/claims");
+        }
+      } catch (error) {
         setLoading(false);
-        router.push("/claims");
+        console.error("Upload error:", error);
+      } finally {
+        // setLoading(false);
       }
-    } catch (error) {
-      setLoading(false);
-      console.error("Upload error:", error);
-    } finally {
-      // setLoading(false);
     }
   };
 
