@@ -35,7 +35,7 @@ export default function AddClaimForm() {
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
-    doctorName: "",
+    doctorName: "DR. ",
     tpaName: "",
     insuranceCompany: "",
     status: "",
@@ -51,7 +51,7 @@ export default function AddClaimForm() {
   const router = useRouter();
   const params = useParams();
   const id = params.id;
-  const handleCreateClaim = async () => {
+  const handleCreateClaim = async (value = null) => {
     try {
       const {
         CLINIC_PAPER,
@@ -74,10 +74,18 @@ export default function AddClaimForm() {
         ].filter(Boolean),
       };
       setLoading(true);
-      const res = await createClaims(payload);
-      if (res.status == 201) {
-        setLoading(false);
-        router.push("/claims");
+      if (value) {
+        const res = await createClaims({ ...payload, status: value });
+        if (res.status == 201) {
+          setLoading(false);
+          router.push("/claims");
+        }
+      } else {
+        const res = await createClaims(payload);
+        if (res.status == 201) {
+          setLoading(false);
+          router.push("/claims");
+        }
       }
     } catch (error) {
       console.error("Upload error:", error);

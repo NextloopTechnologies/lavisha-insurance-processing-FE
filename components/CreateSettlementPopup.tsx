@@ -30,6 +30,7 @@ interface CreateSettlementPopupProps {
   data?: any;
   claimId: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
+  fetchClaimsById:any;
 }
 
 export default function CreateSettlementPopup({
@@ -42,6 +43,7 @@ export default function CreateSettlementPopup({
   data,
   claimId,
   updateClaimStatusAfterModalSuccess,
+  fetchClaimsById
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -192,6 +194,7 @@ export default function CreateSettlementPopup({
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res.status == 200) {
+        fetchClaimsById()
         await updateClaimStatusAfterModalSuccess("SETTLED");
         setLoading(false);
         onOpenChange(!open);
@@ -258,7 +261,7 @@ export default function CreateSettlementPopup({
               />
 
               {/* Action Buttons */}
-              <div className="mt-6 flex justify-end space-x-4 absolute bottom-0 right-5">
+              <div className="mt-6 flex justify-end space-x-4 absolute bottom-2 right-5">
                 <Button
                   onClick={handleClose}
                   className="text-[#3E79D6]"

@@ -130,7 +130,6 @@ export function DataTable({
     currentPage * itemsPerPage
   );
 
-  console.log("filteredData", filteredData);
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}

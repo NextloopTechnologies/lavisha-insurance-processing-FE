@@ -7,7 +7,7 @@ import { navItems } from "@/constants/menu";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { logout } from "@/services/auth";
-import { logoImage, logoSvg, patientImage, userImage } from "../assets";
+import { appLogoImage, logoImage, logoSvg, patientImage, userImage } from "../assets";
 import Image from "next/image";
 import { StaticImageData } from "next/image";
 import { NotificationPopover } from "./NotificationPopover";
@@ -118,8 +118,8 @@ export default function SidebarLayout({ children }: Props) {
         )}
       >
         <div className="w-full flex justify-center border-b-1 border-gray-500">
-          <div className="w-24 h-24">
-            <Image src={logoSvg} alt="Logo" className="w-full h-full" />
+          <div className="w-16 h-16">
+            <Image src={appLogoImage} alt="Logo" className="w-full h-full" />
           </div>
         </div>
 

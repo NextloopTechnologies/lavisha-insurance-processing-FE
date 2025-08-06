@@ -33,8 +33,7 @@ const Dashboard = () => {
   };
   useEffect(() => {
     fetchDashboardData();
-  }, []);
-
+  }, [dateRange]);
   return (
     <SidebarLayout>
       <div className="relative  p-6 space-y-6 h-[calc(100vh-100px)] overflow-y-scroll">
