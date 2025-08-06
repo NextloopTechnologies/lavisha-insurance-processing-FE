@@ -20,6 +20,7 @@ import FileDrag from "./FileDrag";
 import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
+import { StatusType } from "@/types/claims";
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,8 +30,8 @@ interface CreateSettlementPopupProps {
   selectedTab: string;
   data?: any;
   claimId: ParamValue;
-  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
-  onClose?: () => void;
+  updateClaimStatusAfterModalSuccess?: (status: StatusType) => Promise<void>;
+  setModalProcessingStatus?: (value: "") => void;
   fetchClaimsById:any;
 }
 
@@ -44,8 +45,8 @@ export default function CreateSettlementPopup({
   data,
   claimId,
   updateClaimStatusAfterModalSuccess,
-  onClose,
-  fetchClaimsById
+  setModalProcessingStatus,
+  fetchClaimsById,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -54,7 +55,7 @@ export default function CreateSettlementPopup({
     doctorName: "",
     tpaName: "",
     insuranceCompany: "",
-    status: "SETTLED",
+    status: StatusType.SETTLED,
     description: "",
     preAuth: "",
     OTHER: "",
@@ -184,6 +185,7 @@ export default function CreateSettlementPopup({
       const payload = {
         ...others,
         settlementSummary,
+        status: StatusType.SETTLED,
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
@@ -197,7 +199,8 @@ export default function CreateSettlementPopup({
       const res = await updateClaims(payload, claimId);
       if (res.status == 200) {
         fetchClaimsById()
-        await updateClaimStatusAfterModalSuccess("SETTLED");
+        await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
+        setModalProcessingStatus?.("")
         setLoading(false);
         onOpenChange(!open);
       }
@@ -208,7 +211,7 @@ export default function CreateSettlementPopup({
     }
   };
   const handleClose = () => {
-    onClose?.()
+    setModalProcessingStatus?.("")
     onOpenChange(!open);
   };
   return (
