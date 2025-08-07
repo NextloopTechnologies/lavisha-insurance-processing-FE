@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { UploadCloud, Folder, Image, X } from "lucide-react";
 import ImagePreview from "./ImagePreview";
+import { getFileIconType } from "@/lib/utils";
 
 interface FileDropzoneProps {
   title: string;
@@ -31,12 +32,12 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     setFiles(updatedFiles);
     onChange?.(updatedFiles, name, multiple);
   };
-  // useEffect(() => {
-  //   if (!claimInputs) {
-  //     return;
-  //   }
-  //   setFiles(claimInputs);
-  // }, [claimInputs]);
+  useEffect(() => {
+    if (!claimInputs?.length) {
+      return;
+    }
+    setFiles(claimInputs);
+  }, [claimInputs]);
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -63,28 +64,28 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
   };
 
   const handleFileClick = (file) => {
-    const fileURL = URL.createObjectURL(file);
+      const fileURL = URL.createObjectURL(file);
 
-    if (file.type.startsWith("image/")) {
-      // Show image in modal
-      setModalOpen(true);
-      setImagePreview({ fileURL, file: file.name });
-    } else if (file.type === "application/pdf") {
-      // Open PDF in print view
-      const newWindow = window.open(fileURL, "_blank");
-      newWindow.onload = () => {
-        newWindow.print();
-      };
-    } else if (
-      file.type ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
-      file.type === "application/vnd.ms-excel" // .xls
-    ) {
-      // Open Excel files in a new tab
-      window.open(fileURL, "_blank");
-    } else {
-      // Default fallback
-      window.open(fileURL, "_blank");
+      if (file.type.startsWith("image/")) {
+        // Show image in modal
+        setModalOpen(true);
+        setImagePreview({ fileURL, file: file.name });
+      } else if (file.type === "application/pdf") {
+        // Open PDF in print view
+        const newWindow = window.open(fileURL, "_blank");
+        newWindow.onload = () => {
+          newWindow.print();
+        };
+      } else if (
+        file.type ===
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
+        file.type === "application/vnd.ms-excel" // .xls
+      ) {
+        // Open Excel files in a new tab
+        window.open(fileURL, "_blank");
+      } else {
+        // Default fallback
+        window.open(fileURL, "_blank");
     }
   };
 
@@ -140,13 +141,13 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
       {/* File Preview */}
       {files.length > 0 && (
         <div className="p-4 flex gap-4 items-center flex-wrap">
-          {files.map((file, index) => (
+          {files?.map((file, index) => (
             <div key={index} className="text-center relative">
               <div
                 onClick={() => handleFileClick(file)}
                 className="border p-2 rounded"
               >
-                {file.type.startsWith("image/") ? (
+                {file?.type?.startsWith("image/") ? (
                   <Image className="h-10 w-10 text-blue-500 mx-auto" />
                 ) : (
                   <Folder className="h-10 w-10 text-blue-400 mx-auto" />

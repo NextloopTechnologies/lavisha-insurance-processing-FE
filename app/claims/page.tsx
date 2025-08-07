@@ -12,6 +12,8 @@ import {
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { format } from "date-fns";
+import { formatRaisedDate } from "@/lib/utils";
 
 export default function Claims() {
   const [loading, setLoading] = useState(false);
@@ -21,32 +23,57 @@ export default function Claims() {
   const [total, setTotal] = useState(0);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [searchData, setSearchData] = useState({
+    selectedStatuses: [],
+    selectedDate: "",
+    debouncedSearchTerm: "",
+  });
+  const getSearchData = (value, name) => {
+    setSearchData((prev) => {
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
+  };
   const searchParams = useSearchParams();
   const id = searchParams.get("name");
   const sortByClaim = () => {};
   const fetchClaims = async () => {
     setLoading(true);
     try {
-      // getClaimsByParams
-      const res = await getClaimsByParams({
+      const query: any = {
         skip: (page - 1) * pageSize,
         take: pageSize,
         sortBy: "createdAt",
-        // cursor: "last-uuid",
         sortOrder: "desc",
-      });
+      };
+
+      if (searchData?.debouncedSearchTerm)
+        query.patientName = searchData?.debouncedSearchTerm;
+      if (searchData?.selectedStatuses.length > 0)
+        query.status = searchData?.selectedStatuses.join(",");
+      if (searchData?.selectedDate) {
+        query.createdFrom = format(
+          new Date(searchData?.selectedDate),
+          "yyyy-MM-dd"
+        );
+      }
+
+      const res = await getClaimsByParams(query);
+
       setClaims(res.data.data);
       const totalPages = Math.ceil(res?.data?.total / pageSize);
       setTotal(totalPages);
-      setLoading(false);
     } catch (err) {
-      setLoading(false);
       console.error("Failed to fetch claims:", err);
+    } finally {
+      setLoading(false);
     }
   };
   useEffect(() => {
     fetchClaims();
-  }, [page, pageSize]);
+  }, [page, pageSize, searchData]);
 
   const handleDeleteClaim = (id: string) => {
     setSelectedId(id);
@@ -54,14 +81,12 @@ export default function Claims() {
   };
 
   const confirmDelete = async () => {
-    // perform deletion logic here
     setOpenDeleteDialog(false);
     const res = await deleteClaims(selectedId);
     if (res.status == 200) {
       fetchClaims();
     }
   };
-
   return (
     <SidebarLayout>
       {loading && <LoadingOverlay />}
@@ -74,6 +99,7 @@ export default function Claims() {
           total={total}
           sortByClaim={sortByClaim}
           handleDeleteClaim={handleDeleteClaim}
+          getSearchData={getSearchData}
         />
 
         <DeletePopup

@@ -51,7 +51,7 @@ export default function CreateSettlementPopup({
   const [claimInputs, setClaimInputs] = useState<any>({
     isPreAuth: false,
     patientId: "",
-    doctorName: "",
+    doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
     status: "SETTLED",
@@ -196,7 +196,7 @@ export default function CreateSettlementPopup({
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res.status == 200) {
-        fetchClaimsById()
+        fetchClaimsById();
         await updateClaimStatusAfterModalSuccess("SETTLED");
         setLoading(false);
         onOpenChange(!open);
@@ -277,7 +277,7 @@ export default function CreateSettlementPopup({
                   onClick={handleCreateSettlement}
                   className="bg-[#3E79D6] px-4"
                 >
-                  Create
+                  {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
                 </Button>
               </div>
             </div>

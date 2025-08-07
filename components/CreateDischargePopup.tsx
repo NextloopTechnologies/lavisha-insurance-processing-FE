@@ -51,7 +51,7 @@ export default function CreateDischargePopup({
   const [claimInputs, setClaimInputs] = useState<any>({
     isPreAuth: false,
     patientId: "",
-    doctorName: "",
+    doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
     status: "DICHARGED",
@@ -282,7 +282,7 @@ export default function CreateDischargePopup({
                   onClick={handleCreateClaim}
                   className="bg-[#3E79D6] px-4"
                 >
-                  Create
+                  {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
                 </Button>
               </div>
             </div>

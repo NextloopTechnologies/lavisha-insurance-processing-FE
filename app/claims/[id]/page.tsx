@@ -114,8 +114,18 @@ export default function PatientClaimDetails() {
       setLoading(true);
       const res = await getClaimsById(id);
       if (res.status !== 200) throw new Error("Failed to get claims list!");
+      setClaims({
+        ...res.data,
+        enhancements: res.data?.enhancements.sort(
+          (a, b) =>
+            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+        ),
+        queries: res.data?.queries?.sort(
+          (a, b) =>
+            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+        ),
+      });
 
-      setClaims(res.data);
       const currentStatus = res.data.status;
       setSelectedStatuses(currentStatus);
       setFilteredStatusOptions(getStatusVisibility(currentStatus));
@@ -131,7 +141,17 @@ export default function PatientClaimDetails() {
     setLoading(true);
     try {
       const res = await getClaimsById(id);
-      setClaims(res.data);
+      setClaims({
+        ...res.data,
+        enhancements: res.data?.enhancements.sort(
+          (a, b) =>
+            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+        ),
+        queries: res.data?.queries?.sort(
+          (a, b) =>
+            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+        ),
+      });
       setLoading(false);
     } catch (err) {
       setLoading(false);
@@ -144,20 +164,20 @@ export default function PatientClaimDetails() {
   }, []);
 
   const filteredEnhancement = claims?.enhancements?.filter(
-    (item) => item?.id == selectedEnhancementId
+    (item) => item?.raisedAt == selectedEnhancementId
   )[0];
   useEffect(() => {
     if (claims?.enhancements?.length) {
-      setSelectedEnhancementId(claims?.enhancements[0]?.id);
+      setSelectedEnhancementId(claims?.enhancements[0]?.raisedAt);
     }
   }, [claims]);
 
   const filteredQueries = claims?.queries?.filter(
-    (item) => item?.id == selectedQueryId
+    (item) => item?.raisedAt == selectedQueryId
   )[0];
   useEffect(() => {
     if (claims?.queries?.length) {
-      setQueryId(claims?.queries[0]?.id);
+      setQueryId(claims?.queries[0]?.raisedAt);
     }
   }, [claims]);
 
@@ -344,24 +364,6 @@ export default function PatientClaimDetails() {
               <Comments claimId={claims.id} />
             </div>
           )}
-
-          {/* {visibleTabLabels[activeTab] === "Queried" && (
-            <div>
-              <>
-                <div className="flex justify-end">
-                  <button
-                    onClick={() => setOpenPatientDialog(true)}
-                    className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
-                  >
-                    Create Queried
-                  </button>
-                </div>
-                <PatientDetails />
-                <DocumentDetails type={["ICP", "SETTLEMENT_LETTER", "OTHER"]} />
-              </>
-            </div>
-          )} */}
-
           {visibleTabLabels[activeTab] === "Enhancement" && (
             <div>
               <>
@@ -563,7 +565,7 @@ export default function PatientClaimDetails() {
           setSelectedQuery={setSelectedQuery}
           selectedQuery={selectedQuery}
           // claimInputs={}
-          isEditMode={!!selectedQueryId}
+          isEditMode={!!selectedQuery}
           data={claims}
           claimId={claims.id}
           selectedTab={"Query"}
@@ -598,7 +600,7 @@ export default function PatientClaimDetails() {
           // onSubmit={handleSubmitPatient}
           // defaultData={selectedPatient}
           // claimInputs={}
-          // isEditMode={!!selectedPatient}
+          isEditMode={true}
           data={claims}
           claimId={id}
           selectedTab={"Settlement"}

@@ -30,7 +30,7 @@ export default function EnhancementDateDropdown({
       </SelectTrigger>
       <SelectContent>
         {enhancements.map((e) => (
-          <SelectItem key={e.id} value={e.id}>
+          <SelectItem key={e.id} value={e.raisedAt}>
             {formatRaisedDate(e.raisedAt)}
           </SelectItem>
         ))}
