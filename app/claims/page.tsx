@@ -37,6 +37,7 @@ export default function Claims() {
     });
   };
   const searchParams = useSearchParams();
+  const patientNameFromQuery = searchParams.get("patientName");
   const id = searchParams.get("name");
   const sortByClaim = () => {};
   const fetchClaims = async () => {
@@ -71,6 +72,16 @@ export default function Claims() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (patientNameFromQuery) {
+      setSearchData((prev) => ({
+        ...prev,
+        debouncedSearchTerm: patientNameFromQuery,
+      }));
+    }
+  }, [patientNameFromQuery]);
+
   useEffect(() => {
     fetchClaims();
   }, [page, pageSize, searchData]);
@@ -100,6 +111,7 @@ export default function Claims() {
           sortByClaim={sortByClaim}
           handleDeleteClaim={handleDeleteClaim}
           getSearchData={getSearchData}
+          initialSearchTerm={patientNameFromQuery}
         />
 
         <DeletePopup
