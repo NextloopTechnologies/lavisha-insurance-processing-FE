@@ -64,7 +64,9 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
               />
             )}
           </span>
-          <span className="text-sm font-medium">{loggedInUserName}</span>
+          <span className="text-sm font-medium">
+            {profileData?.[0]?.hospitalName}
+          </span>
           <ChevronDown
             className={`w-4 h-4 ${openProfile ? "rotate-180" : "rotate-0"}`}
           />

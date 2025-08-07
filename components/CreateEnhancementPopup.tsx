@@ -22,6 +22,7 @@ import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { createEnhancements, updateEnhancements } from "@/services/enhancement";
+import { StatusType } from "@/types/claims";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -30,12 +31,12 @@ interface CreateEnhancementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId?: ParamValue;
-  selectedEnhancement?: any;
-  fetchClaimsById?: any;
-  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
-  onClose?: () => void;
-  setSelectedEnhancement?: any;
+  claimId: ParamValue;
+  selectedEnhancement: any;
+  fetchClaimsById: any;
+  updateClaimStatusAfterModalSuccess?: (status: StatusType) => Promise<void>;
+  setModalProcessingStatus?: (value: "") => void;
+  setSelectedEnhancement: any;
 }
 
 export default function CreateEnhancementPopup({
@@ -48,15 +49,15 @@ export default function CreateEnhancementPopup({
   data,
   claimId,
   selectedEnhancement,
-  onClose,
+  setModalProcessingStatus,
   fetchClaimsById,
   updateClaimStatusAfterModalSuccess,
-  setSelectedEnhancement,
+  setSelectedEnhancement
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
     doctorName: "DR. ",
-    status: "ENHANCEMENT",
+    status: StatusType.ENHANCEMENT,
     OTHER: "",
     ICP: "",
     numberOfDays: "",
@@ -66,7 +67,7 @@ export default function CreateEnhancementPopup({
     if (!selectedEnhancement) {
       setEnhancementInputs({
         doctorName: "Dr. ",
-        status: "ENHANCEMENT",
+        status: StatusType.ENHANCEMENT,
         OTHER: "",
         ICP: "",
         numberOfDays: "",
@@ -182,8 +183,8 @@ export default function CreateEnhancementPopup({
         };
         setLoading(true);
         const res = await updateEnhancements(payload, selectedEnhancement?.id);
-        if (res?.status == 200) {
-          await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
+        if (res.status == 200) {
+          await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
           setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();
@@ -206,7 +207,7 @@ export default function CreateEnhancementPopup({
         } = enhancementInputs;
         const payload = {
           ...others,
-          status: "ENHANCEMENT",
+          status: StatusType.ENHANCEMENT,
           insuranceRequestId: claimId,
           numberOfDays: Number(numberOfDays),
           documents: [
@@ -217,7 +218,8 @@ export default function CreateEnhancementPopup({
         setLoading(true);
         const res = await createEnhancements(payload);
         if (res?.status == 201) {
-          await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
+          await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
+          setModalProcessingStatus?.("")
           setSelectedEnhancement(null);
           setLoading(false);
           onOpenChange(!open);
@@ -235,7 +237,7 @@ export default function CreateEnhancementPopup({
     if (!isOpen) {
       setSelectedEnhancement(null);
     }
-    onClose?.();
+    setModalProcessingStatus?.("")
     onOpenChange(isOpen);
   };
   return (

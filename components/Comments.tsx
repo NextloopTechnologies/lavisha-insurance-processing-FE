@@ -17,7 +17,7 @@ export default function Comments({ claimId }: CommentsProps) {
 
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
-
+  console.log("loggedInUserRole", loggedInUserRole);
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserRole(localStorage.getItem("userRole"));
@@ -62,13 +62,13 @@ export default function Comments({ claimId }: CommentsProps) {
   };
   useEffect(() => {
     fetchComments();
-  }, [claimId]);
+  }, [claimId, loggedInUserRole, loggedInUserId]);
 
   const handleCreateComment = async () => {
     const payload = {
       text: commentInput,
       insuranceRequestId: claimId,
-      type: "NOTE",
+      type: "QUERY",
     };
 
     try {
@@ -88,7 +88,7 @@ export default function Comments({ claimId }: CommentsProps) {
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {comments.map((msg) => (
           <>
-            {msg.type == "NOTE" && (
+            {msg.type == "QUERY" && (
               <div
                 key={msg.id}
                 className={`flex ${

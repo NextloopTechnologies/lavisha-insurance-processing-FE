@@ -134,7 +134,7 @@ export default function SidebarLayout({ children }: Props) {
   };
   useEffect(() => {
     fetchProfileData();
-  }, [loggedInUserId]);
+  }, [loggedInUserId, openEditProfile]);
   return (
     <div className="relative flex min-h-screen bg-gray-100 w-full ">
       <aside

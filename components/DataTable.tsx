@@ -71,6 +71,7 @@ export function DataTable({
   total,
   handleDeleteClaim,
   getSearchData,
+  initialSearchTerm = "",
 }: {
   data: DATA[];
   sortByClaim: any;
@@ -79,6 +80,7 @@ export function DataTable({
   total: number;
   handleDeleteClaim: any;
   getSearchData: (value?: string[] | string | Date, name?: string) => void;
+  initialSearchTerm?: string,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -92,6 +94,14 @@ export function DataTable({
         : [...prev, status];
     });
   };
+  useEffect(() => {
+    if (initialSearchTerm) {
+      setSearchTerm(initialSearchTerm); // shows in input
+      setDebouncedSearchTerm(initialSearchTerm);
+      getSearchData(initialSearchTerm, "debouncedSearchTerm"); // triggers search
+    }
+  }, [initialSearchTerm]);
+
   useEffect(() => {
     if (selectedStatuses?.length > 0) {
       getSearchData(selectedStatuses, "selectedStatuses");

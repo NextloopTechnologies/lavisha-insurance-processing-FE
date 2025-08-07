@@ -23,6 +23,7 @@ import LoadingOverlay from "./LoadingOverlay";
 import { createEnhancements } from "@/services/enhancement";
 import { createQuery, updateQuery } from "@/services/query";
 import { DialogClose } from "@radix-ui/react-dialog";
+import { StatusType } from "@/types/claims";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,12 +32,12 @@ interface CreateEnhancementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId?: ParamValue;
-  selectedQuery?: any;
-  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
-  onClose?: () => void;
-  fetchClaimsById?: any;
-  setSelectedQuery?: any;
+  claimId: ParamValue;
+  selectedQuery: any;
+  updateClaimStatusAfterModalSuccess?: (status: StatusType) => Promise<void>;
+  setModalProcessingStatus?: (value: "") => void;
+  fetchClaimsById: any;
+  setSelectedQuery: any;
 }
 
 export default function CreateQueryPopup({
@@ -50,14 +51,14 @@ export default function CreateQueryPopup({
   claimId,
   selectedQuery,
   updateClaimStatusAfterModalSuccess,
-  onClose,
+  setModalProcessingStatus,
   fetchClaimsById,
   setSelectedQuery,
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [queryInputs, setQueryInputs] = useState<any>({
     doctorName: "Dr. ",
-    status: "QUERIED",
+    status: StatusType.QUERIED,
     OTHER: "",
     ICP: "",
     notes: "",
@@ -68,7 +69,7 @@ export default function CreateQueryPopup({
     if (!selectedQuery) {
       setQueryInputs({
         doctorName: "Dr. ",
-        status: "QUERIED",
+        status: StatusType.QUERIED,
         OTHER: "",
         ICP: "",
         notes: "",
@@ -194,8 +195,7 @@ export default function CreateQueryPopup({
         setLoading(true);
         const res = await updateQuery(payload, selectedQuery?.id);
         if (res?.status == 200) {
-          await updateClaimStatusAfterModalSuccess("QUERIED");
-          await fetchClaimsById();
+          await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
           setLoading(false);
           onOpenChange(!open);
           setSelectedQuery(null);
@@ -231,8 +231,9 @@ export default function CreateQueryPopup({
         setLoading(true);
         const res = await createQuery(payload);
         if (res?.status == 201) {
-          await updateClaimStatusAfterModalSuccess("QUERIED");
-          await fetchClaimsById();
+          await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
+          setModalProcessingStatus?.("")
+          setLoading(false);
           onOpenChange(!open);
           setSelectedQuery(null);
           setLoading(false);
@@ -249,7 +250,7 @@ export default function CreateQueryPopup({
     if (!isOpen) {
       setSelectedQuery(null);
     }
-    onClose?.();
+    setModalProcessingStatus?.("")
     onOpenChange(isOpen);
   };
   return (
