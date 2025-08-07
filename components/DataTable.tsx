@@ -26,7 +26,7 @@ import {
   Copy,
   EllipsisVertical,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MultiSelect } from "./MultiSelect";
 import Link from "next/link";
 import { statusOptions } from "@/constants/menu";
@@ -70,6 +70,7 @@ export function DataTable({
   setPage,
   total,
   handleDeleteClaim,
+  getSearchData,
 }: {
   data: DATA[];
   sortByClaim: any;
@@ -77,62 +78,48 @@ export function DataTable({
   setPage: any;
   total: number;
   handleDeleteClaim: any;
+  getSearchData: (value?: string[] | string | Date, name?: string) => void;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
   const toggleStatus = (status: string) => {
-    setSelectedStatuses((prev) =>
-      prev.includes(status)
+    setSelectedStatuses((prev) => {
+      return prev.includes(status)
         ? prev.filter((item) => item !== status)
-        : [...prev, status]
-    );
-  };
-  const itemsPerPage = 10;
-  const filteredData = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase();
-    const formattedSelectedDate = selectedDate
-      ? format(selectedDate, "yyyy-MM-dd")
-      : null;
-
-    return data.filter((row) => {
-      const patientName = row.patient?.name?.toLowerCase() || "";
-      const refNumber = row.refNumber?.toLowerCase() || "";
-      const doctorName = row.doctorName?.toLowerCase() || "";
-      const status = row.status?.toLowerCase() || "";
-      const createdDate = row.createdAt
-        ? format(new Date(row.createdAt), "yyyy-MM-dd")
-        : "";
-
-      const matchesSearch =
-        patientName.includes(normalizedSearch) ||
-        refNumber.includes(normalizedSearch) ||
-        doctorName.includes(normalizedSearch) ||
-        status.includes(normalizedSearch);
-
-      const matchesStatus =
-        selectedStatuses.length === 0 || selectedStatuses.includes(row.status);
-
-      const matchesDate =
-        !formattedSelectedDate || createdDate === formattedSelectedDate;
-
-      return matchesSearch && matchesStatus && matchesDate;
+        : [...prev, status];
     });
-  }, [data, searchTerm, selectedStatuses, selectedDate]);
+  };
+  useEffect(() => {
+    if (selectedStatuses?.length > 0) {
+      getSearchData(selectedStatuses, "selectedStatuses");
+    }
+  }, [selectedStatuses]);
+  useEffect(() => {
+    if (selectedDate) {
+      getSearchData(selectedDate, "selectedDate");
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      getSearchData(searchTerm, "debouncedSearchTerm");
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler); // Cleanup if user keeps typing
+    };
+  }, [searchTerm]);
 
   const totalPages = Math.ceil(total);
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
 
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
+
       <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
         <div className="flex gap-2 md:flex-wrap">
           <div className="relative">
@@ -142,7 +129,6 @@ export function DataTable({
               value={searchTerm}
               onChange={(e) => {
                 setSearchTerm(e.target.value);
-                setCurrentPage(1); // reset to page 1 when filtering
               }}
             />
             <span className="absolute left-3 top-2.5 text-[#3E79D6]">
@@ -216,52 +202,54 @@ export function DataTable({
             {/* <br /> */}
             <div className="mb-2 block"></div>
             <TableBody className="bg-white">
-              {filteredData?.map((row, index) => (
-                <TableRow key={index} className="">
-                  {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
+              {data?.length
+                ? data?.map((row, index) => (
+                    <TableRow key={index} className="">
+                      {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
-                  <TableCell className=" border p-5">
-                    {row.patient.name}
-                  </TableCell>
-                  <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                    {row.refNumber}
-                  </TableCell>
-                  <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                    {row.description}
-                  </TableCell>
-                  <TableCell className=" border p-5 ">
-                    {STATUS_LABELS[row.status]}
-                  </TableCell>
-                  <TableCell className=" border p-5 ">
-                    {format(new Date(row.createdAt), "yyyy/MM/dd")}
-                  </TableCell>
-                  <TableCell className=" border p-5 ">
-                    {row.doctorName}
-                  </TableCell>
-                  <TableCell className=" border p-5 ">
-                    {row.isPreAuth ? "True" : "False"}
-                  </TableCell>
-                  <TableCell className=" border p-5">
-                    <div className="flex gap-2 justify-start text-muted-foreground">
-                      <Link href={`/newClaim/${row.refNumber}`}>
-                        <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
-                      </Link>
-                      {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
-                      {row.status !== StatusType.DRAFT && (
-                        <>
-                          <Link href={`/claims/${row.refNumber}`}>
-                            <Eye
-                              // onClick={() => row.patient.id}
-                              className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                            />
+                      <TableCell className=" border p-5">
+                        {row.patient.name}
+                      </TableCell>
+                      <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                        {row.refNumber}
+                      </TableCell>
+                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
+                        {row.description}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {STATUS_LABELS[row.status]}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {format(new Date(row.createdAt), "yyyy/MM/dd")}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {row.doctorName}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {row.isPreAuth ? "True" : "False"}
+                      </TableCell>
+                      <TableCell className=" border p-5">
+                        <div className="flex gap-2 justify-start text-muted-foreground">
+                          <Link href={`/newClaim/${row.refNumber}`}>
+                            <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                           </Link>
-                          <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
-                        </>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                          {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
+                          {row.status !== StatusType.DRAFT && (
+                            <>
+                              <Link href={`/claims/${row.refNumber}`}>
+                                <Eye
+                                  // onClick={() => row.patient.id}
+                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                                />
+                              </Link>
+                              <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : "No record found"}
             </TableBody>
           </Table>
         </div>
@@ -269,7 +257,6 @@ export function DataTable({
           <button
             onClick={() => {
               setPage((prev) => Math.max(prev - 1, 1));
-              // setCurrentPage((prev) => Math.max(prev - 1, 1));
             }}
             disabled={page > 1 ? false : true}
             className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
@@ -284,7 +271,6 @@ export function DataTable({
           <button
             onClick={() => {
               setPage((prev) => prev + 1);
-              // setCurrentPage((prev) => Math.min(prev + 1, totalPages));
             }}
             disabled={page < total ? false : true}
             className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"

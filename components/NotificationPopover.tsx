@@ -60,7 +60,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
       </PopoverTrigger>
       <PopoverContent side="top" align="end" className="w-80 p-0 rounded-none ">
         <h3 className="text-sm font-semibold text-gray-700 my-4 px-4">
-          Notifications
+          {notificationData?.length ? "Notifications" : "No Notifications"}
         </h3>
         <div className="border-b" />
         {notificationData.length > 0 && (

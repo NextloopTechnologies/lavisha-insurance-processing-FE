@@ -33,6 +33,7 @@ import PatientFormDialog from "@/components/CreateEdit";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import InputComponent from "./InputComponent";
 import SelectComponent from "./SelectComponent";
+import Link from "next/link";
 
 export default function CreateClaim({
   handleCreateClaim,
@@ -336,9 +337,11 @@ export default function CreateClaim({
 
         {/* Action Buttons */}
         <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 right-20">
-          <Button className="text-[#3E79D6]" variant="outline">
-            Cancel
-          </Button>
+          <Link href="/claims">
+            <Button className="text-[#3E79D6]" variant="outline">
+              Cancel
+            </Button>
+          </Link>
           {claimInputs.status == "" && (
             <Button
               disabled={loading}

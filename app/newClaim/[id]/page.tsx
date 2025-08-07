@@ -35,7 +35,7 @@ export default function EditClaimForm() {
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
-    doctorName: "",
+    doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
     status: "",

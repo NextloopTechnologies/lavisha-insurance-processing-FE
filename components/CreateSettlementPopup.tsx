@@ -52,7 +52,7 @@ export default function CreateSettlementPopup({
   const [claimInputs, setClaimInputs] = useState<any>({
     isPreAuth: false,
     patientId: "",
-    doctorName: "",
+    doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
     status: StatusType.SETTLED,
@@ -280,7 +280,7 @@ export default function CreateSettlementPopup({
                   onClick={handleCreateSettlement}
                   className="bg-[#3E79D6] px-4"
                 >
-                  Create
+                  {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
                 </Button>
               </div>
             </div>

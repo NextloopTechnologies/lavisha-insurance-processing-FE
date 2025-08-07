@@ -1,19 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Menu, ChevronDown, ChevronRight, X, Bell } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "@/constants/menu";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
 import { logout } from "@/services/auth";
-import { appLogoImage, logoImage, logoSvg, patientImage, userImage } from "../assets";
+import {
+  appLogoImage,
+  logoImage,
+  logoSvg,
+  patientImage,
+  userImage,
+} from "../assets";
 import Image from "next/image";
 import { StaticImageData } from "next/image";
 import { NotificationPopover } from "./NotificationPopover";
 import { recent, unread } from "@/constants/dummy";
 import { ProfilePopover } from "./ProfilePopover";
 import { ProfileEditModal } from "./ProfileEditModal";
+import { getProfileById } from "@/services/profile";
 
 type Props = {
   children: React.ReactNode;
@@ -96,8 +103,11 @@ const SidebarItem = ({
 
 export default function SidebarLayout({ children }: Props) {
   const loggedInUserName = localStorage.getItem("userName");
+  const loggedInUserId = localStorage.getItem("userId");
+  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [openEditProfile, setOpenEditProfile] = useState(false);
+  const [profileData, setProfileData] = useState(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -105,6 +115,21 @@ export default function SidebarLayout({ children }: Props) {
     logout();
     router.push("/login");
   };
+
+  const fetchProfileData = async () => {
+    setLoading(true);
+    try {
+      const res = await getProfileById(loggedInUserId);
+      setProfileData([res.data]);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch patients:", err);
+    }
+  };
+  useEffect(() => {
+    fetchProfileData();
+  }, [loggedInUserId]);
   return (
     <div className="relative flex min-h-screen bg-gray-100 w-full ">
       <aside
@@ -188,10 +213,12 @@ export default function SidebarLayout({ children }: Props) {
                 address="101, Kanchan Sagar, 18/1, Near Industry House"
                 loggedInUserName={loggedInUserName}
                 setOpenEditProfile={setOpenEditProfile}
+                profileData={profileData}
               />
               <ProfileEditModal
                 openEditProfile={openEditProfile}
                 setOpenEditProfile={setOpenEditProfile}
+                profileData={profileData}
               />
               {/* <span
                 onClick={() => setOpenProfile(true)}

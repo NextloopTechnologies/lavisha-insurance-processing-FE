@@ -10,6 +10,7 @@ import {
   createPatient,
   deletePatient,
   getPatients,
+  getPatientsByParams,
   updatePatient,
 } from "@/services/patients";
 import LoadingOverlay from "@/components/LoadingOverlay";
@@ -24,22 +25,24 @@ export default function Patients() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
   const router = useRouter();
   const [patients, setPatients] = useState([]);
-  const fetchPatients = async () => {
-    setLoading(true);
-    try {
-      const res = await getPatients();
-      setPatients(res.data.data);
-      setLoading(false);
-    } catch (err) {
-      setLoading(false);
-      console.error("Failed to fetch patients:", err);
-    }
-  };
-  useEffect(() => {
-    fetchPatients();
-  }, []);
+  // const fetchPatients = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await getPatients();
+  //     setPatients(res.data.data);
+  //     setLoading(false);
+  //   } catch (err) {
+  //     setLoading(false);
+  //     console.error("Failed to fetch patients:", err);
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchPatients();
+  // }, []);
   const handleDelete = (id: string) => {
     setSelectedId(id);
     setOpenDeleteDialog(true);
@@ -98,24 +101,75 @@ export default function Patients() {
     }
   };
 
-  const filteredPatientData = useMemo(() => {
-    return patients.filter((row) => {
-      const matchesSearch = Object.values(row).some((val) =>
-        val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  // const filteredPatientData = useMemo(() => {
+  //   return patients.filter((row) => {
+  //     const matchesSearch = Object.values(row).some((val) =>
+  //       val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //     );
 
-      // const matchesStatus =
-      //   statusFilter === "All" || row.status === statusFilter;
-      // const matchesStatus =
-      //   selectedStatuses.length === 0 ||
-      //   selectedStatuses
-      //     ?.toString()
-      //     .toLowerCase()
-      //     .includes(row.status?.toLowerCase());
+  //     // const matchesStatus =
+  //     //   statusFilter === "All" || row.status === statusFilter;
+  //     // const matchesStatus =
+  //     //   selectedStatuses.length === 0 ||
+  //     //   selectedStatuses
+  //     //     ?.toString()
+  //     //     .toLowerCase()
+  //     //     .includes(row.status?.toLowerCase());
 
-      return matchesSearch;
-    });
-  }, [searchTerm, patients]);
+  //     return matchesSearch;
+  //   });
+  // }, [searchTerm, patients]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler); // Cleanup if user keeps typing
+    };
+  }, [searchTerm]);
+
+  const fetchPatients = async () => {
+    setLoading(true);
+    try {
+      const query: any = {
+        // skip: (page - 1) * pageSize,
+        // take: pageSize,
+        // sortBy: "createdAt",
+        sortOrder: "desc",
+      };
+
+      if (debouncedSearchTerm) query.name = debouncedSearchTerm;
+      // if (searchData?.selectedStatuses.length > 0)
+      //   query.status = searchData?.selectedStatuses.join(",");
+      // if (searchData?.selectedDate) {
+      //   query.createdFrom = format(
+      //     new Date(searchData?.selectedDate),
+      //     "yyyy-MM-dd"
+      //   );
+      // }
+
+      const res = await getPatientsByParams(query);
+      if (res.status == 200) {
+        setPatients(res.data.data);
+        setLoading(false);
+      }
+
+      // const totalPages = Math.ceil(res?.data?.total / pageSize);
+      // setTotal(totalPages);
+    } catch (err) {
+      console.error("Failed to fetch claims:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchPatients();
+  }, [
+    // page, pageSize,
+    debouncedSearchTerm,
+  ]);
 
   const handleClaimView = (id: string) => {
     router.push(`/claims?name=${encodeURIComponent(id)}`);
@@ -160,8 +214,8 @@ export default function Patients() {
 
         {/* Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredPatientData?.length > 0 ? (
-            filteredPatientData?.map((patient, index) => (
+          {patients?.length > 0 ? (
+            patients?.map((patient, index) => (
               <div
                 key={index}
                 className="relative bg-white rounded-2xl shadow-md p-16 text-center"
