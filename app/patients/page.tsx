@@ -249,12 +249,28 @@ export default function Patients() {
 
                 {/* View Claims Button */}
                 {/* <Link href={`/claims/${patient.id}`}> */}
-                <button
-                  onClick={() => handleClaimView(patient.name)}
-                  className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
-                >
-                  View Claims
-                </button>
+                {patient.claimCount>0 ? (
+                  <button
+                    onClick={() => {
+                      const claimCount = patient.claimCount;
+                      if(claimCount === 1){
+                        router.push(`/claims/${patient.singleClaimRefNumber}`);
+                      } else {
+                        router.push(`/claims?patientName=${patient.name}`)
+                      }
+                    }}
+                    className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
+                  >
+                    View Claims
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => router.push(`/newClaim?patientId=${patient.id}`)}
+                    className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
+                  >
+                    Add Claim
+                  </button>
+                )}
                 {/* </Link> */}
               </div>
             ))

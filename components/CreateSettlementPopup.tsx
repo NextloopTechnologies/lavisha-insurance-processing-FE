@@ -20,6 +20,7 @@ import FileDrag from "./FileDrag";
 import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
+import { StatusType } from "@/types/claims";
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -28,10 +29,10 @@ interface CreateSettlementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId?: ParamValue;
-  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
-  onClose?: () => void;
-  fetchClaimsById?: any;
+  claimId: ParamValue;
+  updateClaimStatusAfterModalSuccess?: (status: StatusType) => Promise<void>;
+  setModalProcessingStatus?: (value: "") => void;
+  fetchClaimsById:any;
 }
 
 export default function CreateSettlementPopup({
@@ -44,7 +45,7 @@ export default function CreateSettlementPopup({
   data,
   claimId,
   updateClaimStatusAfterModalSuccess,
-  onClose,
+  setModalProcessingStatus,
   fetchClaimsById,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
@@ -54,7 +55,7 @@ export default function CreateSettlementPopup({
     doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
-    status: "SETTLED",
+    status: StatusType.SETTLED,
     description: "",
     preAuth: "",
     OTHER: "",
@@ -65,7 +66,6 @@ export default function CreateSettlementPopup({
     ICP: "",
     SETTLEMENT_LETTER: "",
     settlementSummary: "",
-    SETTLEMENT_OTHER:""
   });
 
   useEffect(() => {
@@ -73,7 +73,7 @@ export default function CreateSettlementPopup({
 
     // Map documents by their type
     const documentMap = data.documents.reduce((acc, doc) => {
-      if (doc.type === "SETTLEMENT_OTHER") {
+      if (doc.type === "OTHER") {
         acc[doc.type] = acc[doc.type] || [];
         acc[doc.type].push({
           id: doc.id,
@@ -108,7 +108,6 @@ export default function CreateSettlementPopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-      SETTLEMENT_OTHER:documentMap.SETTLEMENT_OTHER || [],
     });
   }, [data]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -186,6 +185,7 @@ export default function CreateSettlementPopup({
       const payload = {
         ...others,
         settlementSummary,
+        status: StatusType.SETTLED,
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
@@ -198,8 +198,9 @@ export default function CreateSettlementPopup({
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res?.status == 200) {
-        fetchClaimsById();
-        await updateClaimStatusAfterModalSuccess("SETTLED");
+        fetchClaimsById()
+        await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
+        setModalProcessingStatus?.("")
         setLoading(false);
         onOpenChange(!open);
       }
@@ -210,7 +211,7 @@ export default function CreateSettlementPopup({
     }
   };
   const handleClose = () => {
-    onClose?.();
+    setModalProcessingStatus?.("")
     onOpenChange(!open);
   };
   return (
@@ -261,8 +262,8 @@ export default function CreateSettlementPopup({
                 title={"Miscellaneous Documents"}
                 multiple={true}
                 onChange={handleFileChange}
-                name={"SETTLEMENT_OTHER"}
-                claimInputs={claimInputs.SETTLEMENT_OTHER}
+                name={"OTHER"}
+                claimInputs={claimInputs.OTHER}
               />
 
               {/* Action Buttons */}

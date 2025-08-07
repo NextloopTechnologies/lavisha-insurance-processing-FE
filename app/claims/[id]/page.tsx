@@ -60,6 +60,7 @@ const modalDependentStatus = [
 
 export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
+  const [openParentLevelModal, setOpenParentLevelModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState(0);
   const [patients, setPatients] = useState<any>([]);
@@ -217,10 +218,10 @@ export default function PatientClaimDetails() {
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
       }
-
-      if (modalDependentStatus.includes(status)) {
-        setModalProcessingStatus(status);
-        setOpenPatientDialog(true);
+      
+      if(modalDependentStatus.includes(status)){
+        setModalProcessingStatus(status)
+        setOpenParentLevelModal(true)
       }
     } catch (error) {
       console.error("catch eror", error);
@@ -250,9 +251,6 @@ export default function PatientClaimDetails() {
             label.toLowerCase() === statusToTabLabel[status].toLowerCase()
         );
         setActiveTab(indexToSet !== -1 ? indexToSet : 0);
-
-        setOpenPatientDialog(!openPatientDialog);
-        setModalProcessingStatus("");
       }
     } catch (error) {
       console.log("UPDATE_STATUS_AFTER_MODAL", error);
@@ -293,74 +291,60 @@ export default function PatientClaimDetails() {
         />
 
         {/* open modal from parent for auto modal operations */}
-        {modalProcessingStatus === StatusType.QUERIED && (
+        {modalProcessingStatus===StatusType.QUERIED && openParentLevelModal && (
           <CreateQueryPopup
-            open={openPatientDialog}
-            onOpenChange={setOpenPatientDialog}
-            selectedQuery={selectedEnhancement}
+            open={openParentLevelModal}
+            onOpenChange={setOpenParentLevelModal}
+            setSelectedQuery={setSelectedQuery}
+            selectedQuery={selectedQuery}
             data={claims}
             claimId={claims?.id}
             selectedTab={"Query"}
-            updateClaimStatusAfterModalSuccess={
-              updateClaimStatusAfterModalSuccess
-            }
-            onClose={() => {
-              setOpenPatientDialog(false);
-              setModalProcessingStatus("");
-            }}
+            fetchClaimsById={fetchClaimsById}
+            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            setModalProcessingStatus={setModalProcessingStatus}
           />
         )}
 
-        {modalProcessingStatus === StatusType.ENHANCEMENT && (
-          <CreateEnhancementPopup
-            open={openPatientDialog}
-            onOpenChange={setOpenPatientDialog}
-            selectedEnhancement={selectedQuery}
+        {modalProcessingStatus===StatusType.ENHANCEMENT && openParentLevelModal && (
+           <CreateEnhancementPopup
+            open={openParentLevelModal}
+            onOpenChange={setOpenParentLevelModal}
+            setSelectedEnhancement={setSelectedEnhancement}
+            selectedEnhancement={selectedEnhancement}
             data={claims}
             claimId={claims?.id}
             selectedTab={"Enhancement"}
-            updateClaimStatusAfterModalSuccess={
-              updateClaimStatusAfterModalSuccess
-            }
-            onClose={() => {
-              setOpenPatientDialog(false);
-              setModalProcessingStatus("");
-            }}
+            fetchClaimsById={fetchClaimsById}
+            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            setModalProcessingStatus={setModalProcessingStatus}
           />
         )}
 
-        {modalProcessingStatus === StatusType.DISCHARGED && (
-          <CreateDischargePopup
-            open={openPatientDialog}
-            onOpenChange={setOpenPatientDialog}
+        {modalProcessingStatus===StatusType.DISCHARGED && openParentLevelModal && (
+           <CreateDischargePopup
+            open={openParentLevelModal}
+            onOpenChange={setOpenParentLevelModal}
             isEditMode={true}
             data={claims}
             claimId={id}
             selectedTab={"Discharge"}
-            updateClaimStatusAfterModalSuccess={
-              updateClaimStatusAfterModalSuccess
-            }
-            onClose={() => {
-              setOpenPatientDialog(false);
-              setModalProcessingStatus("");
-            }}
+            fetchClaimsById={fetchClaimsById}
+            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            setModalProcessingStatus={setModalProcessingStatus}
           />
         )}
 
-        {modalProcessingStatus === StatusType.SETTLED && (
+        {modalProcessingStatus===StatusType.SETTLED && openParentLevelModal && (
           <CreateSettlementPopup
-            open={openPatientDialog}
-            onOpenChange={setOpenPatientDialog}
+            open={openParentLevelModal}
+            onOpenChange={setOpenParentLevelModal}
             data={claims}
             claimId={id}
             selectedTab={"Settlement"}
-            updateClaimStatusAfterModalSuccess={
-              updateClaimStatusAfterModalSuccess
-            }
-            onClose={() => {
-              setOpenPatientDialog(false);
-              setModalProcessingStatus("");
-            }}
+            fetchClaimsById={fetchClaimsById}
+            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            setModalProcessingStatus={setModalProcessingStatus}
           />
         )}
 
@@ -560,7 +544,7 @@ export default function PatientClaimDetails() {
           )}
         </div>
       </div>
-      {visibleTabLabels[activeTab] === "Enhancement" && (
+      {visibleTabLabels[activeTab] === "Enhancement" && openPatientDialog &&(
         <CreateEnhancementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -580,7 +564,7 @@ export default function PatientClaimDetails() {
         />
       )}
 
-      {visibleTabLabels[activeTab] === "Queried" && (
+      {visibleTabLabels[activeTab] === "Queried" && openPatientDialog &&(
         <CreateQueryPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -600,7 +584,7 @@ export default function PatientClaimDetails() {
         />
       )}
 
-      {visibleTabLabels[activeTab] === "Discharge" && (
+      {visibleTabLabels[activeTab] === "Discharge" && openPatientDialog &&(
         <CreateDischargePopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -617,7 +601,7 @@ export default function PatientClaimDetails() {
           }
         />
       )}
-      {visibleTabLabels[activeTab] === "Settlement" && (
+      {visibleTabLabels[activeTab] === "Settlement" && openPatientDialog &&(
         <CreateSettlementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}

@@ -17,7 +17,7 @@ import { INSURANCE_COMPANIES, TPA_OPTIONS } from "@/constants/menu";
 import { createClaims, getClaimsById } from "@/services/claims";
 import { bulkUploadFiles, uploadFiles } from "@/services/files";
 import { getPatientById, getPatients } from "@/services/patients";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, UploadCloud } from "lucide-react";
@@ -32,9 +32,12 @@ import CreateClaim from "@/components/CreateClaim";
 export default function AddClaimForm() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState<any>(null);
+   const searchParams = useSearchParams();
+  const patientIdFromQuery = searchParams.get("patientId");
+
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
-    patientId: "",
+    patientId: patientIdFromQuery || "",
     doctorName: "DR. ",
     tpaName: "",
     insuranceCompany: "",
