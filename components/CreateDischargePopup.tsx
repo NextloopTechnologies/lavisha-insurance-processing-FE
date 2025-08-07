@@ -20,6 +20,7 @@ import FileDrag from "./FileDrag";
 import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
+import { StatusType } from "@/types/claims";
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,8 +30,8 @@ interface CreateSettlementPopupProps {
   selectedTab: string;
   data?: any;
   claimId: ParamValue;
-  updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
-  onClose?: () => void;
+  updateClaimStatusAfterModalSuccess?: (status: StatusType) => Promise<void>;
+  setModalProcessingStatus?: (value: "") => void;
   fetchClaimsById: any;
 }
 
@@ -44,8 +45,8 @@ export default function CreateDischargePopup({
   data,
   claimId,
   updateClaimStatusAfterModalSuccess,
-  onClose,
-  fetchClaimsById,
+  setModalProcessingStatus,
+  fetchClaimsById
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -54,7 +55,7 @@ export default function CreateDischargePopup({
     doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
-    status: "DICHARGED",
+    status: StatusType.DISCHARGED,
     description: "",
     preAuth: "",
     OTHER: "",
@@ -66,7 +67,6 @@ export default function CreateDischargePopup({
     SETTLEMENT_LETTER: "",
     dischargeSummary: "",
   });
-
   useEffect(() => {
     if (!data) return;
 
@@ -184,7 +184,7 @@ export default function CreateDischargePopup({
       const payload = {
         ...others,
         dischargeSummary,
-
+        status: StatusType.DISCHARGED,
         documents: [
           //   CLINIC_PAPER,
           //   ICP,
@@ -197,7 +197,7 @@ export default function CreateDischargePopup({
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res.status == 200) {
-        await updateClaimStatusAfterModalSuccess("DISCHARGED");
+        await updateClaimStatusAfterModalSuccess(StatusType.DISCHARGED);
         setLoading(false);
         onOpenChange(!open);
         fetchClaimsById();
@@ -209,7 +209,7 @@ export default function CreateDischargePopup({
     }
   };
   const handleClose = () => {
-    onClose?.()
+    setModalProcessingStatus?.("")
     onOpenChange(!open);
   };
   return (
