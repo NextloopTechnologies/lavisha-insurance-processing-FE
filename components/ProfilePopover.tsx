@@ -10,19 +10,19 @@ import Image from "next/image";
 import { userImage } from "@/assets";
 
 interface UserPopoverProps {
-  userName: string;
+  userName?: string;
   avatarUrl?: string;
-  hospitalName: string;
-  address: string;
+  hospitalName?: string;
+  address?: string;
   loggedInUserName: string;
   setOpenEditProfile: any;
   profileData?: [
     {
-      hospitalName: string;
-      address: string;
-      rateListUrl: string;
-      profileUrl: string;
-      rateListFileName: string;
+      hospitalName?: string;
+      address?: string;
+      rateListUrl?: string;
+      profileUrl?: string;
+      rateListFileName?: string;
     }
   ];
 }
@@ -50,13 +50,23 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
       <PopoverTrigger asChild>
         <Button variant="ghost" className="flex items-center gap-2 px-2">
           <span className=" w-10 h-10 flex justify-center items-center mb-2">
-            <img
-              src={profileData?.[0]?.profileUrl}
-              alt="Logout"
-              className="mx-auto w-7 h-7 "
-            />
+            {profileData?.[0]?.profileUrl ? (
+              <img
+                src={profileData?.[0]?.profileUrl}
+                alt="profile"
+                className="mx-auto w-7 h-7 "
+              />
+            ) : (
+              <Image
+                src={userImage}
+                alt="profile"
+                className="mx-auto w-7 h-7 "
+              />
+            )}
           </span>
-          <span className="text-sm font-medium">{loggedInUserName}</span>
+          <span className="text-sm font-medium">
+            {profileData?.[0]?.hospitalName}
+          </span>
           <ChevronDown
             className={`w-4 h-4 ${openProfile ? "rotate-180" : "rotate-0"}`}
           />

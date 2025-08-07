@@ -11,9 +11,8 @@ import {
 } from "@/services/claims";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
-import { formatRaisedDate } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 
 export default function Claims() {
   const [loading, setLoading] = useState(false);
@@ -63,9 +62,12 @@ export default function Claims() {
 
       const res = await getClaimsByParams(query);
 
-      setClaims(res.data.data);
-      const totalPages = Math.ceil(res?.data?.total / pageSize);
-      setTotal(totalPages);
+      if (res?.status == 200) {
+        setLoading(false);
+        setClaims(res?.data?.data);
+        const totalPages = Math.ceil(res?.data?.total / pageSize);
+        setTotal(totalPages);
+      }
     } catch (err) {
       console.error("Failed to fetch claims:", err);
     } finally {
@@ -94,7 +96,7 @@ export default function Claims() {
   const confirmDelete = async () => {
     setOpenDeleteDialog(false);
     const res = await deleteClaims(selectedId);
-    if (res.status == 200) {
+    if (res?.status == 200) {
       fetchClaims();
     }
   };

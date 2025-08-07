@@ -52,7 +52,7 @@ export default function Patients() {
     // perform deletion logic here
     setOpenDeleteDialog(false);
     const res = await deletePatient(selectedId);
-    if (res.status == 200) {
+    if (res?.status == 200) {
       fetchPatients();
     }
   };
@@ -64,7 +64,7 @@ export default function Patients() {
 
   const handleEditPatient = (id) => {
     setOpenPatientDialog(true);
-    setSelectedPatient(patients.filter((item) => item.id == id)[0]);
+    setSelectedPatient(patients.filter((item) => item.id == id)?.[0]);
   };
 
   const handleSubmitPatient = async (payload) => {
@@ -141,17 +141,9 @@ export default function Patients() {
       };
 
       if (debouncedSearchTerm) query.name = debouncedSearchTerm;
-      // if (searchData?.selectedStatuses.length > 0)
-      //   query.status = searchData?.selectedStatuses.join(",");
-      // if (searchData?.selectedDate) {
-      //   query.createdFrom = format(
-      //     new Date(searchData?.selectedDate),
-      //     "yyyy-MM-dd"
-      //   );
-      // }
 
       const res = await getPatientsByParams(query);
-      if (res.status == 200) {
+      if (res?.status == 200) {
         setPatients(res.data.data);
         setLoading(false);
       }

@@ -20,6 +20,8 @@ import {
   createPatient,
   getPatientById,
   getPatients,
+  getPatientsByDropdownParams,
+  getPatientsByParams,
 } from "@/services/patients";
 import { useRouter } from "next/navigation";
 
@@ -46,6 +48,8 @@ export default function CreateClaim({
   // const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   // const [claimInputs, setClaimInputs] = useState({
@@ -130,22 +134,49 @@ export default function CreateClaim({
     }
   };
 
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler); // Cleanup if user keeps typing
+    };
+  }, [searchTerm]);
+
   const fetchPatients = async () => {
+    setSearchLoading(true);
     try {
-      const res = await getPatients();
-      setPatients(res.data.data);
+      const query: any = {
+        // skip: (page - 1) * pageSize,
+        // take: pageSize,
+        // sortBy: "createdAt",
+        sortOrder: "desc",
+      };
+
+      if (debouncedSearchTerm) query.search = debouncedSearchTerm;
+
+      const res = await getPatientsByDropdownParams(query);
+      if (res?.status == 200) {
+        setPatients(res.data);
+        setSearchLoading(false);
+      }
     } catch (err) {
-      setLoading(false);
-      console.error("Failed to fetch patients:", err);
+      console.error("Failed to fetch claims:", err);
+    } finally {
+      setSearchLoading(false);
     }
   };
   useEffect(() => {
     fetchPatients();
-  }, []);
+  }, [
+    // page, pageSize,
+    debouncedSearchTerm,
+  ]);
 
-  const filteredPatients = patients.filter((patient) =>
-    patient.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredPatients = patients.filter((patient) =>
+  //   patient.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
 
   // const handleCreatePatient = () => {
   //   setSelectedPatient(null);
@@ -221,21 +252,25 @@ export default function CreateClaim({
                 <Plus size={16} className="mr-2 text-[#3E79D6]" />
                 Add New Patient
               </button>
-              {filteredPatients.map((item) => (
-                <SelectItem
-                  key={item.id}
-                  value={item.id}
-                  className="flex items-center"
-                >
-                  <Image
-                    src={userRound}
-                    alt="User Icon"
-                    width={20}
-                    height={20}
-                  />
-                  {item.name}
-                </SelectItem>
-              ))}
+              {searchLoading
+                ? "Loading..."
+                : patients?.length
+                ? patients.map((item) => (
+                    <SelectItem
+                      key={item.id}
+                      value={item.id}
+                      className="flex items-center"
+                    >
+                      <Image
+                        src={userRound}
+                        alt="User Icon"
+                        width={20}
+                        height={20}
+                      />
+                      {item.name}
+                    </SelectItem>
+                  ))
+                : "No Patients"}
               {/* <SelectItem value="Jane Smith">Jane Smith</SelectItem> */}
             </SelectContent>
           </Select>
@@ -353,13 +388,23 @@ export default function CreateClaim({
               Save as Draft
             </Button>
           )}
-          <Button
-            disabled={loading}
-            onClick={handleCreateClaim}
-            className="bg-[#3E79D6] px-4"
-          >
-            {isEditMode ? "Update Claim" : "Create Claim"}
-          </Button>
+          {claimInputs.status == "DRAFT" ? (
+            <Button
+              disabled={loading}
+              onClick={() => handleCreateClaim("PENDING")}
+              className="bg-[#3E79D6] px-4"
+            >
+              {isEditMode ? "Update Claim" : "Create Claim"}
+            </Button>
+          ) : (
+            <Button
+              disabled={loading}
+              onClick={() => handleCreateClaim(claimInputs.status)}
+              className="bg-[#3E79D6] px-4"
+            >
+              {isEditMode ? "Update Claim" : "Create Claim"}
+            </Button>
+          )}
         </div>
       </div>
     </div>

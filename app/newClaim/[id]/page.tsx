@@ -51,7 +51,7 @@ export default function EditClaimForm() {
   const router = useRouter();
   const params = useParams();
   const id = params.id;
-  const handleCreateClaim = async () => {
+  const handleCreateClaim = async (value = null) => {
     if (!!claims) {
       try {
         const {
@@ -66,6 +66,7 @@ export default function EditClaimForm() {
         } = claimInputs;
         const payload = {
           ...others,
+          status: value,
           documents: [
             CLINIC_PAPER,
             ICP,
@@ -76,7 +77,7 @@ export default function EditClaimForm() {
         };
         setLoading(true);
         const res = await updateClaims(payload, id);
-        if (res.status == 200) {
+        if (res?.status == 200) {
           setLoading(false);
           router.push("/claims");
         }
@@ -110,7 +111,7 @@ export default function EditClaimForm() {
         };
         setLoading(true);
         const res = await createClaims(payload);
-        if (res.status == 201) {
+        if (res?.status == 201) {
           setLoading(false);
           router.push("/claims");
         }

@@ -46,9 +46,17 @@ const statusToTabLabel: Record<string, string> = {
   SETTLED: "Settlement",
 };
 
-const directUpdateStatus = [StatusType.SENT_TO_TPA, StatusType.DENIED, StatusType.APPROVED]
-const modalDependentStatus = [StatusType.QUERIED, StatusType.ENHANCEMENT, 
-        StatusType.DISCHARGED, StatusType.SETTLED]
+const directUpdateStatus = [
+  StatusType.SENT_TO_TPA,
+  StatusType.DENIED,
+  StatusType.APPROVED,
+];
+const modalDependentStatus = [
+  StatusType.QUERIED,
+  StatusType.ENHANCEMENT,
+  StatusType.DISCHARGED,
+  StatusType.SETTLED,
+];
 
 export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
@@ -65,7 +73,9 @@ export default function PatientClaimDetails() {
   const [selectedEnhancementId, setSelectedEnhancementId] = useState("");
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState(null);
-  const [modalProcessingStatus, setModalProcessingStatus] = useState<StatusType|"">("");
+  const [modalProcessingStatus, setModalProcessingStatus] = useState<
+    StatusType | ""
+  >("");
   const [selectedQueryId, setQueryId] = useState("");
 
   const [claimInputs, setClaimInputs] = useState({
@@ -99,8 +109,10 @@ export default function PatientClaimDetails() {
     setLoading(true);
     try {
       const res = await getPatientById(id);
-      setPatients(res.data);
-      setLoading(false);
+      if (res?.status == 200) {
+        setPatients(res?.data);
+        setLoading(false);
+      }
     } catch (err) {
       setLoading(false);
       console.error("Failed to fetch patients:", err);
@@ -114,20 +126,20 @@ export default function PatientClaimDetails() {
     try {
       setLoading(true);
       const res = await getClaimsById(id);
-      if (res.status !== 200) throw new Error("Failed to get claims list!");
+      if (res?.status !== 200) throw new Error("Failed to get claims list!");
       setClaims({
-        ...res.data,
-        enhancements: res.data?.enhancements.sort(
+        ...res?.data,
+        enhancements: res?.data?.enhancements.sort(
           (a, b) =>
             new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
         ),
-        queries: res.data?.queries?.sort(
+        queries: res?.data?.queries?.sort(
           (a, b) =>
             new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
         ),
       });
 
-      const currentStatus = res.data.status;
+      const currentStatus = res?.data?.status;
       setSelectedStatuses(currentStatus);
       setFilteredStatusOptions(getStatusVisibility(currentStatus));
       const maxIndex = statusMaxIndexMap[currentStatus];
@@ -142,18 +154,20 @@ export default function PatientClaimDetails() {
     setLoading(true);
     try {
       const res = await getClaimsById(id);
-      setClaims({
-        ...res.data,
-        enhancements: res.data?.enhancements.sort(
-          (a, b) =>
-            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
-        ),
-        queries: res.data?.queries?.sort(
-          (a, b) =>
-            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
-        ),
-      });
-      setLoading(false);
+      if (res?.status == 200) {
+        setClaims({
+          ...res?.data,
+          enhancements: res?.data?.enhancements.sort(
+            (a, b) =>
+              new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+          ),
+          queries: res?.data?.queries?.sort(
+            (a, b) =>
+              new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+          ),
+        });
+        setLoading(false);
+      }
     } catch (err) {
       setLoading(false);
       console.error("Failed to fetch claims:", err);
@@ -164,21 +178,22 @@ export default function PatientClaimDetails() {
     fetchClaimsById();
   }, []);
 
-  const filteredEnhancement = claims?.enhancements?.filter(
-    (item) => item?.raisedAt == selectedEnhancementId
-  )[0];
+  const filteredEnhancement =
+    claims?.enhancements?.filter(
+      (item) => item?.raisedAt == selectedEnhancementId
+    )?.[0] ?? [];
   useEffect(() => {
     if (claims?.enhancements?.length) {
-      setSelectedEnhancementId(claims?.enhancements[0]?.raisedAt);
+      setSelectedEnhancementId(claims?.enhancements?.[0]?.raisedAt ?? null);
     }
   }, [claims]);
 
-  const filteredQueries = claims?.queries?.filter(
-    (item) => item?.raisedAt == selectedQueryId
-  )[0];
+  const filteredQueries =
+    claims?.queries?.filter((item) => item?.raisedAt == selectedQueryId)?.[0] ??
+    [];
   useEffect(() => {
     if (claims?.queries?.length) {
-      setQueryId(claims?.queries[0]?.raisedAt);
+      setQueryId(claims?.queries?.[0]?.raisedAt ?? null);
     }
   }, [claims]);
 
@@ -195,10 +210,10 @@ export default function PatientClaimDetails() {
   const updateClaimStatus = async (status: StatusType) => {
     try {
       setLoading(true);
-     
-      if(directUpdateStatus.includes(status)){
+
+      if (directUpdateStatus.includes(status)) {
         const res = await updateClaims({ status }, id);
-        if (res.status !== 200) throw new Error("Failed to update status!");
+        if (res?.status !== 200) throw new Error("Failed to update status!");
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
@@ -215,13 +230,14 @@ export default function PatientClaimDetails() {
     }
   };
 
-  const updateClaimStatusAfterModalSuccess = async(status: StatusType) => {
+  const updateClaimStatusAfterModalSuccess = async (status: StatusType) => {
     try {
-      setLoading(true)
-       if(modalDependentStatus.includes(status)){
+      setLoading(true);
+      if (modalDependentStatus.includes(status)) {
         const res = await updateClaims({ status }, id);
-        if (res.status !== 200) throw new Error("Failed to update status!");
-
+        if (res?.status !== 200) throw new Error("Failed to update status!");
+        fetchClaims();
+        fetchClaimsById();
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
@@ -282,7 +298,7 @@ export default function PatientClaimDetails() {
             setSelectedQuery={setSelectedQuery}
             selectedQuery={selectedQuery}
             data={claims}
-            claimId={claims.id}
+            claimId={claims?.id}
             selectedTab={"Query"}
             fetchClaimsById={fetchClaimsById}
             updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
@@ -297,7 +313,7 @@ export default function PatientClaimDetails() {
             setSelectedEnhancement={setSelectedEnhancement}
             selectedEnhancement={selectedEnhancement}
             data={claims}
-            claimId={claims.id}
+            claimId={claims?.id}
             selectedTab={"Enhancement"}
             fetchClaimsById={fetchClaimsById}
             updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
@@ -353,7 +369,7 @@ export default function PatientClaimDetails() {
 
           {visibleTabLabels[activeTab] === "Comments/History" && (
             <div>
-              <Comments claimId={claims.id} />
+              <Comments claimId={claims?.id} />
             </div>
           )}
           {visibleTabLabels[activeTab] === "Enhancement" && (

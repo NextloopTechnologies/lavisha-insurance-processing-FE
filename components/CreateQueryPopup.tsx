@@ -194,11 +194,10 @@ export default function CreateQueryPopup({
         };
         setLoading(true);
         const res = await updateQuery(payload, selectedQuery?.id);
-        if (res.status == 200) {
+        if (res?.status == 200) {
           await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
           setLoading(false);
           onOpenChange(!open);
-          fetchClaimsById();
           setSelectedQuery(null);
         }
       } catch (error) {
@@ -231,13 +230,13 @@ export default function CreateQueryPopup({
         };
         setLoading(true);
         const res = await createQuery(payload);
-        if (res.status == 201) {
+        if (res?.status == 201) {
           await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
           setModalProcessingStatus?.("")
           setLoading(false);
           onOpenChange(!open);
-          fetchClaimsById();
           setSelectedQuery(null);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Upload error:", error);

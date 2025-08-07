@@ -196,7 +196,7 @@ export default function CreateDischargePopup({
       };
       setLoading(true);
       const res = await updateClaims(payload, claimId);
-      if (res.status == 200) {
+      if (res?.status == 200) {
         await updateClaimStatusAfterModalSuccess(StatusType.DISCHARGED);
         setLoading(false);
         onOpenChange(!open);

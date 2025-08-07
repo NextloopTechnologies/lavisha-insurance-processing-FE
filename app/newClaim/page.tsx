@@ -79,13 +79,13 @@ export default function AddClaimForm() {
       setLoading(true);
       if (value) {
         const res = await createClaims({ ...payload, status: value });
-        if (res.status == 201) {
+        if (res?.status == 201) {
           setLoading(false);
           router.push("/claims");
         }
       } else {
         const res = await createClaims(payload);
-        if (res.status == 201) {
+        if (res?.status == 201) {
           setLoading(false);
           router.push("/claims");
         }
@@ -100,7 +100,9 @@ export default function AddClaimForm() {
   const fetchClaims = async () => {
     try {
       const res = await getClaimsById(id);
-      setClaims(res.data);
+      if (res?.status == 200) {
+        setClaims(res?.data);
+      }
     } catch (err) {
       console.error("Failed to fetch claims:", err);
     }

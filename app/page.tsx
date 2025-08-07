@@ -11,21 +11,29 @@ import { DateRangePicker } from "@/components/DateRangePicker";
 import { getDashboardByDate } from "@/services/dashboard";
 
 const Dashboard = () => {
-  const loggedInUserName = localStorage.getItem("userName");
+  const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
 
   const [dashboardData, setDashboardData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<any>({
     from: new Date("2025-06-01"),
     to: new Date("2025-07-30"),
   });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLoggedInUserName(localStorage.getItem("userName"));
+    }
+  }, []);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
       const res = await getDashboardByDate(dateRange.from, dateRange.to);
-      setDashboardData(res.data);
-      setLoading(false);
+      if (res?.status == 200) {
+        setDashboardData(res?.data);
+        setLoading(false);
+      }
     } catch (err) {
       setLoading(false);
       console.error("Failed to fetch patients:", err);

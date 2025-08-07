@@ -78,7 +78,9 @@ export function DateRangePicker({ date, setDate }: DateRangePickerProps) {
             mode="range"
             numberOfMonths={2}
             selected={date}
-            onSelect={(range) => range && setDate(range)}
+            onSelect={(range) =>
+              range && setDate({ from: range?.from, to: range.to })
+            }
             initialFocus
             disabled={(date) => date > new Date()}
           />

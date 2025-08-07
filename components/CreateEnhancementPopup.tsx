@@ -56,8 +56,6 @@ export default function CreateEnhancementPopup({
 }: CreateEnhancementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [enhancementInputs, setEnhancementInputs] = useState<any>({
-    doctorName: "",
-    status: StatusType.ENHANCEMENT,
     doctorName: "DR. ",
     status: StatusType.ENHANCEMENT,
     OTHER: "",
@@ -219,7 +217,7 @@ export default function CreateEnhancementPopup({
         };
         setLoading(true);
         const res = await createEnhancements(payload);
-        if (res.status == 201) {
+        if (res?.status == 201) {
           await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
           setModalProcessingStatus?.("")
           setSelectedEnhancement(null);

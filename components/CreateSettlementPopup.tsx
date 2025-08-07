@@ -197,7 +197,7 @@ export default function CreateSettlementPopup({
       };
       setLoading(true);
       const res = await updateClaims(payload, claimId);
-      if (res.status == 200) {
+      if (res?.status == 200) {
         fetchClaimsById()
         await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
         setModalProcessingStatus?.("")
