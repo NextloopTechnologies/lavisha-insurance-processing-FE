@@ -31,12 +31,12 @@ interface CreateEnhancementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId: ParamValue;
-  selectedQuery: any;
+  claimId?: ParamValue;
+  selectedQuery?: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
   onClose?: () => void;
-  fetchClaimsById: any;
-  setSelectedQuery: any;
+  fetchClaimsById?: any;
+  setSelectedQuery?: any;
 }
 
 export default function CreateQueryPopup({
@@ -193,11 +193,11 @@ export default function CreateQueryPopup({
         };
         setLoading(true);
         const res = await updateQuery(payload, selectedQuery?.id);
-        if (res.status == 200) {
+        if (res?.status == 200) {
           await updateClaimStatusAfterModalSuccess("QUERIED");
+          await fetchClaimsById();
           setLoading(false);
           onOpenChange(!open);
-          fetchClaimsById();
           setSelectedQuery(null);
         }
       } catch (error) {
@@ -230,12 +230,12 @@ export default function CreateQueryPopup({
         };
         setLoading(true);
         const res = await createQuery(payload);
-        if (res.status == 201) {
+        if (res?.status == 201) {
           await updateClaimStatusAfterModalSuccess("QUERIED");
-          setLoading(false);
+          await fetchClaimsById();
           onOpenChange(!open);
-          fetchClaimsById();
           setSelectedQuery(null);
+          setLoading(false);
         }
       } catch (error) {
         console.error("Upload error:", error);
@@ -249,7 +249,7 @@ export default function CreateQueryPopup({
     if (!isOpen) {
       setSelectedQuery(null);
     }
-    onClose?.()
+    onClose?.();
     onOpenChange(isOpen);
   };
   return (

@@ -15,9 +15,15 @@ export default function Comments({ claimId }: CommentsProps) {
   const [loading, setLoading] = useState(false);
   const [commentInput, setCommentInput] = useState("");
 
-  const loggedInUserRole = localStorage.getItem("userRole");
-  const loggedInUserId = localStorage.getItem("userId");
+  const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLoggedInUserRole(localStorage.getItem("userRole"));
+      setLoggedInUserId(localStorage.getItem("userId"));
+    }
+  }, []);
   const fetchComments = async () => {
     try {
       setLoading(true);
@@ -35,9 +41,9 @@ export default function Comments({ claimId }: CommentsProps) {
               date: formatDateTime(item?.createdAt).date,
               time: formatDateTime(item?.createdAt).time,
               position: item?.createdBy == loggedInUserId ? "right" : "left",
+              type: item?.type,
               creator: {
-                id: "6bbe3afb-e85d-404a-b088-b904a86a4451",
-                name: "Hospital",
+                ...item.creator,
               },
             };
           })
@@ -80,41 +86,41 @@ export default function Comments({ claimId }: CommentsProps) {
   return (
     <div className="flex flex-col h-[calc(100vh-235px)] max-w-full mx-auto border rounded-lg shadow bg-white overflow-y">
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
-        <h1 className="text-center text-sm text-[#6D6D6D] bg-[#3E79D61A] rounded-sm p-1">
-          Messages and calls are end-to-end encrypted. Only people in this chat
-          can read, listen to, or share them. Learn more.{" "}
-        </h1>
         {comments.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${
-              msg.position === "right" ? "justify-end" : "justify-start"
-            }`}
-          >
-            <div className="flex justify-start items-start gap-x-2">
-              {msg.position === "left" && (
-                <div className="w-7 h-7  mx-auto rounded-full bg-gray-300 text-center flex justify-center items-center overflow-hidden">
-                  <span className="text-[22px]  font-semibold text-[#3E79D6] ">
-                    {msg.sender.charAt(0)}
-                  </span>
+          <>
+            {msg.type == "NOTE" && (
+              <div
+                key={msg.id}
+                className={`flex ${
+                  msg.position === "right" ? "justify-end" : "justify-start"
+                }`}
+              >
+                <div className="flex justify-start items-start gap-x-2">
+                  {msg.position === "left" && (
+                    <div className="w-7 h-7  mx-auto rounded-full bg-gray-300 text-center flex justify-center items-center overflow-hidden">
+                      <span className="text-[22px]  font-semibold text-[#3E79D6] ">
+                        {msg.sender.charAt(0)}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="min-w-[25%] bg-[#3E79D61A] p-2 rounded-lg shadow-sm">
+                    <div className="w-full text-sm text-gray-500 font-semibold mb-1 flex justify-between gap-x-8">
+                      <span>{msg.sender} </span>{" "}
+                      <span className="text-xs text-gray-400 font-normal">
+                        {msg.date}
+                      </span>
+                    </div>
+                    <div className="  text-sm text-[#6D6D6D] my-3">
+                      <p>{msg.message}</p>
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1 flex justify-between">
+                      <span>{msg.time}</span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              <div className="min-w-[25%] bg-[#3E79D61A] p-2 rounded-lg shadow-sm">
-                <div className="w-full text-sm text-gray-500 font-semibold mb-1 flex justify-between gap-x-8">
-                  <span>{msg.sender} </span>{" "}
-                  <span className="text-xs text-gray-400 font-normal">
-                    {msg.date}
-                  </span>
-                </div>
-                <div className="  text-sm text-[#6D6D6D] my-3">
-                  <p>{msg.message}</p>
-                </div>
-                <div className="text-xs text-gray-400 mt-1 flex justify-between">
-                  <span>{msg.time}</span>
-                </div>
-              </div>
-            </div>
-            {/* {msg.position === "right" && (
+
+                {/* {msg.position === "right" && (
               <div className="w-6 h-6  mx-auto rounded-full bg-gray-300 text-center flex justify-center items-center overflow-hidden">
                 <span className="text-[22px]  font-semibold text-[#3E79D6] ">
                   {msg.sender.charAt(0)}
@@ -122,14 +128,24 @@ export default function Comments({ claimId }: CommentsProps) {
               </div>
             )} */}
 
-            {/* {msg.position === "left" && (
+                {/* {msg.position === "left" && (
               <div className="w-6 h-6  mx-auto rounded-full bg-gray-300 text-center flex justify-center items-center overflow-hidden">
                 <span className="text-[22px]  font-semibold text-[#3E79D6] ">
                   {msg.sender.charAt(0)}
                 </span>
               </div>
             )} */}
-          </div>
+              </div>
+            )}
+            {msg.type == "SYSTEM" && (
+              <div className="w-full">
+                <h1 className="text-[12px] text-center w-full">{msg.time}</h1>
+                <h1 className="text-center text-sm text-[#6D6D6D] bg-[#3E79D61A] rounded-sm p-1">
+                  {msg.message}
+                </h1>
+              </div>
+            )}
+          </>
         ))}
       </div>
 

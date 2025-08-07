@@ -28,10 +28,10 @@ interface CreateSettlementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId: ParamValue;
+  claimId?: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
   onClose?: () => void;
-  fetchClaimsById: any;
+  fetchClaimsById?: any;
 }
 
 export default function CreateDischargePopup({
@@ -196,7 +196,7 @@ export default function CreateDischargePopup({
       };
       setLoading(true);
       const res = await updateClaims(payload, claimId);
-      if (res.status == 200) {
+      if (res?.status == 200) {
         await updateClaimStatusAfterModalSuccess("DISCHARGED");
         setLoading(false);
         onOpenChange(!open);
@@ -209,7 +209,7 @@ export default function CreateDischargePopup({
     }
   };
   const handleClose = () => {
-    onClose?.()
+    onClose?.();
     onOpenChange(!open);
   };
   return (

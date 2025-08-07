@@ -25,8 +25,8 @@ export function ProfileEditModal({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   // const [profileData, setProfileData] = useState([]);
-  const loggedInUserId = localStorage.getItem("userId");
-  const loggedInUserName = localStorage.getItem("userName");
+  const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
   const [profileInput, setProfileInput] = useState({
     name: loggedInUserName,
@@ -36,6 +36,12 @@ export function ProfileEditModal({
     profileFileName: "",
     profileUrl: "",
   });
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLoggedInUserName(localStorage.getItem("userName"));
+      setLoggedInUserId(localStorage.getItem("userId"));
+    }
+  }, []);
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -104,12 +110,12 @@ export function ProfileEditModal({
       }, {});
 
       setProfileInput({
-        name: profileData[0]?.name || loggedInUserName,
-        address: profileData[0]?.address,
-        hospitalName: profileData[0]?.hospitalName,
-        rateListFileName: profileData[0]?.rateListUrl,
-        profileFileName: profileData[0]?.profileFileName,
-        profileUrl: profileData[0]?.profileUrl,
+        name: profileData?.[0]?.name || loggedInUserName,
+        address: profileData?.[0]?.address,
+        hospitalName: profileData?.[0]?.hospitalName,
+        rateListFileName: profileData?.[0]?.rateListUrl,
+        profileFileName: profileData?.[0]?.profileFileName,
+        profileUrl: profileData?.[0]?.profileUrl,
       });
     }
   }, [profileData]);
@@ -141,7 +147,7 @@ export function ProfileEditModal({
         };
         setLoading(true);
         const res = await updateProfile(payload, loggedInUserId);
-        if (res.status == 200) {
+        if (res?.status == 200) {
           setLoading(false);
           setOpenEditProfile(false);
         }
@@ -180,7 +186,7 @@ export function ProfileEditModal({
               <div className="w-24 h-24 flex items-center justify-center rounded-full border ">
                 {/* <Eye className="w-8 h-8 text-gray-400" /> */}
                 <span className="text-[50px] font-semibold text-[#3E79D6] ">
-                  {profileInput?.name[0]}
+                  {profileInput?.name?.[0]}
                 </span>
               </div>
             )}

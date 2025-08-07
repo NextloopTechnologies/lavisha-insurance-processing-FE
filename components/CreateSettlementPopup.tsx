@@ -28,10 +28,10 @@ interface CreateSettlementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId: ParamValue;
+  claimId?: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
   onClose?: () => void;
-  fetchClaimsById:any;
+  fetchClaimsById?: any;
 }
 
 export default function CreateSettlementPopup({
@@ -45,7 +45,7 @@ export default function CreateSettlementPopup({
   claimId,
   updateClaimStatusAfterModalSuccess,
   onClose,
-  fetchClaimsById
+  fetchClaimsById,
 }: CreateSettlementPopupProps) {
   const [loading, setLoading] = useState(false);
   const [claimInputs, setClaimInputs] = useState<any>({
@@ -65,6 +65,7 @@ export default function CreateSettlementPopup({
     ICP: "",
     SETTLEMENT_LETTER: "",
     settlementSummary: "",
+    SETTLEMENT_OTHER:""
   });
 
   useEffect(() => {
@@ -72,7 +73,7 @@ export default function CreateSettlementPopup({
 
     // Map documents by their type
     const documentMap = data.documents.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
+      if (doc.type === "SETTLEMENT_OTHER") {
         acc[doc.type] = acc[doc.type] || [];
         acc[doc.type].push({
           id: doc.id,
@@ -107,6 +108,7 @@ export default function CreateSettlementPopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      SETTLEMENT_OTHER:documentMap.SETTLEMENT_OTHER || [],
     });
   }, [data]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -195,7 +197,7 @@ export default function CreateSettlementPopup({
       };
       setLoading(true);
       const res = await updateClaims(payload, claimId);
-      if (res.status == 200) {
+      if (res?.status == 200) {
         fetchClaimsById();
         await updateClaimStatusAfterModalSuccess("SETTLED");
         setLoading(false);
@@ -208,7 +210,7 @@ export default function CreateSettlementPopup({
     }
   };
   const handleClose = () => {
-    onClose?.()
+    onClose?.();
     onOpenChange(!open);
   };
   return (
@@ -259,8 +261,8 @@ export default function CreateSettlementPopup({
                 title={"Miscellaneous Documents"}
                 multiple={true}
                 onChange={handleFileChange}
-                name={"OTHER"}
-                claimInputs={claimInputs.OTHER}
+                name={"SETTLEMENT_OTHER"}
+                claimInputs={claimInputs.SETTLEMENT_OTHER}
               />
 
               {/* Action Buttons */}

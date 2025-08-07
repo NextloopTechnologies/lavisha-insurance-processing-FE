@@ -49,7 +49,7 @@ export default function PatientDetails({ data, show }) {
   ];
   return (
     <div className="grid grid-cols-2 gap-4 mt-4">
-      {userData.map(({ key, value }, idx) => (
+      {userData?.map(({ key, value }, idx) => (
         <div key={idx} className="p-4 border rounded-md bg-white">
           <div className="flex gap-x-4">
             <span className="mt-1">

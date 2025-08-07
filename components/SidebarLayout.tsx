@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Menu, ChevronDown, ChevronRight, X, Bell } from "lucide-react";
+import { Menu, ChevronDown, ChevronRight, X, Bell, LogOut } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "@/constants/menu";
 import { usePathname, useRouter } from "next/navigation";
@@ -102,8 +102,8 @@ const SidebarItem = ({
 };
 
 export default function SidebarLayout({ children }: Props) {
-  const loggedInUserName = localStorage.getItem("userName");
-  const loggedInUserId = localStorage.getItem("userId");
+  const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
   const [openEditProfile, setOpenEditProfile] = useState(false);
@@ -115,7 +115,12 @@ export default function SidebarLayout({ children }: Props) {
     logout();
     router.push("/login");
   };
-
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLoggedInUserName(localStorage.getItem("userName"));
+      setLoggedInUserId(localStorage.getItem("userId"));
+    }
+  }, []);
   const fetchProfileData = async () => {
     setLoading(true);
     try {
@@ -167,7 +172,8 @@ export default function SidebarLayout({ children }: Props) {
               // onClick={() => hasChildren && setOpen(!open)}
             >
               <span>
-                <Image src={userImage} alt="Logout" className="mx-auto w-3" />
+                {/* <Image src={userImage} alt="Logout" className="mx-auto w-3" /> */}
+                <LogOut className="w-4 h-4 mr-2" />
               </span>
               <span>Logout</span>
             </div>
@@ -254,11 +260,12 @@ export default function SidebarLayout({ children }: Props) {
                     // onClick={() => hasChildren && setOpen(!open)}
                   >
                     <span>
-                      <Image
+                      {/* <Image
                         src={patientImage}
                         alt="Logout"
                         className="mx-auto w-3"
-                      />
+                      /> */}
+                      <LogOut />
                     </span>
                     <span>Logout</span>
                   </div>

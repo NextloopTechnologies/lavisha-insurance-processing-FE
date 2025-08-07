@@ -208,13 +208,13 @@ export function DataTable({
                       {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
                       <TableCell className=" border p-5">
-                        {row.patient.name}
+                        {row?.patient.name}
                       </TableCell>
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                        {row.refNumber}
+                        {row?.refNumber}
                       </TableCell>
                       <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row.description}
+                        {row?.description}
                       </TableCell>
                       <TableCell className=" border p-5 ">
                         {STATUS_LABELS[row.status]}
@@ -223,20 +223,20 @@ export function DataTable({
                         {format(new Date(row.createdAt), "yyyy/MM/dd")}
                       </TableCell>
                       <TableCell className=" border p-5 ">
-                        {row.doctorName}
+                        {row?.doctorName}
                       </TableCell>
                       <TableCell className=" border p-5 ">
-                        {row.isPreAuth ? "True" : "False"}
+                        {row?.isPreAuth ? "True" : "False"}
                       </TableCell>
                       <TableCell className=" border p-5">
                         <div className="flex gap-2 justify-start text-muted-foreground">
-                          <Link href={`/newClaim/${row.refNumber}`}>
+                          <Link href={`/newClaim/${row?.refNumber}`}>
                             <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                           </Link>
                           {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
-                          {row.status !== StatusType.DRAFT && (
+                          {row?.status !== StatusType.DRAFT && (
                             <>
-                              <Link href={`/claims/${row.refNumber}`}>
+                              <Link href={`/claims/${row?.refNumber}`}>
                                 <Eye
                                   // onClick={() => row.patient.id}
                                   className="w-4 h-4 hover:text-blue-600 cursor-pointer"

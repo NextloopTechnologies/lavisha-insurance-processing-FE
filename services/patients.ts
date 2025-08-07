@@ -16,3 +16,14 @@ export const getPatientsByParams = (params: {
 }) => {
   return api.get("/patients", { params });
 };
+
+export const getPatientsByDropdownParams = (params: {
+  skip?: number;
+  take?: number;
+  sortBy?: string;
+  cursor?: string;
+  sortOrder?: "asc" | "desc";
+  search?:string;
+}) => {
+  return api.get("/patients/dropdown", { params });
+};

@@ -30,12 +30,12 @@ interface CreateEnhancementPopupProps {
   isEditMode?: boolean;
   selectedTab: string;
   data?: any;
-  claimId: ParamValue;
-  selectedEnhancement: any;
-  fetchClaimsById: any;
+  claimId?: ParamValue;
+  selectedEnhancement?: any;
+  fetchClaimsById?: any;
   updateClaimStatusAfterModalSuccess?: (status: string) => Promise<void>;
   onClose?: () => void;
-  setSelectedEnhancement: any;
+  setSelectedEnhancement?: any;
 }
 
 export default function CreateEnhancementPopup({
@@ -182,7 +182,7 @@ export default function CreateEnhancementPopup({
         };
         setLoading(true);
         const res = await updateEnhancements(payload, selectedEnhancement?.id);
-        if (res.status == 200) {
+        if (res?.status == 200) {
           await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
           setLoading(false);
           onOpenChange(!open);
@@ -216,7 +216,7 @@ export default function CreateEnhancementPopup({
         };
         setLoading(true);
         const res = await createEnhancements(payload);
-        if (res.status == 201) {
+        if (res?.status == 201) {
           await updateClaimStatusAfterModalSuccess("ENHANCEMENT");
           setSelectedEnhancement(null);
           setLoading(false);
@@ -235,7 +235,7 @@ export default function CreateEnhancementPopup({
     if (!isOpen) {
       setSelectedEnhancement(null);
     }
-    onClose?.()
+    onClose?.();
     onOpenChange(isOpen);
   };
   return (

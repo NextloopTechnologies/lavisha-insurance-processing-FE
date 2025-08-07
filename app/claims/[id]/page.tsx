@@ -46,9 +46,17 @@ const statusToTabLabel: Record<string, string> = {
   SETTLED: "Settlement",
 };
 
-const directUpdateStatus = [StatusType.SENT_TO_TPA, StatusType.DENIED, StatusType.APPROVED]
-const modalDependentStatus = [StatusType.QUERIED, StatusType.ENHANCEMENT, 
-        StatusType.DISCHARGED, StatusType.SETTLED]
+const directUpdateStatus = [
+  StatusType.SENT_TO_TPA,
+  StatusType.DENIED,
+  StatusType.APPROVED,
+];
+const modalDependentStatus = [
+  StatusType.QUERIED,
+  StatusType.ENHANCEMENT,
+  StatusType.DISCHARGED,
+  StatusType.SETTLED,
+];
 
 export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
@@ -64,7 +72,9 @@ export default function PatientClaimDetails() {
   const [selectedEnhancementId, setSelectedEnhancementId] = useState("");
   const [selectedEnhancement, setSelectedEnhancement] = useState(null);
   const [selectedQuery, setSelectedQuery] = useState(null);
-  const [modalProcessingStatus, setModalProcessingStatus] = useState<StatusType|"">("");
+  const [modalProcessingStatus, setModalProcessingStatus] = useState<
+    StatusType | ""
+  >("");
   const [selectedQueryId, setQueryId] = useState("");
 
   const [claimInputs, setClaimInputs] = useState({
@@ -98,8 +108,10 @@ export default function PatientClaimDetails() {
     setLoading(true);
     try {
       const res = await getPatientById(id);
-      setPatients(res.data);
-      setLoading(false);
+      if (res?.status == 200) {
+        setPatients(res?.data);
+        setLoading(false);
+      }
     } catch (err) {
       setLoading(false);
       console.error("Failed to fetch patients:", err);
@@ -113,20 +125,20 @@ export default function PatientClaimDetails() {
     try {
       setLoading(true);
       const res = await getClaimsById(id);
-      if (res.status !== 200) throw new Error("Failed to get claims list!");
+      if (res?.status !== 200) throw new Error("Failed to get claims list!");
       setClaims({
-        ...res.data,
-        enhancements: res.data?.enhancements.sort(
+        ...res?.data,
+        enhancements: res?.data?.enhancements.sort(
           (a, b) =>
             new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
         ),
-        queries: res.data?.queries?.sort(
+        queries: res?.data?.queries?.sort(
           (a, b) =>
             new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
         ),
       });
 
-      const currentStatus = res.data.status;
+      const currentStatus = res?.data?.status;
       setSelectedStatuses(currentStatus);
       setFilteredStatusOptions(getStatusVisibility(currentStatus));
       const maxIndex = statusMaxIndexMap[currentStatus];
@@ -141,18 +153,20 @@ export default function PatientClaimDetails() {
     setLoading(true);
     try {
       const res = await getClaimsById(id);
-      setClaims({
-        ...res.data,
-        enhancements: res.data?.enhancements.sort(
-          (a, b) =>
-            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
-        ),
-        queries: res.data?.queries?.sort(
-          (a, b) =>
-            new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
-        ),
-      });
-      setLoading(false);
+      if (res?.status == 200) {
+        setClaims({
+          ...res?.data,
+          enhancements: res?.data?.enhancements.sort(
+            (a, b) =>
+              new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+          ),
+          queries: res?.data?.queries?.sort(
+            (a, b) =>
+              new Date(b.raisedAt).getTime() - new Date(a.raisedAt).getTime()
+          ),
+        });
+        setLoading(false);
+      }
     } catch (err) {
       setLoading(false);
       console.error("Failed to fetch claims:", err);
@@ -163,21 +177,22 @@ export default function PatientClaimDetails() {
     fetchClaimsById();
   }, []);
 
-  const filteredEnhancement = claims?.enhancements?.filter(
-    (item) => item?.raisedAt == selectedEnhancementId
-  )[0];
+  const filteredEnhancement =
+    claims?.enhancements?.filter(
+      (item) => item?.raisedAt == selectedEnhancementId
+    )?.[0] ?? [];
   useEffect(() => {
     if (claims?.enhancements?.length) {
-      setSelectedEnhancementId(claims?.enhancements[0]?.raisedAt);
+      setSelectedEnhancementId(claims?.enhancements?.[0]?.raisedAt ?? null);
     }
   }, [claims]);
 
-  const filteredQueries = claims?.queries?.filter(
-    (item) => item?.raisedAt == selectedQueryId
-  )[0];
+  const filteredQueries =
+    claims?.queries?.filter((item) => item?.raisedAt == selectedQueryId)?.[0] ??
+    [];
   useEffect(() => {
     if (claims?.queries?.length) {
-      setQueryId(claims?.queries[0]?.raisedAt);
+      setQueryId(claims?.queries?.[0]?.raisedAt ?? null);
     }
   }, [claims]);
 
@@ -194,18 +209,18 @@ export default function PatientClaimDetails() {
   const updateClaimStatus = async (status: StatusType) => {
     try {
       setLoading(true);
-     
-      if(directUpdateStatus.includes(status)){
+
+      if (directUpdateStatus.includes(status)) {
         const res = await updateClaims({ status }, id);
-        if (res.status !== 200) throw new Error("Failed to update status!");
+        if (res?.status !== 200) throw new Error("Failed to update status!");
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
       }
-      
-      if(modalDependentStatus.includes(status)){
-        setModalProcessingStatus(status)
-        setOpenPatientDialog(true)
+
+      if (modalDependentStatus.includes(status)) {
+        setModalProcessingStatus(status);
+        setOpenPatientDialog(true);
       }
     } catch (error) {
       console.error("catch eror", error);
@@ -214,13 +229,14 @@ export default function PatientClaimDetails() {
     }
   };
 
-  const updateClaimStatusAfterModalSuccess = async(status: StatusType) => {
+  const updateClaimStatusAfterModalSuccess = async (status: StatusType) => {
     try {
-      setLoading(true)
-       if(modalDependentStatus.includes(status)){
+      setLoading(true);
+      if (modalDependentStatus.includes(status)) {
         const res = await updateClaims({ status }, id);
-        if (res.status !== 200) throw new Error("Failed to update status!");
-
+        if (res?.status !== 200) throw new Error("Failed to update status!");
+        fetchClaims();
+        fetchClaimsById();
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
@@ -235,8 +251,8 @@ export default function PatientClaimDetails() {
         );
         setActiveTab(indexToSet !== -1 ? indexToSet : 0);
 
-        setOpenPatientDialog(!openPatientDialog)
-        setModalProcessingStatus("")
+        setOpenPatientDialog(!openPatientDialog);
+        setModalProcessingStatus("");
       }
     } catch (error) {
       console.log("UPDATE_STATUS_AFTER_MODAL", error);
@@ -277,15 +293,17 @@ export default function PatientClaimDetails() {
         />
 
         {/* open modal from parent for auto modal operations */}
-        {modalProcessingStatus===StatusType.QUERIED && (
+        {modalProcessingStatus === StatusType.QUERIED && (
           <CreateQueryPopup
             open={openPatientDialog}
             onOpenChange={setOpenPatientDialog}
             selectedQuery={selectedEnhancement}
             data={claims}
-            claimId={claims.id}
+            claimId={claims?.id}
             selectedTab={"Query"}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            updateClaimStatusAfterModalSuccess={
+              updateClaimStatusAfterModalSuccess
+            }
             onClose={() => {
               setOpenPatientDialog(false);
               setModalProcessingStatus("");
@@ -293,15 +311,17 @@ export default function PatientClaimDetails() {
           />
         )}
 
-        {modalProcessingStatus===StatusType.ENHANCEMENT && (
-           <CreateEnhancementPopup
+        {modalProcessingStatus === StatusType.ENHANCEMENT && (
+          <CreateEnhancementPopup
             open={openPatientDialog}
             onOpenChange={setOpenPatientDialog}
             selectedEnhancement={selectedQuery}
             data={claims}
-            claimId={claims.id}
+            claimId={claims?.id}
             selectedTab={"Enhancement"}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            updateClaimStatusAfterModalSuccess={
+              updateClaimStatusAfterModalSuccess
+            }
             onClose={() => {
               setOpenPatientDialog(false);
               setModalProcessingStatus("");
@@ -309,15 +329,17 @@ export default function PatientClaimDetails() {
           />
         )}
 
-        {modalProcessingStatus===StatusType.DISCHARGED && (
-           <CreateDischargePopup
+        {modalProcessingStatus === StatusType.DISCHARGED && (
+          <CreateDischargePopup
             open={openPatientDialog}
             onOpenChange={setOpenPatientDialog}
             isEditMode={true}
             data={claims}
             claimId={id}
             selectedTab={"Discharge"}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            updateClaimStatusAfterModalSuccess={
+              updateClaimStatusAfterModalSuccess
+            }
             onClose={() => {
               setOpenPatientDialog(false);
               setModalProcessingStatus("");
@@ -325,14 +347,16 @@ export default function PatientClaimDetails() {
           />
         )}
 
-        {modalProcessingStatus===StatusType.SETTLED && (
+        {modalProcessingStatus === StatusType.SETTLED && (
           <CreateSettlementPopup
             open={openPatientDialog}
             onOpenChange={setOpenPatientDialog}
             data={claims}
             claimId={id}
             selectedTab={"Settlement"}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
+            updateClaimStatusAfterModalSuccess={
+              updateClaimStatusAfterModalSuccess
+            }
             onClose={() => {
               setOpenPatientDialog(false);
               setModalProcessingStatus("");
@@ -361,7 +385,7 @@ export default function PatientClaimDetails() {
 
           {visibleTabLabels[activeTab] === "Comments/History" && (
             <div>
-              <Comments claimId={claims.id} />
+              <Comments claimId={claims?.id} />
             </div>
           )}
           {visibleTabLabels[activeTab] === "Enhancement" && (
