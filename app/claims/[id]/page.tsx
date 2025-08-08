@@ -533,6 +533,8 @@ export default function PatientClaimDetails() {
                     additionalNotes: false,
                     description: false,
                     settlementSummary: true,
+                    settlementAmount:true,
+                    actualQuotedAmount:true
                   }}
                 />
                 <DocumentDetails

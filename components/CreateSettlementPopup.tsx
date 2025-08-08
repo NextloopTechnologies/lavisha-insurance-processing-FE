@@ -32,7 +32,7 @@ interface CreateSettlementPopupProps {
   claimId: ParamValue;
   updateClaimStatusAfterModalSuccess?: (status: StatusType) => Promise<void>;
   setModalProcessingStatus?: (value: "") => void;
-  fetchClaimsById:any;
+  fetchClaimsById: any;
 }
 
 export default function CreateSettlementPopup({
@@ -66,6 +66,8 @@ export default function CreateSettlementPopup({
     ICP: "",
     SETTLEMENT_LETTER: "",
     settlementSummary: "",
+    settlementAmount: "5000",
+    actualQuotedAmount: "",
   });
 
   useEffect(() => {
@@ -100,6 +102,8 @@ export default function CreateSettlementPopup({
       status: data.status,
       description: data.description,
       settlementSummary: data?.settlementSummary,
+      settlementAmount: data?.settlementAmount,
+      actualQuotedAmount: data?.actualQuotedAmount,
       preAuth: "", // You can derive if needed
       additionalNotes: data.additionalNotes || "",
       OTHER: documentMap.OTHER || [],
@@ -180,11 +184,15 @@ export default function CreateSettlementPopup({
         SETTLEMENT_LETTER,
         description,
         settlementSummary,
+        settlementAmount,
+        actualQuotedAmount,
         ...others
       } = claimInputs;
       const payload = {
         ...others,
         settlementSummary,
+        settlementAmount,
+        actualQuotedAmount,
         status: StatusType.SETTLED,
         documents: [
           //   CLINIC_PAPER,
@@ -198,9 +206,9 @@ export default function CreateSettlementPopup({
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res?.status == 200) {
-        fetchClaimsById()
+        fetchClaimsById();
         await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
-        setModalProcessingStatus?.("")
+        setModalProcessingStatus?.("");
         setLoading(false);
         onOpenChange(!open);
       }
@@ -211,7 +219,7 @@ export default function CreateSettlementPopup({
     }
   };
   const handleClose = () => {
-    setModalProcessingStatus?.("")
+    setModalProcessingStatus?.("");
     onOpenChange(!open);
   };
   return (
@@ -239,12 +247,30 @@ export default function CreateSettlementPopup({
 
               <div className="my-4">
                 <textarea
-                  value={claimInputs.settlementSummary}
+                  value={claimInputs.description}
                   onChange={(e) =>
-                    handleSelectChange(e.target.value, "settlementSummary")
+                    handleSelectChange(e.target.value, "description")
                   }
                   placeholder="Description"
                   className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
+                />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 mb-4 gap-4">
+                <Input
+                  placeholder="Actual Quoted Amount"
+                  className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
+                  value={claimInputs.actualQuotedAmount}
+                  onChange={(e) =>
+                    handleSelectChange(e.target.value, "actualQuotedAmount")
+                  }
+                />
+                <Input
+                  placeholder="Settlement Amount"
+                  className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
+                  value={claimInputs.settlementAmount}
+                  onChange={(e) =>
+                    handleSelectChange(e.target.value, "settlementAmount")
+                  }
                 />
               </div>
 

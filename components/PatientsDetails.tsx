@@ -89,6 +89,20 @@ export default function PatientDetails({ data, show }) {
           </p>
         </div>
       )}
+      {show?.actualQuotedAmount && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Actual Quoted Amount</label>
+          <p className="text-sm mt-1 text-gray-700">
+            {data?.actualQuotedAmount}
+          </p>
+        </div>
+      )}
+      {show?.settlementAmount && (
+        <div className="col-span-2 p-4 border rounded-md bg-white">
+          <label className="text-xs text-gray-500">Settlement Amount</label>
+          <p className="text-sm mt-1 text-gray-700">{data?.settlementAmount}</p>
+        </div>
+      )}
 
       {show?.additionalNotes && (
         <div className="col-span-2 p-4 border rounded-md bg-white">
