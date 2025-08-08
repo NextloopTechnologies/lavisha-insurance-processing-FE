@@ -230,7 +230,7 @@ export default function CreateClaim({
           <Select
             value={claimInputs.patientId}
             onValueChange={(value) => handleSelectChange(value, "patientId")}
-            disabled={!!claimInputs.patientId}
+            // disabled={!!claimInputs.patientId}
           >
             <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black ">
               <SelectValue placeholder="Patient Name" />

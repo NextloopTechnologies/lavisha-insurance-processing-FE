@@ -7,7 +7,7 @@ export const login = async (data) => {
   Cookies.set("access_token", resData?.access_token); // Store in cookie for middleware
   localStorage.setItem("userName", resData?.user?.name);
   localStorage.setItem("userId", resData?.user?.id);
-
+  localStorage.setItem("hospitalName", resData?.user?.hospitalName);
   localStorage.setItem("userRole", resData?.user?.role);
   return response.data;
 };
@@ -16,6 +16,7 @@ export const logout = () => {
   localStorage.removeItem("userName");
   localStorage.removeItem("userId");
   localStorage.removeItem("userRole");
+  localStorage.removeItem("hospitalName");
 };
 
 export const isLoggedIn = () => {

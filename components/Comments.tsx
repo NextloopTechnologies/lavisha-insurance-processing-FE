@@ -150,16 +150,17 @@ export default function Comments({ claimId }: CommentsProps) {
       </div>
 
       <div className="p-4  flex items-center space-x-3">
-        {/* <img
-          src="https://i.pravatar.cc/150?img=60"
-          alt="your avatar"
-          className="w-10 h-10 rounded-full"
-        /> */}
         <input
           type="text"
           placeholder="Add a comment"
           value={commentInput}
           onChange={(e) => setCommentInput(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleCreateComment();
+            }
+          }}
           className="flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none "
         />
         <button
