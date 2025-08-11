@@ -1,3 +1,4 @@
+"use client";
 import {
   Table,
   TableBody,
@@ -7,103 +8,287 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import {
+  Select,
+  SelectTrigger,
+  SelectContent,
+  SelectItem,
+  SelectValue,
+} from "@/components/ui/select";
+import { DatePicker } from "@/components/DatePicker";
+import { useRouter } from "next/navigation";
+import {
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
+  Copy,
+  EllipsisVertical,
+} from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { MultiSelect } from "./MultiSelect";
+import Link from "next/link";
+import { statusOptions } from "@/constants/menu";
+import DeletePopup from "./DeletePopup";
+import { StatusType } from "@/types/claims";
+import { format } from "date-fns";
+import { STATUS_LABELS } from "@/lib/utils";
 
 type User = {
   id: number;
-  claimID: number;
   patientName: string;
-  disease: string;
   status: string;
-  Doctor: string;
+  doctor: string;
   createdDate: string;
-  //   disease: string;
-  //   disease: string;
-  //   disease: string;
+  description: string;
+  claimId: string;
+  preAuthStatus: string;
+};
+type DATA = {
+  id?: number;
+  patientName?: string;
+  status?: string;
+  doctorName?: string;
+  createdAt: string;
+  description?: string;
+  claimId: string;
+  refNumber?: string;
+  isPreAuth: string;
+  tpaName?: string;
+  insuranceCompany?: string;
+  patient: {
+    id?: string;
+    name?: string;
+  };
 };
 
-const users: User[] = [
-  {
-    id: 1,
-    claimID: 11,
-    patientName: "Md Nizam",
-    disease: "fever",
-    status: "active",
-    Doctor: "Dr. SK",
-    createdDate: "05-05-2025",
-  },
-  {
-    id: 2,
-    claimID: 22,
-    patientName: "abc",
-    disease: "fever",
-    status: "active",
-    Doctor: "Dr. xy",
-    createdDate: "05-05-2025",
-  },
-];
+export function DataTable({
+  data,
+  sortByClaim,
+  page,
+  setPage,
+  total,
+  handleDeleteClaim,
+  getSearchData,
+  initialSearchTerm = "",
+}: {
+  data: DATA[];
+  sortByClaim: any;
+  page: number;
+  setPage: any;
+  total: number;
+  handleDeleteClaim: any;
+  getSearchData: (value?: string[] | string | Date, name?: string) => void;
+  initialSearchTerm?: string,
+}) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const router = useRouter();
+  const toggleStatus = (status: string) => {
+    setSelectedStatuses((prev) => {
+      return prev.includes(status)
+        ? prev.filter((item) => item !== status)
+        : [...prev, status];
+    });
+  };
+  useEffect(() => {
+    if (initialSearchTerm) {
+      setSearchTerm(initialSearchTerm); // shows in input
+      setDebouncedSearchTerm(initialSearchTerm);
+      getSearchData(initialSearchTerm, "debouncedSearchTerm"); // triggers search
+    }
+  }, [initialSearchTerm]);
 
-export function DataTable() {
+  useEffect(() => {
+    if (selectedStatuses?.length > 0) {
+      getSearchData(selectedStatuses, "selectedStatuses");
+    }
+  }, [selectedStatuses]);
+  useEffect(() => {
+    if (selectedDate) {
+      getSearchData(selectedDate, "selectedDate");
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      getSearchData(searchTerm, "debouncedSearchTerm");
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler); // Cleanup if user keeps typing
+    };
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(total);
+
   return (
-    <div className="rounded-md border">
-      <div className="text-lg font-semibold m-4">
-        {/* Search / Filters */}
-        <input
-          type="text"
-          placeholder="search..."
-          className="w-[50%] bg-gray-100 rounded-sm placeholder:text-[16px] p-2"
+    <div className="min-h-[calc(100vh-75px)] p-4">
+      {/* Top bar */}
+
+      <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
+        <div className="flex gap-2 md:flex-wrap">
+          <div className="relative">
+            <Input
+              placeholder="Search here"
+              className="pl-10 w-[180px] md:w-56 bg-white rounded-4xl"
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+              }}
+            />
+            <span className="absolute left-3 top-2.5 text-[#3E79D6]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                fill="currentColor"
+                viewBox="0 0 16 16"
+              >
+                <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242 1.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
+              </svg>
+            </span>
+          </div>
+          <MultiSelect
+            mode="multi"
+            selectedStatuses={selectedStatuses}
+            status={statusOptions}
+            toggleStatus={toggleStatus}
+            setSelectedStatuses={setSelectedStatuses}
+          />
+          <DatePicker date={selectedDate} onChange={setSelectedDate} />
+        </div>
+        <Button
+          onClick={() => router.push("/newClaim")}
+          className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+        >
+          <Plus className="mr-2 h-4 w-4" /> New Claim
+        </Button>
+        <Plus
+          onClick={() => router.push("/newClaim")}
+          className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
         />
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow className="text-center">
-            <TableHead>ID</TableHead>
-            <TableHead>Claim ID</TableHead>
-            <TableHead>Patient Name</TableHead>
-            <TableHead>Disease</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Doctor</TableHead>
-            <TableHead>Created Date</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow className="text-start" key={user.id + user.claimID}>
-              <TableCell>{user.id}</TableCell>
-              <TableCell>{user.claimID}</TableCell>
-              <TableCell>{user.patientName}</TableCell>
-              <TableCell>{user.disease}</TableCell>
-              <TableCell>{user.status}</TableCell>
-              <TableCell>{user.Doctor}</TableCell>
-              <TableCell>{user.createdDate}</TableCell>
-              <TableCell className="text-start space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  //   onClick={() => alert(`Viewing ${user.id}`)}
-                >
-                  View
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  //   onClick={() => alert(`Editing claim for ${user.claimID}`)}
-                >
-                  Edit Claim
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  //   onClick={() => alert(`Editing patient ${user.patientName}`)}
-                >
-                  Edit Patient
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* Table */}
+      <div className="  overflow-x-auto">
+        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-300px)] md:h-[calc(100vh-210px)]">
+          <Table className="min-w-full ">
+            <TableHeader className="text-red-400  w-full">
+              <TableRow className="bg-white text-[#FBBC05]">
+                {/* <div className="rounded-md border  w-20"> */}
+                {/* <TableHead className="text-[#FBBC05] border p-3">S No.</TableHead> */}
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
+                  Patient Name
+                </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
+                  Claim ID
+                </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Description
+                </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Status
+                </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Created Date
+                </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Dr. Name
+                </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Pre-Auth Status
+                </TableHead>
+                <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
+                  Action
+                </TableHead>
+                {/* </div> */}
+              </TableRow>
+            </TableHeader>
+            {/* <br /> */}
+            <div className="mb-2 block"></div>
+            <TableBody className="bg-white">
+              {data?.length
+                ? data?.map((row, index) => (
+                    <TableRow key={index} className="">
+                      {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
+
+                      <TableCell className=" border p-5">
+                        {row?.patient.name}
+                      </TableCell>
+                      <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                        {row?.refNumber}
+                      </TableCell>
+                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
+                        {row?.description}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {STATUS_LABELS[row.status]}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {format(new Date(row.createdAt), "yyyy/MM/dd")}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {row?.doctorName}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {row?.isPreAuth ? "True" : "False"}
+                      </TableCell>
+                      <TableCell className=" border p-5">
+                        <div className="flex gap-2 justify-start text-muted-foreground">
+                          <Link href={`/newClaim/${row?.refNumber}`}>
+                            <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
+                          </Link>
+                          {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
+                          {row?.status !== StatusType.DRAFT && (
+                            <>
+                              <Link href={`/claims/${row?.refNumber}`}>
+                                <Eye
+                                  // onClick={() => row.patient.id}
+                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                                />
+                              </Link>
+                              <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : "No record found"}
+            </TableBody>
+          </Table>
+        </div>
+        <div className="flex justify-between items-center mt-4">
+          <button
+            onClick={() => {
+              setPage((prev) => Math.max(prev - 1, 1));
+            }}
+            disabled={page > 1 ? false : true}
+            className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          <span className="text-sm">
+            Page {page} of {totalPages}
+          </span>
+
+          <button
+            onClick={() => {
+              setPage((prev) => prev + 1);
+            }}
+            disabled={page < total ? false : true}
+            className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

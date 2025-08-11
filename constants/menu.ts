@@ -1,57 +1,167 @@
+import { StatusType } from "@/types/claims";
+import {
+  dashboardImage,
+  claimsImage,
+  patientImage,
+  pendingIcon,
+  send1Icon,
+  draftIcon,
+  faqIcon,
+  approveIcon,
+  cancelIcon,
+  growthIcon,
+  dischargeIcon,
+  settledIcon,
+  dashboardActive,
+  claim,
+  claimActive,
+  patient,
+  patientActive,
+} from "../assets";
+
 export const navItems = [
   {
     label: "Dashboard",
     path: "/",
-    icon: "assets/dashboard.png",
+    icon: dashboardImage,
+    activeIcon: dashboardActive,
   },
   {
     label: "Claims",
-path: "/claims",
-    icon: "assets/claims.png",
-
-    // children: [
-    //   { label: "All Claims", path: "/claims", icon: "assets/claims.png" },
-    //   { label: "New Claim", path: "/claims/new", icon: "assets/claims.png" },
-    //   {
-    //     label: "Rejected Claims",
-    //     icon: "assets/claims.png",
-
-    //     children: [
-    //       {
-    //         label: "By Patient",
-    //         path: "/claims/rejected/patient",
-    //         icon: "assets/patient.png",
-    //       },
-    //       {
-    //         label: "By Hospital",
-    //         path: "/claims/rejected/hospital",
-    //         icon: "assets/patient.png",
-    //       },
-    //     ],
-    //   },
-    // ],
+    path: "/claims",
+    icon: claim,
+    activeIcon: claimActive,
   },
   {
     label: "Patients",
     path: "/patients",
-    icon: "assets/patient.png",
+     icon: patient,
+    activeIcon: patientActive,
+  },
+  // {
+  //   label: "User",
+  //   icon: patientImage,
+  //   path: "/user",
+  // },
+  // {
+  //   //  path: "/settlements",
+  //   label: "Settlements",
+  //   icon: patientImage,
+  // },
+  // { path: "/enhancements", label: "Enhancements", icon: patientImage },
+];
+
+export const statusOptions = [
+  {
+    name: "Draft",
+    icon: draftIcon,
+    key: StatusType.DRAFT,
   },
   {
-    label: "queries",
-    icon: "assets/patient.png",
-    children: [
-      {
-        label: "Profile",
-        path: "/queries/profile",
-        icon: "assets/patient.png",
-      },
-      {
-        label: "Security",
-        path: "/queries/security",
-        icon: "assets/patient.png",
-      },
-    ],
+    name: "Pending",
+    icon: pendingIcon,
+    key: StatusType.PENDING,
   },
-  { path: "/settlements", label: "Settlements", icon: "assets/patient.png" },
-  { path: "/enhancements", label: "Enhancements", icon: "assets/patient.png" },
+  {
+    name: "Send to TPA",
+    icon: send1Icon,
+    key: StatusType.SENT_TO_TPA,
+  },
+  {
+    name: "Queried",
+    icon: faqIcon,
+    key: StatusType.QUERIED,
+  },
+  {
+    name: "Denied",
+    icon: cancelIcon,
+    key: StatusType.DENIED,
+  },
+  {
+    name: "Approved",
+    icon: approveIcon,
+    key: StatusType.APPROVED,
+  },
+  {
+    name: "Enhancement",
+    icon: growthIcon,
+    key: StatusType.ENHANCEMENT,
+  },
+  {
+    name: "Discharged",
+    icon: dischargeIcon,
+    key: StatusType.DISCHARGED,
+  },
+  {
+    name: "Settled",
+    icon: settledIcon,
+    key: StatusType.SETTLED,
+  },
+];
+
+export const documents = [
+  { type: "Document Type 1", icon: true },
+  { type: "Document Type 2", icon: true },
+  { type: "Document Type 3", icon: false },
+  { type: "Document Type 4", icon: false },
+  { type: "Document Type 5", icon: false },
+  { type: "Document Type 6", icon: false },
+  { type: "Misc Document", icon: false },
+  { type: "More Document", icon: false },
+];
+
+export const TPA_OPTIONS = [
+  "PARAMOUNT TPA",
+  "RAKSHA TPA",
+  "MD INDIA",
+  "MEDI ASSIST",
+  "HEALTH INDIA TPA",
+  "FAMILY HEALTH TPA",
+  "VIDAL HEALTH TPA",
+  "GENINS INDIA TPA",
+  "HEALTH INSURANCE TPA",
+  "VIPULMEDCORP TPA",
+  "HERITAGE TPA",
+  "GOOD HEALTH INDIA TPA",
+  "MEDSAVE TPA",
+  "Anmol Medicare",
+  "Ericson TPA",
+  "United Healthcare Parekh",
+  "East West TPA",
+  "PARK MEDICLAIM",
+  "SAFEWAY",
+  "VOLO",
+];
+
+export const INSURANCE_COMPANIES = [
+  "STAR HEALTH",
+  "IFFCO TOKIO",
+  "MS CHOLAMANDALAM",
+  "CARE HEALTH",
+  "ICICI LOMBARD",
+  "FUTURE GENERALI",
+  "Aditya Birla",
+  "TATA AIG",
+  "Universal Sompo",
+  "Niva Bupa",
+  "MANIPAL CIGNA",
+  "Navi General",
+  "Bajaj Allianz",
+  "HDFC Ergo",
+  "Liberty General Insurance",
+  "Reliance Ceda",
+  "ACKO GENERAL INSURANCE",
+  "CHOLA MS",
+  "GO DIGIT",
+  "ICICI PRUDENTIAL",
+  "KOTAK",
+  "MAGMA",
+  "RAHEJA QBE GENERAL INSURANCE",
+  "RELIANCE GENERAL INSURANCE",
+  "SBI GENERAL INS",
+  "ROYAL SUNDARAM",
+  "NEW INDIA INSURANCE COMP",
+  "ORIENTAL INSURANCE COMP",
+  "NATIONAL INSURANCE COMP",
+  "UNITED INDIA INSURANCE COMP",
 ];

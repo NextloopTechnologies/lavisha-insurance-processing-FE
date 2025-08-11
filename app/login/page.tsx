@@ -3,13 +3,46 @@
 
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { login } from "@/services/auth";
+import { useRouter } from "next/navigation";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginType, setLoginType] = useState<"admin" | "hospital">("admin");
+  const [loading, setLoading] = useState(false);
+  const [inputs, setInputs] = useState({
+    email: "",
+    password: "",
+  });
+  const router = useRouter();
+  const handleChange = (e, name) => {
+    setInputs((prev) => {
+      return {
+        ...prev,
+        [name]: e.target.value,
+      };
+    });
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setLoading(true);
+    try {
+      const userData = await login(inputs);
+      if (userData?.access_token) {
+        setLoading(true);
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Login failed:", error);
+      // Show toast or error message
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-screen bg-white">
+      {loading && <LoadingOverlay />}
       {/* Left Branding Section - only on desktop */}
       <div className="hidden lg:flex w-2/3 bg-primary  text-white flex-col justify-center items-center relative">
         <img
@@ -19,7 +52,7 @@ export default function LoginPage() {
         />
         <div className="z-10 text-center w-[600px]">
           <img
-            src="assets/larisha-logo.png"
+            src="assets/Logo.svg"
             alt="Logo"
             className="mx-auto mb-4 w-full"
           />
@@ -48,7 +81,7 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-gray-800">
               Hi, Welcome! 👋
             </h1>
-            <div className="mt-2 flex justify-center gap-6 text-sm font-semibold">
+            {/* <div className="mt-2 flex justify-center gap-6 text-sm font-semibold">
               <button
                 className={`border-b-2 ${
                   loginType === "admin"
@@ -69,23 +102,27 @@ export default function LoginPage() {
               >
                 Hospital Login
               </button>
-            </div>
+            </div> */}
           </div>
 
           {/* Form */}
-          <form className="space-y-4">
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <input
                 type="email"
                 placeholder="Email"
-                className="w-full border-b border-yellow-300 px-2 py-2 focus:outline-none text-sm"
+                value={inputs.email}
+                onChange={(e) => handleChange(e, "email")}
+                className="w-full border-b border-[#3E79D6] px-2 py-2 focus:outline-none text-sm"
               />
             </div>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
+                value={inputs.password}
+                onChange={(e) => handleChange(e, "password")}
                 placeholder="Password"
-                className="w-full border-b border-yellow-300 px-2 py-2 focus:outline-none text-sm"
+                className="w-full border-b border-[#3E79D6] px-2 py-2 focus:outline-none text-sm"
               />
               <span
                 className="absolute right-2 top-2 cursor-pointer text-gray-500"
@@ -98,7 +135,7 @@ export default function LoginPage() {
               <input
                 type="checkbox"
                 id="remember"
-                className="accent-yellow-400"
+                className="accent-[#3E79D6]"
               />
               <label htmlFor="remember" className="text-gray-600">
                 Remember me
@@ -106,7 +143,7 @@ export default function LoginPage() {
             </div>
             <button
               type="submit"
-              className="w-full bg-yellow-400 hover:bg-yellow-500 text-white py-2 rounded-full font-semibold text-sm"
+              className="w-full bg-[#3E79D6] hover:bg-[#3E79D6] text-white py-2 rounded-full font-semibold text-sm cursor-pointer"
             >
               Log In
             </button>

@@ -1,10 +1,17 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import type { Metadata, Viewport } from "next";
 
-export const metadata = {
-  title: "Next.js PWA App",
-  description: "A progressive web app with Next.js",
-  manifest: "/manifest.json",
+export const metadata: Metadata = {
+  title: "Larisha Insurance Processing", // App name
+  description: "A progressive web app for insurance claims management",
+  icons: {
+    icon: "/favicon.ico", // Favicon path from public/
+    apple: "/apple-touch-icon.png", // Optional for iOS
+  },
+};
+
+export const viewport: Viewport = {
   themeColor: "#0f172a",
 };
 
@@ -18,18 +25,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-
-export default function RootLayout({ children }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en">
-      <head>
-        {/* <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        /> */}
-      </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased `}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
       </body>

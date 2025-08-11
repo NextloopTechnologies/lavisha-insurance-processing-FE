@@ -1,0 +1,44 @@
+export { default as chatImage } from "./chat.png";
+export { default as claimsImage } from "./claims.png";
+export { default as dashboardImage } from "./dashboard.png";
+export { default as appLogoImage } from "./logo/logo.png";
+
+export { default as dashboardActive } from "./menu/dashboard-active-icon.svg";
+export { default as dashboard } from "./menu/dashboard.svg";
+
+export { default as claimActive } from "./menu/claim-active-icon.svg";
+
+export { default as claim } from "./menu/claim.svg";
+
+export { default as patient } from "./menu/patient.svg";
+export { default as patientActive } from "./menu/patient-active-icon.svg";
+
+export { default as deleteImage } from "./delete.png";
+export { default as doctorBgImage } from "./doctor-bg.jpg";
+export { default as editImage } from "./edit.png";
+export { default as larishaLogo } from "./larisha-logo.png";
+export { default as logoImage } from "./logo.png";
+export { default as notificationIcon } from "./notification_icon.png";
+export { default as patientImage } from "./patient.png";
+export { default as viewImage } from "./view.png";
+export { default as userImage } from "./user.png";
+export { default as whatsappImage } from "./whatsapp.png";
+export { default as deleteIcon } from "./delete-icon.svg";
+export { default as dischargeIcon } from "./discharge.svg";
+export { default as doctorHospitalIcon } from "./doctor-hospital.svg";
+export { default as draftIcon } from "./draft.svg";
+export { default as faqIcon } from "./faq.svg";
+export { default as growthIcon } from "./growth.svg";
+export { default as mainIcon } from "./Icon.svg";
+export { default as logoSvg } from "./Logo.svg";
+export { default as pendingIcon } from "./Pending.svg";
+export { default as send1Icon } from "./send 1.svg";
+export { default as approveIcon } from "./approve.svg";
+export { default as cancelIcon } from "./cancel.svg";
+
+export { default as settledIcon } from "./settled.svg";
+export { default as vectorIcon } from "./Vector.svg";
+export { default as trailLoading } from "./loader/trail-loading.gif";
+export { default as userRound } from "./userRound.png";
+export { default as editIcon } from "./edit_icon.png";
+export { default as doctorBriefcase } from "./doctor-briefcase.png";

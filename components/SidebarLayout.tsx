@@ -1,11 +1,26 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, ChevronDown, ChevronRight, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Menu, ChevronDown, ChevronRight, X, Bell, LogOut } from "lucide-react";
 import Link from "next/link";
 import { navItems } from "@/constants/menu";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
+import { logout } from "@/services/auth";
+import {
+  appLogoImage,
+  logoImage,
+  logoSvg,
+  patientImage,
+  userImage,
+} from "../assets";
+import Image from "next/image";
+import { StaticImageData } from "next/image";
+import { NotificationPopover } from "./NotificationPopover";
+import { recent, unread } from "@/constants/dummy";
+import { ProfilePopover } from "./ProfilePopover";
+import { ProfileEditModal } from "./ProfileEditModal";
+import { getProfileById } from "@/services/profile";
 
 type Props = {
   children: React.ReactNode;
@@ -14,7 +29,8 @@ type Props = {
 type NavItem = {
   label: string;
   path?: string;
-  icon?: string;
+  icon?: string | StaticImageData;
+  activeIcon?: string | StaticImageData;
 
   children?: NavItem[];
 };
@@ -28,14 +44,17 @@ const SidebarItem = ({
   level?: number;
   pathname?: string;
 }) => {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
+
   const hasChildren = item.children && item.children.length > 0;
   const isActive = pathname === item.path;
   return (
     <div className={`pl-${level * 4} text-sm`}>
       <div
-        className={`flex items-center justify-between cursor-pointer  p-2 ${
-          isActive ? "bg-[#FBBC05]" : "hover:shadow-sm"
+        className={`flex items-center justify-between cursor-pointer text-center px-6 py-2 md:py-2 md:px-2  ${
+          isActive
+            ? "bg-[#3E79D6] md:rounded-l-sm rounded-sm shadow-md text-white"
+            : "hover:shadow-md"
         }`}
         onClick={() => hasChildren && setOpen(!open)}
       >
@@ -45,14 +64,22 @@ const SidebarItem = ({
             className="flex justify-start items-center gap-x-2 w-full "
           >
             <span>
-              <img src={item.icon} alt="Logo" className="mx-auto w-3" />
+              {isActive ? (
+                <Image
+                  src={item.activeIcon}
+                  alt="active-logo"
+                  className="mx-auto w-4 h-4"
+                />
+              ) : (
+                <Image src={item.icon} alt="Logo" className="mx-auto w-4 h-4" />
+              )}
             </span>
             <span>{item.label}</span>
           </Link>
         ) : (
           <div className="flex justify-start items-center gap-x-2 w-full ">
             <span>
-              <img src={item.icon} alt="Logo" className="mx-auto w-3" />
+              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
             </span>
             <span>{item.label}</span>
           </div>
@@ -75,24 +102,54 @@ const SidebarItem = ({
 };
 
 export default function SidebarLayout({ children }: Props) {
+  const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
+  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(true);
-  const pathname = usePathname();
+  const [openEditProfile, setOpenEditProfile] = useState(false);
+  const [profileData, setProfileData] = useState(null);
 
+  const router = useRouter();
+  const pathname = usePathname();
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setLoggedInUserName(localStorage.getItem("userName"));
+      setLoggedInUserId(localStorage.getItem("userId"));
+    }
+  }, []);
+  const fetchProfileData = async () => {
+    setLoading(true);
+    try {
+      const res = await getProfileById(loggedInUserId);
+      setProfileData([res.data]);
+      setLoading(false);
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch patients:", err);
+    }
+  };
+  useEffect(() => {
+    fetchProfileData();
+  }, [loggedInUserId, openEditProfile]);
   return (
-    <div className="flex min-h-screen bg-gray-50 w-full ">
+    <div className="relative flex min-h-screen bg-gray-100 w-full ">
       <aside
+        // className={clsx(
+        //   "transition-all relative duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto",
+        //   isOpen ? "w-60 " : "w-0 p-0"
+        // )}
+
         className={clsx(
-          "transition-all relative duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto",
-          isOpen ? "w-60 " : "w-0 p-0"
+          "transition-all relative duration-300 ease-in-out h-screen bg-white shadow-md overflow-y-auto hidden md:block w-0 md:w-60"
         )}
       >
         <div className="w-full flex justify-center border-b-1 border-gray-500">
-          <div className="w-24 h-24">
-            <img
-              src="assets/larisha-logo.png"
-              alt="Logo"
-              className="w-full h-full"
-            />
+          <div className="w-16 h-16">
+            <Image src={appLogoImage} alt="Logo" className="w-full h-full" />
           </div>
         </div>
 
@@ -104,19 +161,19 @@ export default function SidebarLayout({ children }: Props) {
               ))}
             </div>
           )}
-          <div className="space-y-4 text-gray-800 font-medium pl-6 pt-6 w-full">
+          <div
+            onClick={() => handleLogout()}
+            className="space-y-4 text-gray-800 font-medium pl-6 pt-6 w-full"
+          >
             <div
-              className={`flex items-center justify-start cursor-pointer shadow-sm p-2 
-         hover:bg-[#FBBC05]
+              className={`flex items-center justify-start cursor-pointer  p-2 
+         hover:shadow-sm
         `}
               // onClick={() => hasChildren && setOpen(!open)}
             >
               <span>
-                <img
-                  src={"assets/patient.png"}
-                  alt="Logout"
-                  className="mx-auto w-3"
-                />
+                {/* <Image src={userImage} alt="Logout" className="mx-auto w-3" /> */}
+                <LogOut className="w-4 h-4 mr-2" />
               </span>
               <span>Logout</span>
             </div>
@@ -125,9 +182,12 @@ export default function SidebarLayout({ children }: Props) {
       </aside>
 
       <div
+        // className={clsx(
+        //   "flex flex-col transition-all duration-300 ease-in-out",
+        //   isOpen ? "w-[calc(100%-15rem)]" : "w-full"
+        // )}
         className={clsx(
-          "flex flex-col transition-all duration-300 ease-in-out",
-          isOpen ? "w-[calc(100%-15rem)]" : "w-full"
+          "flex flex-col transition-all duration-300 ease-in-out w-[calc(100%)] md:w-[calc(100%-15rem)]"
         )}
       >
         <div className="flex items-center justify-between px-4 py-3 bg-white border-b shadow-sm sticky top-0 z-10">
@@ -143,28 +203,80 @@ export default function SidebarLayout({ children }: Props) {
             )}
           </button> */}
 
-          <div className="flex items-center gap-2 ml-auto">
-            <button className=" text-white block w-10 h-10  text-sm">
-              {/* Notification */}
-              <img
-                src={"assets/notification_icon.png"}
-                alt="Logout"
-                className="mx-auto w-6 h-6"
+          <div className="flex flex-col items-center gap-2 w-full">
+            <div className="flex justify-center items-center gap-2 ml-auto">
+              <NotificationPopover
+                unreadNotifications={unread}
+                recentNotifications={recent}
+                unreadCount={unread.length}
+                // setOpenNotification={setOpenNotification}
+                // openNotification={openNotification}
               />
-            </button>
-            <span className=" w-10 h-10 flex justify-center items-center mb-2">
-              <img
-                src={"assets/user.png"}
-                alt="Logout"
-                className="mx-auto w-7 h-7 "
+              <ProfilePopover
+                userName="Dr. Aamir"
+                // avatarUrl="/path-to-avatar.jpg"
+                hospitalName="Hospital Name"
+                address="101, Kanchan Sagar, 18/1, Near Industry House"
+                loggedInUserName={loggedInUserName}
+                setOpenEditProfile={setOpenEditProfile}
+                profileData={profileData}
               />
-            </span>
-            <span className="text-sm font-medium">User Name</span>
+              <ProfileEditModal
+                openEditProfile={openEditProfile}
+                setOpenEditProfile={setOpenEditProfile}
+                profileData={profileData}
+              />
+              {/* <span
+                onClick={() => setOpenProfile(true)}
+                className=" w-10 h-10 flex justify-center items-center mb-2"
+              >
+                <Image
+                  src={userImage}
+                  alt="Logout"
+                  className="mx-auto w-7 h-7 "
+                />
+              </span> */}
+              {/* <span className="text-sm font-medium">{loggedInUserName}</span> */}
+            </div>
+            {/* mobile view */}
+            <div className="md:hidden flex justify-between h-[calc(100%-120px)] w-90 overflow-scroll">
+              {/* {isOpen && ( */}
+              <div className="flex space-y-4 text-gray-800 font-medium pl-0 pt-2">
+                {navItems.map((item) => (
+                  <SidebarItem
+                    key={item.label}
+                    item={item}
+                    pathname={pathname}
+                  />
+                ))}
+                <div
+                  onClick={() => logout()}
+                  className=" text-gray-800 font-medium pl-6 pt-6 w-full"
+                >
+                  <div
+                    className={`flex items-center justify-start cursor-pointer  p-2 
+         hover:shadow-sm
+        `}
+                    // onClick={() => hasChildren && setOpen(!open)}
+                  >
+                    <span>
+                      {/* <Image
+                        src={patientImage}
+                        alt="Logout"
+                        className="mx-auto w-3"
+                      /> */}
+                      <LogOut />
+                    </span>
+                    <span>Logout</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Page content */}
-        <main className="p-4">{children}</main>
+        <main className="p-0">{children}</main>
       </div>
     </div>
   );
