@@ -154,7 +154,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
                 )}
               </div>
               <div className="text-xs mt-1 truncate max-w-[80px]">
-                {file.name}
+                {file?.name}
               </div>
               <span
                 onClick={() => removeFile(index)}
