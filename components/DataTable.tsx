@@ -57,6 +57,7 @@ type DATA = {
   isPreAuth: string;
   tpaName?: string;
   insuranceCompany?: string;
+  assignee?: string;
   patient: {
     id?: string;
     name?: string;
@@ -80,7 +81,7 @@ export function DataTable({
   total: number;
   handleDeleteClaim: any;
   getSearchData: (value?: string[] | string | Date, name?: string) => void;
-  initialSearchTerm?: string,
+  initialSearchTerm?: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -203,6 +204,9 @@ export function DataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Pre-Auth Status
                 </TableHead>
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Assingee
+                </TableHead>
                 <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
                   Action
                 </TableHead>
@@ -237,6 +241,9 @@ export function DataTable({
                       </TableCell>
                       <TableCell className=" border p-5 ">
                         {row?.isPreAuth ? "True" : "False"}
+                      </TableCell>
+                      <TableCell className=" border p-5 ">
+                        {row?.assignee || "---"}
                       </TableCell>
                       <TableCell className=" border p-5">
                         <div className="flex gap-2 justify-start text-muted-foreground">
