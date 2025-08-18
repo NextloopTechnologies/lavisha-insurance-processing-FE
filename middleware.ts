@@ -1,23 +1,43 @@
-// app/middleware.ts
-
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PUBLIC_ROUTES = ["/login"];
 
+// Role permissions
+const ROLE_PERMISSIONS: Record<string, string[]> = {
+  "/dashboard": ["HOSPITAL", "SUPER_ADMIN", "ADMIN"],
+  "/claims": ["HOSPITAL", "SUPER_ADMIN", "ADMIN"],
+  "/settlements": ["HOSPITAL"],
+  "/patients": ["HOSPITAL"],
+  "/newClaim": ["HOSPITAL"],
+  "/": ["HOSPITAL", "SUPER_ADMIN", "ADMIN"],
+  "/user": ["ADMIN", "SUPER_ADMIN", "ADMIN"],
+};
+
 export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token")?.value;
-  const isPublicRoute = PUBLIC_ROUTES.includes(request.nextUrl.pathname);
-  const isAuthRoute = request.nextUrl.pathname === "/login";
+  const role = request.cookies.get("user_role")?.value;
+  const path = request.nextUrl.pathname;
 
-  // If no token and trying to access protected page → redirect to login
+  const isPublicRoute = PUBLIC_ROUTES.includes(path);
+  const isAuthRoute = path === "/login";
+
+  // Redirect to login if not logged in and accessing protected route
   if (!token && !isPublicRoute) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  // If token exists and trying to access login → redirect to dashboard
+  // If logged in but tries to go to login, redirect to dashboard
   if (token && isAuthRoute) {
     return NextResponse.redirect(new URL("/", request.url));
+  }
+
+  // Role-based access check
+  if (token && role && ROLE_PERMISSIONS[path]) {
+    console.log("ROLE_PERMISSIONS[path]", ROLE_PERMISSIONS[path]);
+    if (!ROLE_PERMISSIONS[path].includes(role)) {
+      return NextResponse.redirect(new URL("/unauthorized", request.url));
+    }
   }
 
   return NextResponse.next();
