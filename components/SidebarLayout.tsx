@@ -21,6 +21,7 @@ import { recent, unread } from "@/constants/dummy";
 import { ProfilePopover } from "./ProfilePopover";
 import { ProfileEditModal } from "./ProfileEditModal";
 import { getProfileById } from "@/services/profile";
+import Cookies from "js-cookie";
 
 type Props = {
   children: React.ReactNode;
@@ -79,7 +80,7 @@ const SidebarItem = ({
         ) : (
           <div className="flex justify-start items-center gap-x-2 w-full ">
             <span>
-              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
+              <Image src={item?.icon} alt="Logo" className="mx-auto w-3 h-3" />
             </span>
             <span>{item.label}</span>
           </div>
@@ -108,6 +109,7 @@ export default function SidebarLayout({ children }: Props) {
   const [isOpen, setIsOpen] = useState(true);
   const [openEditProfile, setOpenEditProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
+  const [menu, setMenu] = useState([]);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -115,6 +117,15 @@ export default function SidebarLayout({ children }: Props) {
     logout();
     router.push("/login");
   };
+
+  useEffect(() => {
+    const userRole = Cookies.get("user_role");
+    if (userRole) {
+      const list = navItems.filter((item) => item.role == userRole);
+      setMenu(list[0]?.menu);
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserName(localStorage.getItem("userName"));
@@ -156,7 +167,7 @@ export default function SidebarLayout({ children }: Props) {
         <div className="flex flex-col justify-between h-[calc(100%-120px)]">
           {isOpen && (
             <div className="space-y-4 text-gray-800 font-medium pl-6 pt-2">
-              {navItems.map((item) => (
+              {menu.map((item) => (
                 <SidebarItem key={item.label} item={item} pathname={pathname} />
               ))}
             </div>
@@ -244,7 +255,7 @@ export default function SidebarLayout({ children }: Props) {
               <div className="flex space-y-4 text-gray-800 font-medium pl-0 pt-2">
                 {navItems.map((item) => (
                   <SidebarItem
-                    key={item.label}
+                    key={item.role}
                     item={item}
                     pathname={pathname}
                   />
