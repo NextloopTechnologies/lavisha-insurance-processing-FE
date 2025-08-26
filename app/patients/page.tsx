@@ -218,10 +218,12 @@ export default function Patients() {
                     onClick={() => handleEditPatient(patient.id)}
                     className="w-4 h-4 text-gray-500 hover:text-blue-600 cursor-pointer"
                   />
-                  <Trash2
-                    onClick={() => handleDelete(patient.id)}
-                    className="w-4 h-4 text-gray-500 hover:text-red-600 cursor-pointer"
-                  />
+                  {patient.claimCount===0 && (
+                    <Trash2
+                      onClick={() => handleDelete(patient.id)}
+                      className="w-4 h-4 text-gray-500 hover:text-red-600 cursor-pointer"
+                    />
+                  )}
                 </div>
 
                 {/* Avatar */}
@@ -254,14 +256,17 @@ export default function Patients() {
                     onClick={() => {
                       const claimCount = patient.claimCount;
                       if(claimCount === 1){
-                        router.push(`/claims/${patient.singleClaimRefNumber}`);
+                        if(patient.isClaimStatusDraft) {
+                          return router.push(`/newClaim/${patient.singleClaimRefNumber}`); // for draft claims
+                        }
+                        router.push(`/claims/${patient.singleClaimRefNumber}`); // for single non draft claim
                       } else {
-                        router.push(`/claims?patientName=${patient.name}`)
+                        router.push(`/claims?patientName=${patient.name}`) // for multiple claims
                       }
                     }}
                     className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
                   >
-                    View Claims
+                   {patient.isClaimStatusDraft ? 'Edit Claim' : 'View Claims'}
                   </button>
                 ) : (
                   <button
