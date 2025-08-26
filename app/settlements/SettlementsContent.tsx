@@ -76,7 +76,6 @@ export default function SettlementsContent() {
       }));
     }
   }, [patientNameFromQuery]);
-  console.log("searchData", searchData);
 
   useEffect(() => {
     fetchClaims();
