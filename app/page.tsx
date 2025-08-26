@@ -16,6 +16,10 @@ const Dashboard = () => {
     from: new Date("2025-06-01"),
     to: new Date("2025-07-30"),
   });
+  const [selectHospital, setSelectHospital] = useState("");
+  const handleHospitalChange = (value: string) => {
+    setSelectHospital(value);
+  };
 
   const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
@@ -27,7 +31,11 @@ const Dashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const res = await getDashboardByDate(dateRange.from, dateRange.to);
+      const res = await getDashboardByDate(
+        dateRange.from,
+        dateRange.to,
+        selectHospital
+      );
       if (res?.status === 200) {
         setDashboardData(res.data);
       }
@@ -38,7 +46,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchDashboardData();
-  }, [dateRange]);
+  }, [dateRange, selectHospital]);
   const hospitalStatCardData = [
     {
       value: "90%",
@@ -55,15 +63,15 @@ const Dashboard = () => {
   ];
   const adminStatCardData = [
     {
-      value: "50",
+      value: dashboardData?.monthlyClaims ?? 0,
       label: "Monthly Claims",
     },
     {
-      value: 50,
+      value: dashboardData?.totalSettlements ?? 0,
       label: "Monthly Settlements",
     },
     {
-      value: 100,
+      value: dashboardData?.totalPatients ?? 0,
       label: "Total Patients",
     },
   ];
@@ -71,7 +79,7 @@ const Dashboard = () => {
   return (
     <SidebarLayout>
       <div className="relative  p-6 space-y-6 h-[calc(100vh-100px)] overflow-y-scroll">
-        {roles.includes("ADMIN") && (
+        {(roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN")) && (
           <AdminDashboard
             dashboardData={dashboardData}
             loggedInUserName={loggedInUserName}
@@ -80,9 +88,12 @@ const Dashboard = () => {
             statCardData={adminStatCardData}
             hospitalFilter={true}
             roles={roles}
+            handleHospitalChange={handleHospitalChange}
+            selectHospital={selectHospital}
           />
         )}
-        {roles.includes("HOSPITAL") && (
+        {(roles?.includes("HOSPITAL") ||
+          roles?.includes("HOSPITAL_MANAGER")) && (
           <AdminDashboard
             dashboardData={dashboardData}
             loggedInUserName={loggedInUserName}

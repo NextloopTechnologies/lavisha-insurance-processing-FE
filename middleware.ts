@@ -6,12 +6,13 @@ const PUBLIC_ROUTES = ["/login"];
 // Role permissions
 const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/dashboard": ["HOSPITAL", "SUPER_ADMIN", "ADMIN"],
-  "/claims": ["HOSPITAL", "SUPER_ADMIN", "ADMIN"],
-  "/settlements": ["HOSPITAL"],
-  "/patients": ["HOSPITAL"],
+  "/claims": ["HOSPITAL", "SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
+  "/settlements": ["HOSPITAL", "SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
+  "/manager-chat": ["SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
+  "/patients": ["HOSPITAL", "HOSPITAL_MANAGER", "SUPER_ADMIN"],
   "/newClaim": ["HOSPITAL"],
-  "/": ["HOSPITAL", "SUPER_ADMIN", "ADMIN"],
-  "/user": ["ADMIN", "SUPER_ADMIN", "ADMIN"],
+  "/": ["HOSPITAL", "SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
+  "/user": ["ADMIN", "SUPER_ADMIN"],
 };
 
 export function middleware(request: NextRequest) {
@@ -34,7 +35,6 @@ export function middleware(request: NextRequest) {
 
   // Role-based access check
   if (token && role && ROLE_PERMISSIONS[path]) {
-    console.log("ROLE_PERMISSIONS[path]", ROLE_PERMISSIONS[path]);
     if (!ROLE_PERMISSIONS[path].includes(role)) {
       return NextResponse.redirect(new URL("/unauthorized", request.url));
     }
@@ -53,5 +53,6 @@ export const config = {
     "/queries",
     "/settlements",
     "/enhancements",
+    "/manager-chat",
   ],
 };

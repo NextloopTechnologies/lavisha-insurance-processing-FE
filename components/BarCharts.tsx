@@ -125,18 +125,22 @@ const BarCharts = ({
       </div>
 
       <ResponsiveContainer width="100%" height={255}>
-        <BarChart data={chartData}>
-          <CartesianGrid strokeDasharray="4 4" vertical={false} />
-          <XAxis dataKey="name" />
-          <YAxis />
-          <Tooltip />
-          <Bar
-            dataKey="value"
-            fill="#3b82f6"
-            barSize={40}
-            radius={[4, 4, 0, 0]}
-          />
-        </BarChart>
+        {chartData?.length > 0 ? (
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="4 4" vertical={false} />
+            <XAxis dataKey="name" />
+            <YAxis />
+            <Tooltip />
+            <Bar
+              dataKey="value"
+              fill="#3b82f6"
+              barSize={40}
+              radius={[4, 4, 0, 0]}
+            />
+          </BarChart>
+        ) : (
+          <div className="flex justify-center items-center">No data found</div>
+        )}
       </ResponsiveContainer>
     </div>
   );

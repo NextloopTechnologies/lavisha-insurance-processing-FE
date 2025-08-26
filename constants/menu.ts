@@ -110,7 +110,7 @@ export const navItems = [
     ],
   },
   {
-    role: "SUPER_ADMIN",
+    role: "HOSPITAL_MANAGER",
     menu: [
       {
         label: "Dashboard",
@@ -130,6 +130,42 @@ export const navItems = [
         icon: patient,
         activeIcon: patientActive,
       },
+
+      {
+        label: "Manager Chat",
+        path: "/manager-chat",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+      // {
+      //   label: "User",
+      //   path: "/user",
+      //   icon: patient,
+      //   activeIcon: patientActive,
+      // },
+    ],
+  },
+  {
+    role: "SUPER_ADMIN",
+    menu: [
+      {
+        label: "Dashboard",
+        path: "/",
+        icon: dashboardImage,
+        activeIcon: dashboardActive,
+      },
+      {
+        label: "Claims",
+        path: "/claims",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      // {
+      //   label: "Patients",
+      //   path: "/patients",
+      //   icon: patient,
+      //   activeIcon: patientActive,
+      // },
       {
         label: "Settlements",
         path: "/settlements",
@@ -150,6 +186,7 @@ export const navItems = [
       },
     ],
   },
+
   {
     role: "ADMIN",
     menu: [
@@ -165,12 +202,12 @@ export const navItems = [
         icon: claim,
         activeIcon: claimActive,
       },
-      {
-        label: "Patients",
-        path: "/patients",
-        icon: patient,
-        activeIcon: patientActive,
-      },
+      // {
+      //   label: "Patients",
+      //   path: "/patients",
+      //   icon: patient,
+      //   activeIcon: patientActive,
+      // },
       {
         label: "Settlements",
         path: "/settlements",

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
@@ -18,11 +19,12 @@ import {
   BriefcaseIcon,
   Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { uploadFiles } from "@/services/files";
-import { createUsers } from "@/services/users";
+import { createUsers, getUsersDropdown } from "@/services/users";
 import FileDrag from "./FileDrag";
 import SelectComponent from "./SelectComponent";
+import { toast } from "sonner";
 
 type BasePayload = {
   name: string;
@@ -33,8 +35,9 @@ type BasePayload = {
 
 type HospitalPayload = BasePayload & {
   address: string;
-  hospitalName: string;
+  hospitalName?: string;
   rateListFileName: string;
+  hospitalId?: string;
 };
 
 type Payload = BasePayload | HospitalPayload;
@@ -48,10 +51,12 @@ export default function CreateUser() {
     address: "",
     hospitalName: "",
     rateListFileName: "",
+    hospitalId: "",
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [users, setUsers] = useState([]);
   const [fileUpload, setFileUpload] = useState({});
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
@@ -101,6 +106,8 @@ export default function CreateUser() {
   };
 
   const handleCreate = async () => {
+    setLoading(true);
+
     try {
       let payload: Payload = {
         name: user.name,
@@ -114,21 +121,55 @@ export default function CreateUser() {
         payload = {
           ...payload,
           address: user.address,
-          hospitalName: user.hospitalName,
+          // hospitalName: user.hospitalName,
+          rateListFileName: user.rateListFileName,
+        } as HospitalPayload;
+      }
+      if (user.role === "HOSPITAL_MANAGER") {
+        payload = {
+          ...payload,
+          address: user.address,
+          hospitalId: user.hospitalId,
           rateListFileName: user.rateListFileName,
         } as HospitalPayload;
       }
 
-      console.log("payload", payload);
-
-      const res = null; // await createUsers(payload);
+      const res = await createUsers(payload);
       if (res?.status === 201) {
         setLoading(false);
+        toast.success("Created Successfully");
+        setUser({
+          role: "",
+          name: "",
+          email: "",
+          password: "",
+          address: "",
+          hospitalName: "",
+          rateListFileName: "",
+          hospitalId: "",
+        });
       }
     } catch (error) {
       console.error("User Create error:", error);
     }
   };
+  const fetchUsersDropdown = async () => {
+    // setLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL");
+      if (res?.status === 200) {
+        setUsers(res?.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersDropdown();
+  }, []);
 
   return (
     <div className="min-h-[calc(100vh-200px)] w-full p-4">
@@ -177,6 +218,26 @@ export default function CreateUser() {
               <SelectItem value="HOSPITAL_MANAGER">Hospital Manager</SelectItem>
             </SelectContent>
           </Select>
+          {user.role == "HOSPITAL_MANAGER" && (
+            <Select
+              value={user.hospitalId}
+              onValueChange={(value) => handleChange("hospitalId", value)}
+            >
+              <SelectTrigger className="w-full flex justify-between bg-[#F2F7FC] text-black font-semibold">
+                <div className="flex gap-x-2 items-center">
+                  <Users className="w-6 h-6 text-[#3E79D6]" />
+                  <SelectValue placeholder={"Select Hospital"} />
+                </div>
+              </SelectTrigger>
+              <SelectContent className=" w-full">
+                <SelectGroup>
+                  {users?.map((item, index) => (
+                    <SelectItem value={item?.id}>{item?.name}</SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
 
           <div className="flex items-center gap-2 bg-[#F2F7FC] p-1 rounded-md">
             <UserIcon className="w-5 h-5 text-[#3E79D6]" />
@@ -188,7 +249,7 @@ export default function CreateUser() {
               onChange={(e) => handleChange("name", e.target.value)}
             />
           </div>
-          {user.role == "HOSPITAL" && (
+          {/* {user.role == "HOSPITAL" && (
             <div className="flex items-center gap-2 bg-[#F2F7FC] p-1 rounded-md">
               <UserIcon className="w-5 h-5 text-[#3E79D6]" />
               <Input
@@ -199,8 +260,30 @@ export default function CreateUser() {
                 onChange={(e) => handleChange("hospitalName", e.target.value)}
               />
             </div>
-          )}
+          )} */}
 
+          <div className="flex flex-col gap-4">
+            {user.role == "HOSPITAL" && (
+              <div>
+                <textarea
+                  value={user.address}
+                  onChange={(e) => handleChange("address", e.target.value)}
+                  placeholder="Address"
+                  className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+                />
+              </div>
+            )}
+
+            {user.role == "HOSPITAL" && (
+              <FileDrag
+                title={"RateList FileName"}
+                multiple={false}
+                onChange={handleFileChange}
+                name={"rateListFileName"}
+                // claimInputs={[profileInput?.rateListFileName]}
+              />
+            )}
+          </div>
           <div className="flex gap-4">
             <div className="flex items-center gap-2 bg-[#F2F7FC] p-1 rounded-md w-full">
               <BadgeIcon className="w-5 h-5 text-[#3E79D6]" />
@@ -223,28 +306,6 @@ export default function CreateUser() {
                 onChange={(e) => handleChange("password", e.target.value)}
               />
             </div>
-          </div>
-          <div className="flex flex-col gap-4">
-            {user.role == "HOSPITAL" && (
-              <div>
-                <textarea
-                  value={user.address}
-                  onChange={(e) => handleChange("address", e.target.value)}
-                  placeholder="Address"
-                  className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
-                />
-              </div>
-            )}
-
-            {user.role == "HOSPITAL" && (
-              <FileDrag
-                title={"RateList FileName"}
-                multiple={false}
-                onChange={handleFileChange}
-                name={"rateListFileName"}
-                // claimInputs={[profileInput?.rateListFileName]}
-              />
-            )}
           </div>
         </div>
 

@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import PieCharts from "@/components/PieCharts";
 import BarCharts from "@/components/BarCharts";
@@ -16,6 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import DasboardStatCard from "./DashboardStatCard";
 import { boolean } from "yup";
+import { getUsersDropdown } from "@/services/users";
 
 interface Props {
   dashboardData: any;
@@ -25,6 +26,8 @@ interface Props {
   statCardData?: { value: any; label: string }[];
   hospitalFilter?: boolean;
   roles?: string[];
+  handleHospitalChange?: (e: any) => void;
+  selectHospital?: string;
 }
 
 const AdminDashboard: React.FC<Props> = ({
@@ -35,7 +38,27 @@ const AdminDashboard: React.FC<Props> = ({
   statCardData,
   hospitalFilter = false,
   roles,
+  handleHospitalChange,
+  selectHospital,
 }) => {
+  const [users, setUsers] = useState([]);
+  const fetchUsersDropdown = async () => {
+    // setLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL");
+      if (res?.status === 200) {
+        setUsers(res?.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersDropdown();
+  }, []);
   return (
     <>
       <div className="flex justify-between items-center">
@@ -47,17 +70,17 @@ const AdminDashboard: React.FC<Props> = ({
                 All Hospital
               </Label>
               <Select
-              // value={filter} onValueChange={handleChange}
+                value={selectHospital}
+                onValueChange={handleHospitalChange}
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Hospital" />
                 </SelectTrigger>
                 <SelectContent className=" w-full">
                   <SelectGroup>
-                    <SelectItem value="CHL_HOSPITAL">CHL HOSPITAL</SelectItem>
-                    <SelectItem value="HOSPITAL_MANAGER">
-                      Hospital Manager
-                    </SelectItem>
+                    {users?.map((item, index) => (
+                      <SelectItem value={item?.id}>{item?.name}</SelectItem>
+                    ))}
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -97,14 +120,15 @@ const AdminDashboard: React.FC<Props> = ({
         {/* Right - Bar Chart by TPA */}
         <Card className="p-4 md:col-span-4">
           {/* <BarCharts data={dashboardData} /> */}
-          {roles?.includes("ADMIN") && (
+          {(roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN")) && (
             <BarCharts
               data={dashboardData}
               showDropdown={false}
               dropdownLabel="Claims By"
             />
           )}
-          {roles?.includes("HOSPITAL") && (
+          {(roles?.includes("HOSPITAL") ||
+            roles?.includes("HOSPITAL_MANAGER")) && (
             <BarCharts
               data={dashboardData}
               showDropdown
