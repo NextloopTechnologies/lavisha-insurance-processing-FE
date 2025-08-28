@@ -15,9 +15,13 @@ const Dashboard = () => {
 
   const [dashboardData, setDashboardData] = useState<any>([]);
   const [loading, setLoading] = useState(false);
-  const [dateRange, setDateRange] = useState<any>({
-    from: new Date("2025-06-01"),
-    to: new Date("2025-07-30"),
+
+  const [dateRange, setDateRange] = useState(() => {
+    const to = new Date();
+    const from = new Date();
+    from.setMonth(from.getMonth() - 1);
+
+    return { from, to };
   });
 
   useEffect(() => {
