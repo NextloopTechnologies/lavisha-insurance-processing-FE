@@ -9,9 +9,9 @@ const COLORS = ["#3b82f6", "#6366f1", "#a5b4fc"]; // Tailwind-like blue shades
 const PieCharts = ({ data }) => {
   const chartData = useMemo(() => {
     return [
-      { name: "Settled", value: Number(data?.percentageSettled) },
-      { name: "Enhancement", value: Number(data?.percentageEnhancement) },
-      { name: "Pending", value: Number(data?.percentagePending) },
+      { name: "Settled", value: Number(data?.percentageSettled || 0) },
+      { name: "Enhancement", value: Number(data?.percentageEnhancement || 0) },
+      { name: "Pending", value: Number(data?.percentagePending || 0) },
     ];
   }, [data]);
   return (
@@ -45,7 +45,7 @@ const PieCharts = ({ data }) => {
             dominantBaseline="middle"
             className="text-3xl font-bold"
           >
-            {data?.totalClaims}
+            {data?.totalClaims || 0}
           </text>
         </PieChart>
       </div>
