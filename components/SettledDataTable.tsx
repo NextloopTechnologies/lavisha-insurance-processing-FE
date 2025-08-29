@@ -34,7 +34,6 @@ import DeletePopup from "./DeletePopup";
 import { StatusType } from "@/types/claims";
 import { format } from "date-fns";
 import { STATUS_LABELS } from "@/lib/utils";
-import AssigneeDropdown from "./AssigneeDropdown";
 import { UserRole } from "@/types/comments";
 
 type User = {
@@ -59,14 +58,14 @@ type DATA = {
   isPreAuth: string;
   tpaName?: string;
   insuranceCompany?: string;
-  assignee?: { id: string };
+  assignee?: string;
   patient: {
     id?: string;
     name?: string;
   };
 };
 
-export function DataTable({
+export function SettledDataTable({
   data,
   sortByClaim,
   page,
@@ -76,8 +75,6 @@ export function DataTable({
   getSearchData,
   initialSearchTerm = "",
   roles,
-  setClaims,
-  users,
 }: {
   roles?: string[];
   data: DATA[];
@@ -88,15 +85,15 @@ export function DataTable({
   handleDeleteClaim: any;
   getSearchData: (value?: string[] | string | Date, name?: string) => void;
   initialSearchTerm?: string;
-  setClaims?: any;
-  users?: { id?: string; name?: string; role?: string }[];
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
+  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
+    "SETTLED",
+  ]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [assignee, setAssignee] = useState("");
   const router = useRouter();
-
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) => {
       return prev.includes(status)
@@ -135,6 +132,7 @@ export function DataTable({
   }, [searchTerm]);
 
   const totalPages = Math.ceil(total);
+  const handleChange = (name, value) => {};
 
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
@@ -163,23 +161,21 @@ export function DataTable({
               </svg>
             </span>
           </div>
-          <MultiSelect
+          {/* <MultiSelect
             mode="multi"
             selectedStatuses={selectedStatuses}
-            status={statusOptions}
+            status={statusOptions.filter((item) => item?.name == "Settled")}
             toggleStatus={toggleStatus}
             setSelectedStatuses={setSelectedStatuses}
-          />
-          <DatePicker date={selectedDate} onChange={setSelectedDate} />
+          /> */}
+          {/* <DatePicker date={selectedDate} onChange={setSelectedDate} /> */}
         </div>
-        {(!roles.includes("ADMIN") || !roles.includes("SUPER_ADMIN")) && (
-          <Button
-            onClick={() => router.push("/newClaim")}
-            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
-          >
-            <Plus className="mr-2 h-4 w-4" /> New Claim
-          </Button>
-        )}
+        <Button
+          onClick={() => router.push("/newClaim")}
+          className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+        >
+          <Plus className="mr-2 h-4 w-4" /> New Claim
+        </Button>
         <Plus
           onClick={() => router.push("/newClaim")}
           className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
@@ -203,8 +199,7 @@ export function DataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Description
                 </TableHead>
-                {(!roles?.includes(UserRole.ADMIN) ||
-                  !roles?.includes(UserRole.SUPER_ADMIN)) && (
+                {!roles?.includes("ADMIN") && (
                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                     Status
                   </TableHead>
@@ -218,8 +213,7 @@ export function DataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Pre-Auth Status
                 </TableHead>
-                {(roles?.includes(UserRole.ADMIN) ||
-                  roles?.includes(UserRole.SUPER_ADMIN)) && (
+                {roles?.includes("ADMIN") && (
                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                     Assingee
                   </TableHead>
@@ -264,39 +258,20 @@ export function DataTable({
                       {(roles?.includes(UserRole.ADMIN) ||
                         roles?.includes(UserRole.SUPER_ADMIN)) && (
                         <TableCell className=" border p-5 ">
-                          {/* {row?.assignee || "---"} */}
-                          <AssigneeDropdown
-                            claimId={row?.refNumber}
-                            currentAssignee={row?.assignee?.id}
-                            users={users} // pass list of users to assign
-                            onUpdate={(id, newAssignee) => {
-                              setClaims((prev) =>
-                                prev.map((c) =>
-                                  c.id === id
-                                    ? { ...c, assignee: newAssignee }
-                                    : c
-                                )
-                              );
-                            }}
-                          />
+                          {row?.assignee || "---"}
                         </TableCell>
                       )}
                       <TableCell className=" border p-5">
                         <div className="flex gap-2 justify-start text-muted-foreground">
-                          {/* {!roles?.includes("ADMIN") && ( */}
-                          <Link href={`/newClaim/${row?.refNumber}`}>
-                            <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
-                          </Link>
-                          {/* )} */}
-                          {row?.status == StatusType.DRAFT && (
-                            <Trash2
-                              onClick={() => handleDeleteClaim(row.refNumber)}
-                              className="w-4 h-4 hover:text-red-600 cursor-pointer"
-                            />
+                          {!roles?.includes("ADMIN") && (
+                            <Link href={`/newClaim/${row?.refNumber}`}>
+                              <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
+                            </Link>
                           )}
+                          {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
                           {row?.status !== StatusType.DRAFT && (
                             <>
-                              {/* {roles?.includes("ADMIN") ? (
+                              {roles?.includes("ADMIN") ? (
                                 <Link
                                   href={`/claims/${row?.refNumber}?showStatus=true&tab=5`}
                                 >
@@ -305,24 +280,24 @@ export function DataTable({
                                     className="w-4 h-4 hover:text-blue-600 cursor-pointer"
                                   />
                                 </Link>
-                              ) : ( */}
-                              <Link href={`/claims/${row?.refNumber}`}>
-                                <Eye
-                                  // onClick={() => row.patient.id}
-                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                />
-                              </Link>
-                              {/* )} */}
-                              {/* {!roles?.includes("ADMIN") && ( */}
-                              <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
-                              {/* )} */}
+                              ) : (
+                                <Link href={`/claims/${row?.refNumber}`}>
+                                  <Eye
+                                    // onClick={() => row.patient.id}
+                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                                  />
+                                </Link>
+                              )}
+                              {!roles?.includes("ADMIN") && (
+                                <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
+                              )}
                             </>
                           )}
                         </div>
                       </TableCell>
                     </TableRow>
                   ))
-                : ""}
+                : " "}
             </TableBody>
           </Table>
           {data?.length == 0 ? (

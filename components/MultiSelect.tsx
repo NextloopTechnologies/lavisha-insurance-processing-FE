@@ -16,7 +16,8 @@ export function MultiSelect({
   toggleStatus,
   mode = "multi",
   updateClaimStatus,
-  isClaimDetailsSelect
+  isClaimDetailsSelect,
+  disable,
 }: {
   selectedStatuses: string[] | string;
   toggleStatus: (value: string) => void;
@@ -27,8 +28,9 @@ export function MultiSelect({
     key: string;
   }[];
   mode?: "multi" | "single";
-  updateClaimStatus?:(value: string) => void,
-  isClaimDetailsSelect?: boolean
+  updateClaimStatus?: (value: string) => void;
+  isClaimDetailsSelect?: boolean;
+  disable?: boolean;
 }) {
   const isMulti = mode === "multi";
   const selectedArray = Array.isArray(selectedStatuses)
@@ -49,27 +51,29 @@ export function MultiSelect({
       toggleStatus(value);
     } else {
       // set status for multi mode
-      if(!isClaimDetailsSelect) setSelectedStatuses(value)
+      if (!isClaimDetailsSelect) setSelectedStatuses(value);
       // for claim details select
-      if(['SENT_TO_TPA','DENIED', 'APPROVED'].includes(value)){   
+      if (["SENT_TO_TPA", "DENIED", "APPROVED"].includes(value)) {
         setSelectedStatuses(value);
-      }  
-      if(updateClaimStatus) updateClaimStatus(value);
+      }
+      if (updateClaimStatus) updateClaimStatus(value);
     }
   };
-
 
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button
+          disabled={disable}
           variant="outline"
-          className="md:w-[220px] justify-start bg-white rounded-md font-normal"
+          className={`md:w-[220px] justify-start bg-white rounded-md font-normal ${
+            Boolean(disable) ? " cursor-not-allowed" : " cursor-pointer"
+          }`}
         >
           {/* {selectedArray.length > 0
             ? selectedArray.join(", ")
             : "Select Status"} */}
-            {selectedArray.length > 0
+          {selectedArray.length > 0
             ? status
                 .filter((s) => selectedArray.includes(s.key))
                 .map((s) => s.name)
