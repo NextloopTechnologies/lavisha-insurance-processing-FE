@@ -1,7 +1,7 @@
 "use client";
 import { chatMessages } from "@/constants/dummy";
 import { createComments, getComments } from "@/services/comments";
-import { TComments } from "@/types/comments";
+import { CommentType, TComments, UserRole } from "@/types/comments";
 import Image from "next/image";
 import React, { useEffect, useState } from "react";
 import Avtar from "./Avtar";
@@ -9,15 +9,16 @@ import { formatDateTime } from "@/lib/utils";
 
 type CommentsProps = {
   claimId: string;
+  disable?: boolean;
+  data?: any;
 };
-export default function Comments({ claimId }: CommentsProps) {
+export default function Comments({ claimId, disable, data }: CommentsProps) {
   const [comments, setComments] = useState<TComments[]>([]);
   const [loading, setLoading] = useState(false);
   const [commentInput, setCommentInput] = useState("");
 
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
-  console.log("loggedInUserRole", loggedInUserRole);
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserRole(localStorage.getItem("userRole"));
@@ -67,8 +68,20 @@ export default function Comments({ claimId }: CommentsProps) {
   const handleCreateComment = async () => {
     const payload = {
       text: commentInput,
-      insuranceRequestId: claimId,
-      type: "QUERY",
+
+      ...((loggedInUserRole == UserRole.HOSPITAL_MANAGER ||
+        loggedInUserRole == UserRole.HOSPITAL) && {
+        insuranceRequestId: claimId,
+      }),
+      ...((loggedInUserRole == UserRole.ADMIN ||
+        loggedInUserRole == UserRole.SUPER_ADMIN) && {
+        hospitalId: data?.patient?.hospital?.id,
+      }),
+      type:
+        loggedInUserRole == UserRole.ADMIN ||
+        loggedInUserRole == UserRole.SUPER_ADMIN
+          ? CommentType.QUERY
+          : CommentType.QUERY,
     };
 
     try {
@@ -149,7 +162,7 @@ export default function Comments({ claimId }: CommentsProps) {
         ))}
       </div>
 
-      <div className="p-4  flex items-center space-x-3">
+      <div className={` p-4  flex items-center space-x-3`}>
         <input
           type="text"
           placeholder="Add a comment"
@@ -161,9 +174,13 @@ export default function Comments({ claimId }: CommentsProps) {
               handleCreateComment();
             }
           }}
-          className="flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none "
+          disabled={disable}
+          className={`${
+            Boolean(disable) ? " cursor-not-allowed" : ""
+          } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
         />
         <button
+          disabled={disable}
           onClick={handleCreateComment}
           className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-2 text-sm cursor-pointer"
         >

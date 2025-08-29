@@ -19,36 +19,215 @@ import {
   patientActive,
 } from "../assets";
 
-export const navItems = [
+// export const navItems = [
+//   {
+//     label: "Dashboard",
+//     path: "/",
+//     icon: dashboardImage,
+//     activeIcon: dashboardActive,
+//   },
+//   {
+//     label: "Claims",
+//     path: "/claims",
+//     icon: claim,
+//     activeIcon: claimActive,
+//   },
+//   {
+//     label: "Patients",
+//     path: "/patients",
+//     icon: patient,
+//     activeIcon: patientActive,
+//   },
+// ];
+
+export const adminNavItems = [
   {
     label: "Dashboard",
     path: "/",
     icon: dashboardImage,
     activeIcon: dashboardActive,
   },
+  { label: "Claims", path: "/claims", icon: claim, activeIcon: claimActive },
   {
-    label: "Claims",
-    path: "/claims",
+    label: "Patients",
+    path: "/patients",
+    icon: patient,
+    activeIcon: patientActive,
+  },
+  {
+    label: "Settlements",
+    path: "/settlements",
     icon: claim,
     activeIcon: claimActive,
   },
   {
-    label: "Patients",
-    path: "/patients",
-     icon: patient,
+    label: "Manager Chat",
+    path: "/manager-chat",
+    icon: patient,
     activeIcon: patientActive,
   },
-  // {
-  //   label: "User",
-  //   icon: patientImage,
-  //   path: "/user",
-  // },
-  // {
-  //   //  path: "/settlements",
-  //   label: "Settlements",
-  //   icon: patientImage,
-  // },
-  // { path: "/enhancements", label: "Enhancements", icon: patientImage },
+  { label: "User", path: "/user", icon: patient, activeIcon: patientActive },
+];
+
+export const hospitalNavItems = [
+  {
+    label: "Dashboard",
+    path: "/",
+    icon: dashboardImage,
+    activeIcon: dashboardActive,
+  },
+  { label: "Claims", path: "/claims", icon: claim, activeIcon: claimActive },
+  {
+    label: "Patients",
+    path: "/patients",
+    icon: patient,
+    activeIcon: patientActive,
+  },
+];
+
+export const navItems = [
+  {
+    role: "HOSPITAL",
+    menu: [
+      {
+        label: "Dashboard",
+        path: "/",
+        icon: dashboardImage,
+        activeIcon: dashboardActive,
+      },
+      {
+        label: "Claims",
+        path: "/claims",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      {
+        label: "Patients",
+        path: "/patients",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+    ],
+  },
+  {
+    role: "HOSPITAL_MANAGER",
+    menu: [
+      {
+        label: "Dashboard",
+        path: "/",
+        icon: dashboardImage,
+        activeIcon: dashboardActive,
+      },
+      {
+        label: "Claims",
+        path: "/claims",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      {
+        label: "Patients",
+        path: "/patients",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+
+      {
+        label: "Manager Chat",
+        path: "/manager-chat",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+      // {
+      //   label: "User",
+      //   path: "/user",
+      //   icon: patient,
+      //   activeIcon: patientActive,
+      // },
+    ],
+  },
+  {
+    role: "SUPER_ADMIN",
+    menu: [
+      {
+        label: "Dashboard",
+        path: "/",
+        icon: dashboardImage,
+        activeIcon: dashboardActive,
+      },
+      {
+        label: "Claims",
+        path: "/claims",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      // {
+      //   label: "Patients",
+      //   path: "/patients",
+      //   icon: patient,
+      //   activeIcon: patientActive,
+      // },
+      {
+        label: "Settlements",
+        path: "/settlements",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      {
+        label: "Manager Chat",
+        path: "/manager-chat",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+      {
+        label: "User",
+        path: "/user",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+    ],
+  },
+
+  {
+    role: "ADMIN",
+    menu: [
+      {
+        label: "Dashboard",
+        path: "/",
+        icon: dashboardImage,
+        activeIcon: dashboardActive,
+      },
+      {
+        label: "Claims",
+        path: "/claims",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      // {
+      //   label: "Patients",
+      //   path: "/patients",
+      //   icon: patient,
+      //   activeIcon: patientActive,
+      // },
+      {
+        label: "Settlements",
+        path: "/settlements",
+        icon: claim,
+        activeIcon: claimActive,
+      },
+      {
+        label: "Manager Chat",
+        path: "/manager-chat",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+      {
+        label: "User",
+        path: "/user",
+        icon: patient,
+        activeIcon: patientActive,
+      },
+    ],
+  },
 ];
 
 export const statusOptions = [

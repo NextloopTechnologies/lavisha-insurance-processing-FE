@@ -7,6 +7,13 @@ export enum CommentType {
   HOSPITAL_NOTE = "HOSPITAL_NOTE",
 }
 
+export enum UserRole {
+  ADMIN = "ADMIN",
+  SUPER_ADMIN = "SUPER_ADMIN",
+  HOSPITAL = "HOSPITAL",
+  HOSPITAL_MANAGER = "HOSPITAL_MANAGER",
+}
+
 export type TComments = {
   message: string;
   sender: string;

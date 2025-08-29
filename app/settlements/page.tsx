@@ -1,12 +1,12 @@
 import { Suspense } from "react";
-import ClaimsContent from "./ClaimsContent";
+import SettlementsContent from "./SettlementsContent";
 
 export default function ClaimsPage() {
   return (
     <Suspense
       fallback={<div className="flex justify-center items-center"></div>}
     >
-      <ClaimsContent />
+      <SettlementsContent />
     </Suspense>
   );
 }

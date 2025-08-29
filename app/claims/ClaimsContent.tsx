@@ -8,6 +8,8 @@ import { deleteClaims, getClaimsByParams } from "@/services/claims";
 import { format } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import { getUsersDropdown } from "@/services/users";
 
 export default function ClaimsContent() {
   const [loading, setLoading] = useState(false);
@@ -22,6 +24,24 @@ export default function ClaimsContent() {
     selectedDate: "",
     debouncedSearchTerm: "",
   });
+  const [users, setUsers] = useState([]);
+  const fetchUsersDropdown = async () => {
+    // setLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL");
+      if (res?.status === 200) {
+        setUsers(res?.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch users:", err);
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersDropdown();
+  }, []);
 
   const getSearchData = (value, name) => {
     setSearchData((prev) => ({ ...prev, [name]: value }));
@@ -29,6 +49,7 @@ export default function ClaimsContent() {
 
   const searchParams = useSearchParams();
   const patientNameFromQuery = searchParams.get("patientName");
+  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
   const fetchClaims = async () => {
     setLoading(true);
@@ -104,6 +125,9 @@ export default function ClaimsContent() {
           handleDeleteClaim={handleDeleteClaim}
           getSearchData={getSearchData}
           initialSearchTerm={patientNameFromQuery}
+          roles={roles}
+          setClaims={setClaims}
+          users={users}
         />
 
         <DeletePopup

@@ -18,3 +18,22 @@ export const createComments = (data: {
 }) => {
   return api.post(`/comments`, data);
 };
+export const getAdminHospitalManagerCommentList = () => {
+  return api.get(`/comments/list_manager_comments`);
+};
+
+export const getlManagerComments = (hospitalId?: string) => {
+  return api.get(`/comments?hospitalId=${hospitalId}`);
+};
+
+export const markReadForAdminManagerComments = (hospitalId?: string) => {
+  return api.patch(`/comments/markRead/${hospitalId}`);
+};
+
+export const createManagerChat = (data: {
+  text: string;
+  hospitalId: string;
+  type: string;
+}) => {
+  return api.post(`/comments`, data);
+};

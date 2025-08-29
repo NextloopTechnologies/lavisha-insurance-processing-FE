@@ -21,13 +21,14 @@ import { recent, unread } from "@/constants/dummy";
 import { ProfilePopover } from "./ProfilePopover";
 import { ProfileEditModal } from "./ProfileEditModal";
 import { getProfileById } from "@/services/profile";
+import Cookies from "js-cookie";
 
 type Props = {
   children: React.ReactNode;
 };
 
 type NavItem = {
-  label: string;
+  label?: string;
   path?: string;
   icon?: string | StaticImageData;
   activeIcon?: string | StaticImageData;
@@ -79,7 +80,11 @@ const SidebarItem = ({
         ) : (
           <div className="flex justify-start items-center gap-x-2 w-full ">
             <span>
-              <Image src={item.icon} alt="Logo" className="mx-auto w-3 h-3" />
+              <Image
+                src={item?.icon || null}
+                alt="Logo"
+                className="mx-auto w-3 h-3"
+              />
             </span>
             <span>{item.label}</span>
           </div>
@@ -108,6 +113,7 @@ export default function SidebarLayout({ children }: Props) {
   const [isOpen, setIsOpen] = useState(true);
   const [openEditProfile, setOpenEditProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
+  const [menu, setMenu] = useState([]);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -115,6 +121,15 @@ export default function SidebarLayout({ children }: Props) {
     logout();
     router.push("/login");
   };
+
+  useEffect(() => {
+    const userRole = Cookies.get("user_role");
+    if (userRole) {
+      const list = navItems.filter((item) => item.role == userRole);
+      setMenu(list[0]?.menu);
+    }
+  }, []);
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserName(localStorage.getItem("userName"));
@@ -133,7 +148,9 @@ export default function SidebarLayout({ children }: Props) {
     }
   };
   useEffect(() => {
-    fetchProfileData();
+    if (loggedInUserId) {
+      fetchProfileData();
+    }
   }, [loggedInUserId, openEditProfile]);
   return (
     <div className="relative flex min-h-screen bg-gray-100 w-full ">
@@ -153,17 +170,17 @@ export default function SidebarLayout({ children }: Props) {
           </div>
         </div>
 
-        <div className="flex flex-col justify-between h-[calc(100%-120px)]">
+        <div className="flex flex-col justify-between h-[calc(100%-70px)]">
           {isOpen && (
             <div className="space-y-4 text-gray-800 font-medium pl-6 pt-2">
-              {navItems.map((item) => (
+              {menu?.map((item) => (
                 <SidebarItem key={item.label} item={item} pathname={pathname} />
               ))}
             </div>
           )}
           <div
             onClick={() => handleLogout()}
-            className="space-y-4 text-gray-800 font-medium pl-6 pt-6 w-full"
+            className="space-y-10 text-gray-800 font-medium pl-6 pt-6 w-full"
           >
             <div
               className={`flex items-center justify-start cursor-pointer  p-2 
@@ -242,19 +259,15 @@ export default function SidebarLayout({ children }: Props) {
             <div className="md:hidden flex justify-between h-[calc(100%-120px)] w-90 overflow-scroll">
               {/* {isOpen && ( */}
               <div className="flex space-y-4 text-gray-800 font-medium pl-0 pt-2">
-                {navItems.map((item) => (
-                  <SidebarItem
-                    key={item.label}
-                    item={item}
-                    pathname={pathname}
-                  />
+                {menu?.map((item, index) => (
+                  <SidebarItem key={index} item={item} pathname={pathname} />
                 ))}
                 <div
                   onClick={() => logout()}
                   className=" text-gray-800 font-medium pl-6 pt-6 w-full"
                 >
                   <div
-                    className={`flex items-center justify-start cursor-pointer  p-2 
+                    className={`flex items-center  justify-start cursor-pointer  p-2 
          hover:shadow-sm
         `}
                     // onClick={() => hasChildren && setOpen(!open)}

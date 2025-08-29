@@ -174,7 +174,7 @@ export function ProfileEditModal({
 
         <div className="flex flex-col items-center justify-center gap-3 my-4">
           <label htmlFor="profile-photo" className="cursor-pointer">
-            {profileInput?.profileUrl ? (
+            {profileInput?.profileUrl != null ? (
               <div className="w-full flex justify-center items-center">
                 <img
                   src={profileInput?.profileUrl}
