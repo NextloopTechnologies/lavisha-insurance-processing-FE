@@ -6,6 +6,9 @@ export const getClaimsById = (id: ParamValue) => api.get(`/claims/${id}`);
 export const createClaims = (data: any) => api.post("/claims", data);
 export const updateClaims = (data: any, id: ParamValue) =>
   api.patch(`/claims/${id}`, data);
+export const updateClaimsAssignee = (id: ParamValue,data: any ) =>
+  api.patch(`/claims/assign/${id}`, data);
+
 
 export const deleteClaims = (id: string) => api.delete(`/claims/${id}`);
 

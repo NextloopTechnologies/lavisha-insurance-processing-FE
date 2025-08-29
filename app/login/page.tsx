@@ -6,6 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { login } from "@/services/auth";
 import { useRouter } from "next/navigation";
 import LoadingOverlay from "@/components/LoadingOverlay";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -31,9 +32,11 @@ export default function LoginPage() {
       const userData = await login(inputs);
       if (userData?.access_token) {
         setLoading(true);
+        toast.success("Login Success");
         router.push("/");
       }
     } catch (error) {
+      toast.error("Login failed");
       console.error("Login failed:", error);
       // Show toast or error message
       setLoading(false);

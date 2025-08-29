@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { getPatientById } from "@/services/patients";
 import { MultiSelect } from "@/components/MultiSelect";
 import { statusOptions } from "@/constants/menu";
@@ -104,6 +104,9 @@ export default function PatientClaimDetails() {
 
   const params = useParams();
   const id = params.id;
+  const searchParams = useSearchParams();
+  const statusFromQuery = searchParams.get("showStatus");
+  const tabFromQuery = searchParams.get("tab");
 
   const fetchPatients = async () => {
     setLoading(true);
@@ -121,6 +124,11 @@ export default function PatientClaimDetails() {
   useEffect(() => {
     fetchPatients();
   }, [id]);
+  useEffect(() => {
+    if (tabFromQuery) {
+      setActiveTab(Number(tabFromQuery));
+    }
+  }, [tabFromQuery]);
 
   const fetchClaims = async () => {
     try {
@@ -220,10 +228,10 @@ export default function PatientClaimDetails() {
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
       }
-      
-      if(modalDependentStatus.includes(status)){
-        setModalProcessingStatus(status)
-        setOpenParentLevelModal(true)
+
+      if (modalDependentStatus.includes(status)) {
+        setModalProcessingStatus(status);
+        setOpenParentLevelModal(true);
       }
     } catch (error) {
       console.error("catch eror", error);
@@ -284,6 +292,7 @@ export default function PatientClaimDetails() {
             setSelectedStatuses={setSelectedStatuses}
             updateClaimStatus={updateClaimStatus}
             isClaimDetailsSelect={true}
+            disable={Boolean(statusFromQuery)}
           />
         </div>
 
@@ -294,62 +303,74 @@ export default function PatientClaimDetails() {
         />
 
         {/* open modal from parent for auto modal operations */}
-        {modalProcessingStatus===StatusType.QUERIED && openParentLevelModal && (
-          <CreateQueryPopup
-            open={openParentLevelModal}
-            onOpenChange={setOpenParentLevelModal}
-            setSelectedQuery={setSelectedQuery}
-            selectedQuery={selectedQuery}
-            data={claims}
-            claimId={claims?.id}
-            selectedTab={"Query"}
-            fetchClaimsById={fetchClaimsById}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
-            setModalProcessingStatus={setModalProcessingStatus}
-          />
-        )}
+        {modalProcessingStatus === StatusType.QUERIED &&
+          openParentLevelModal && (
+            <CreateQueryPopup
+              open={openParentLevelModal}
+              onOpenChange={setOpenParentLevelModal}
+              setSelectedQuery={setSelectedQuery}
+              selectedQuery={selectedQuery}
+              data={claims}
+              claimId={claims?.id}
+              selectedTab={"Query"}
+              fetchClaimsById={fetchClaimsById}
+              updateClaimStatusAfterModalSuccess={
+                updateClaimStatusAfterModalSuccess
+              }
+              setModalProcessingStatus={setModalProcessingStatus}
+            />
+          )}
 
-        {modalProcessingStatus===StatusType.ENHANCEMENT && openParentLevelModal && (
-           <CreateEnhancementPopup
-            open={openParentLevelModal}
-            onOpenChange={setOpenParentLevelModal}
-            setSelectedEnhancement={setSelectedEnhancement}
-            selectedEnhancement={selectedEnhancement}
-            data={claims}
-            claimId={claims?.id}
-            selectedTab={"Enhancement"}
-            fetchClaimsById={fetchClaimsById}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
-            setModalProcessingStatus={setModalProcessingStatus}
-          />
-        )}
+        {modalProcessingStatus === StatusType.ENHANCEMENT &&
+          openParentLevelModal && (
+            <CreateEnhancementPopup
+              open={openParentLevelModal}
+              onOpenChange={setOpenParentLevelModal}
+              setSelectedEnhancement={setSelectedEnhancement}
+              selectedEnhancement={selectedEnhancement}
+              data={claims}
+              claimId={claims?.id}
+              selectedTab={"Enhancement"}
+              fetchClaimsById={fetchClaimsById}
+              updateClaimStatusAfterModalSuccess={
+                updateClaimStatusAfterModalSuccess
+              }
+              setModalProcessingStatus={setModalProcessingStatus}
+            />
+          )}
 
-        {modalProcessingStatus===StatusType.DISCHARGED && openParentLevelModal && (
-           <CreateDischargePopup
-            open={openParentLevelModal}
-            onOpenChange={setOpenParentLevelModal}
-            isEditMode={true}
-            data={claims}
-            claimId={id}
-            selectedTab={"Discharge"}
-            fetchClaimsById={fetchClaimsById}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
-            setModalProcessingStatus={setModalProcessingStatus}
-          />
-        )}
+        {modalProcessingStatus === StatusType.DISCHARGED &&
+          openParentLevelModal && (
+            <CreateDischargePopup
+              open={openParentLevelModal}
+              onOpenChange={setOpenParentLevelModal}
+              isEditMode={true}
+              data={claims}
+              claimId={id}
+              selectedTab={"Discharge"}
+              fetchClaimsById={fetchClaimsById}
+              updateClaimStatusAfterModalSuccess={
+                updateClaimStatusAfterModalSuccess
+              }
+              setModalProcessingStatus={setModalProcessingStatus}
+            />
+          )}
 
-        {modalProcessingStatus===StatusType.SETTLED && openParentLevelModal && (
-          <CreateSettlementPopup
-            open={openParentLevelModal}
-            onOpenChange={setOpenParentLevelModal}
-            data={claims}
-            claimId={id}
-            selectedTab={"Settlement"}
-            fetchClaimsById={fetchClaimsById}
-            updateClaimStatusAfterModalSuccess={updateClaimStatusAfterModalSuccess}
-            setModalProcessingStatus={setModalProcessingStatus}
-          />
-        )}
+        {modalProcessingStatus === StatusType.SETTLED &&
+          openParentLevelModal && (
+            <CreateSettlementPopup
+              open={openParentLevelModal}
+              onOpenChange={setOpenParentLevelModal}
+              data={claims}
+              claimId={id}
+              selectedTab={"Settlement"}
+              fetchClaimsById={fetchClaimsById}
+              updateClaimStatusAfterModalSuccess={
+                updateClaimStatusAfterModalSuccess
+              }
+              setModalProcessingStatus={setModalProcessingStatus}
+            />
+          )}
 
         <div className="mt-6">
           {visibleTabLabels[activeTab] === "Details" && (
@@ -372,7 +393,11 @@ export default function PatientClaimDetails() {
 
           {visibleTabLabels[activeTab] === "Comments/History" && (
             <div>
-              <Comments claimId={claims?.id} />
+              <Comments
+                claimId={claims?.id}
+                disable={Boolean(statusFromQuery)}
+                data={claims}
+              />
             </div>
           )}
           {visibleTabLabels[activeTab] === "Enhancement" && (
@@ -391,15 +416,27 @@ export default function PatientClaimDetails() {
                   <div>
                     {selectedEnhancementId && (
                       <button
+                        disabled={Boolean(statusFromQuery)}
                         onClick={() => handleEditEnhancement()}
                         // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                       >
-                        <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-4" />
+                        <Pencil
+                          className={`w-6 h-6 ${
+                            Boolean(statusFromQuery)
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-[#3E79D6] cursor-pointer"
+                          }   mr-2`}
+                        />
                       </button>
                     )}
                     <button
+                      disabled={Boolean(statusFromQuery)}
                       onClick={() => setOpenPatientDialog(true)}
-                      className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      className={`rounded-sm bg-[#3E79D6]  px-3 py-2 text-white ${
+                        Boolean(statusFromQuery)
+                          ? " cursor-not-allowed"
+                          : " cursor-pointer"
+                      }`}
                     >
                       Create Another Enhancement
                       {/* <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" /> */}
@@ -443,15 +480,27 @@ export default function PatientClaimDetails() {
                   <div className="flex justify-start items-center">
                     {selectedQueryId && (
                       <button
+                        disabled={Boolean(statusFromQuery)}
                         onClick={() => handleEditQuery()}
                         // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                       >
-                        <Pencil className="w-6 h-6 text-[#3E79D6] hover:text-[#3E79D6] cursor-pointer mr-4" />
+                        <Pencil
+                          className={`w-6 h-6 ${
+                            Boolean(statusFromQuery)
+                              ? "text-gray-300 cursor-not-allowed"
+                              : "text-[#3E79D6] cursor-pointer"
+                          }   mr-2`}
+                        />
                       </button>
                     )}
                     <button
+                      disabled={Boolean(statusFromQuery)}
                       onClick={() => setOpenPatientDialog(true)}
-                      className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      className={`rounded-sm bg-[#3E79D6]  px-3 py-2 text-white ${
+                        Boolean(statusFromQuery)
+                          ? " cursor-not-allowed"
+                          : " cursor-pointer"
+                      }`}
                     >
                       Create Query
                     </button>
@@ -488,10 +537,17 @@ export default function PatientClaimDetails() {
               <>
                 <div className="flex justify-end">
                   <button
+                    disabled={Boolean(statusFromQuery)}
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-2" />
+                    <Pencil
+                      className={`w-6 h-6 ${
+                        Boolean(statusFromQuery)
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-[#3E79D6] cursor-pointer"
+                      }   mr-2`}
+                    />
                   </button>
                 </div>
                 <PatientDetails
@@ -519,10 +575,17 @@ export default function PatientClaimDetails() {
               <>
                 <div className="flex justify-end">
                   <button
+                    disabled={Boolean(statusFromQuery)}
                     onClick={() => setOpenPatientDialog(true)}
                     // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
-                    <Pencil className="w-6 h-6 hover:text-[#3E79D6] text-[#3E79D6] cursor-pointer mr-2" />
+                    <Pencil
+                      className={`w-6 h-6 ${
+                        Boolean(statusFromQuery)
+                          ? "text-gray-300 cursor-not-allowed"
+                          : "text-[#3E79D6] cursor-pointer"
+                      }   mr-2`}
+                    />
                   </button>
                 </div>
                 <PatientDetails
@@ -536,8 +599,8 @@ export default function PatientClaimDetails() {
                     additionalNotes: false,
                     description: false,
                     settlementSummary: true,
-                    settlementAmount:true,
-                    actualQuotedAmount:true
+                    settlementAmount: true,
+                    actualQuotedAmount: true,
                   }}
                 />
                 <DocumentDetails
@@ -549,7 +612,7 @@ export default function PatientClaimDetails() {
           )}
         </div>
       </div>
-      {visibleTabLabels[activeTab] === "Enhancement" && openPatientDialog &&(
+      {visibleTabLabels[activeTab] === "Enhancement" && openPatientDialog && (
         <CreateEnhancementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -569,7 +632,7 @@ export default function PatientClaimDetails() {
         />
       )}
 
-      {visibleTabLabels[activeTab] === "Queried" && openPatientDialog &&(
+      {visibleTabLabels[activeTab] === "Queried" && openPatientDialog && (
         <CreateQueryPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -589,7 +652,7 @@ export default function PatientClaimDetails() {
         />
       )}
 
-      {visibleTabLabels[activeTab] === "Discharge" && openPatientDialog &&(
+      {visibleTabLabels[activeTab] === "Discharge" && openPatientDialog && (
         <CreateDischargePopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -606,7 +669,7 @@ export default function PatientClaimDetails() {
           }
         />
       )}
-      {visibleTabLabels[activeTab] === "Settlement" && openPatientDialog &&(
+      {visibleTabLabels[activeTab] === "Settlement" && openPatientDialog && (
         <CreateSettlementPopup
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
