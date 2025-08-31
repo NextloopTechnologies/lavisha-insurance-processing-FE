@@ -24,7 +24,7 @@ import CreateEnhancementPopup from "@/components/CreateEnhancementPopup";
 import EnhancementDateDropdown from "@/components/EnhancementDateDropdown";
 import CreateQueryPopup from "@/components/CreateQueryPopup";
 import CreateDischargePopup from "@/components/CreateDischargePopup";
-import { getStatusVisibility, statusMaxIndexMap } from "@/lib/utils";
+import { filterTabsByData, getStatusVisibility, statusMaxIndexMap } from "@/lib/utils";
 import { StatusType } from "@/types/claims";
 
 const allTabLabels = [
@@ -151,7 +151,9 @@ export default function PatientClaimDetails() {
       setSelectedStatuses(currentStatus);
       setFilteredStatusOptions(getStatusVisibility(currentStatus));
       const maxIndex = statusMaxIndexMap[currentStatus];
-      setVisibleTabLabels(allTabLabels.slice(0, maxIndex + 1));
+      let tabs = allTabLabels.slice(0, maxIndex + 1);
+      tabs = filterTabsByData(tabs, res?.data);
+      setVisibleTabLabels(tabs);
     } catch (err) {
       console.error("Failed to fetch claims:", err);
     } finally {
@@ -251,7 +253,8 @@ export default function PatientClaimDetails() {
         setClaims((prev: any) => ({ ...prev, status }));
 
         const maxIndex = statusMaxIndexMap[status];
-        const updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1);
+        let updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1);
+        updatedVisibleTabs = filterTabsByData(updatedVisibleTabs, res?.data);
         setVisibleTabLabels(updatedVisibleTabs);
 
         const indexToSet = updatedVisibleTabs.findIndex(

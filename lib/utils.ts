@@ -109,6 +109,34 @@ export const statusMaxIndexMap: Record<string, number> = {
   SETTLED: 5,
 };
 
+type TabVisibilityRule = {
+  tab: string;
+  minIndex: number; // index in allTabLabels when this tab becomes visible
+  shouldShow: (res: any) => boolean;
+};
+
+const tabVisibilityRules: TabVisibilityRule[] = [
+  {
+    tab: "Queried",
+    minIndex: 2, 
+    shouldShow: (res) => (res?.queries?.length ?? 0) > 0,
+  },
+  {
+    tab: "Enhancement",
+    minIndex: 3,
+    shouldShow: (res) => (res?.enhancements?.length ?? 0) > 0,
+  },
+];
+
+export const filterTabsByData = (tabs: string[], res: any): string[] => {
+  return tabs.filter((tab, idx) => {
+    const rule = tabVisibilityRules.find((r) => r.tab === tab);
+    if (!rule) return true; // no rule → always visible
+    if (idx < rule.minIndex) return true; // not yet reached status
+    return rule.shouldShow(res); // apply condition
+  });
+};
+
 export const STATUS_LABELS: Record<string, string> = {
   DRAFT: "Draft",
   PENDING: "Pending",

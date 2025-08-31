@@ -12,9 +12,14 @@ import { ChartNoAxesColumnIncreasing } from "lucide-react";
 const Dashboard = () => {
   const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
   const [dashboardData, setDashboardData] = useState<any>([]);
-  const [dateRange, setDateRange] = useState<any>({
-    from: new Date("2025-06-01"),
-    to: new Date("2025-07-30"),
+  const [loading, setLoading] = useState(false);
+
+  const [dateRange, setDateRange] = useState(() => {
+    const to = new Date();
+    const from = new Date();
+    from.setMonth(from.getMonth() - 1);
+
+    return { from, to };
   });
   const [selectHospital, setSelectHospital] = useState("");
   const handleHospitalChange = (value: string) => {
