@@ -9,9 +9,9 @@ import { format } from "date-fns";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { getUsersDropdown } from "@/services/users";
+import { SettledDataTable } from "@/components/SettledDataTable";
 
-export default function ClaimsContent() {
+export default function SettlementsContent() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState([]);
   const [page, setPage] = useState(1);
@@ -20,36 +20,18 @@ export default function ClaimsContent() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchData, setSearchData] = useState({
-    selectedStatuses: [],
+    selectedStatuses: ["SETTLED"],
     selectedDate: "",
     debouncedSearchTerm: "",
   });
-  const [users, setUsers] = useState([]);
-  const fetchUsersDropdown = async () => {
-    // setLoading(true);
-    try {
-      const res = await getUsersDropdown("HOSPITAL");
-      if (res?.status === 200) {
-        setUsers(res?.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch users:", err);
-    } finally {
-      // setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUsersDropdown();
-  }, []);
 
   const getSearchData = (value, name) => {
     setSearchData((prev) => ({ ...prev, [name]: value }));
   };
+  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
   const searchParams = useSearchParams();
   const patientNameFromQuery = searchParams.get("patientName");
-  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
   const fetchClaims = async () => {
     setLoading(true);
@@ -116,7 +98,7 @@ export default function ClaimsContent() {
     <SidebarLayout>
       {loading && <LoadingOverlay />}
       <div className="bg-gray-100">
-        <DataTable
+        <SettledDataTable
           data={claims}
           page={page}
           setPage={setPage}
@@ -126,8 +108,6 @@ export default function ClaimsContent() {
           getSearchData={getSearchData}
           initialSearchTerm={patientNameFromQuery}
           roles={roles}
-          setClaims={setClaims}
-          users={users}
         />
 
         <DeletePopup

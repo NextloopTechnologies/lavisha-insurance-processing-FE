@@ -17,6 +17,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import Link from "next/link";
 import Avtar from "@/components/Avtar";
 import { useRouter } from "next/navigation";
+import Cookies from "js-cookie";
 
 export default function Patients() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
@@ -120,6 +121,8 @@ export default function Patients() {
   //   });
   // }, [searchTerm, patients]);
 
+  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
@@ -218,10 +221,14 @@ export default function Patients() {
                     onClick={() => handleEditPatient(patient.id)}
                     className="w-4 h-4 text-gray-500 hover:text-blue-600 cursor-pointer"
                   />
-                  <Trash2
-                    onClick={() => handleDelete(patient.id)}
-                    className="w-4 h-4 text-gray-500 hover:text-red-600 cursor-pointer"
-                  />
+                  {(!roles.includes("ADMIN") ||
+                    !roles.includes("SUPER_ADMIN") ||
+                    patient?.claimCount === 0) && (
+                    <Trash2
+                      onClick={() => handleDelete(patient.id)}
+                      className="w-4 h-4 text-gray-500 hover:text-red-600 cursor-pointer"
+                    />
+                  )}
                 </div>
 
                 {/* Avatar */}
@@ -249,23 +256,28 @@ export default function Patients() {
 
                 {/* View Claims Button */}
                 {/* <Link href={`/claims/${patient.id}`}> */}
-                {patient.claimCount>0 ? (
+                {patient.claimCount > 0 ? (
                   <button
                     onClick={() => {
                       const claimCount = patient.claimCount;
                       if(claimCount === 1){
-                        router.push(`/claims/${patient.singleClaimRefNumber}`);
+                        if(patient.isClaimStatusDraft) {
+                          return router.push(`/newClaim/${patient.singleClaimRefNumber}`); // for draft claims
+                        }
+                        router.push(`/claims/${patient.singleClaimRefNumber}`); // for single non draft claim
                       } else {
-                        router.push(`/claims?patientName=${patient.name}`)
+                        router.push(`/claims?patientName=${patient.name}`) // for multiple claims
                       }
                     }}
                     className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
                   >
-                    View Claims
+                   {patient.isClaimStatusDraft ? 'Edit Claim' : 'View Claims'}
                   </button>
                 ) : (
                   <button
-                    onClick={() => router.push(`/newClaim?patientId=${patient.id}`)}
+                    onClick={() =>
+                      router.push(`/newClaim?patientId=${patient.id}`)
+                    }
                     className="cursor-pointer mt-4 w-full absolute bottom-0 left-0 bg-[#3E79D6] text-white px-4 py-4 rounded-b-2xl hover:bg-[#3E79D6]"
                   >
                     Add Claim
@@ -275,9 +287,16 @@ export default function Patients() {
               </div>
             ))
           ) : (
-            <span>No Patients Found</span>
+            <div></div>
           )}
         </div>
+        {patients?.length == 0 ? (
+          <div className="text-center w-full flex justify-center items-center h-[calc(100vh-300px)] md:h-[calc(100vh-210px)]">
+            No record found
+          </div>
+        ) : (
+          ""
+        )}
         <PatientFormDialog
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
