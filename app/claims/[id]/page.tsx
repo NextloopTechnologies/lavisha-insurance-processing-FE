@@ -244,8 +244,10 @@ export default function PatientClaimDetails() {
     try {
       setLoading(true);
       if (modalDependentStatus.includes(status)) {
-        const res = await updateClaims({ status }, id);
-        if (res?.status !== 200) throw new Error("Failed to update status!");
+        if([StatusType.QUERIED, StatusType.ENHANCEMENT].includes(status)) {
+          const result = await updateClaims({ status }, id);
+          if (result?.status !== 200) throw new Error("Failed to update status!");
+        }
         fetchClaims();
         fetchClaimsById();
         setSelectedStatuses([status]);
@@ -253,14 +255,21 @@ export default function PatientClaimDetails() {
         setClaims((prev: any) => ({ ...prev, status }));
 
         const maxIndex = statusMaxIndexMap[status];
-        let updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1);
-        updatedVisibleTabs = filterTabsByData(updatedVisibleTabs, res?.data);
+        let updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1)
+        // [detials, comments, queried, enhancement, discharged]
+        // updatedVisibleTabs = filterTabsByData(updatedVisibleTabs, result?.data);
+        console.log("claims", claims)
+        updatedVisibleTabs = filterTabsByData(updatedVisibleTabs, claims);
         setVisibleTabLabels(updatedVisibleTabs);
+
+        console.log("updatedVisibleTabs", updatedVisibleTabs)
 
         const indexToSet = updatedVisibleTabs.findIndex(
           (label) =>
             label.toLowerCase() === statusToTabLabel[status].toLowerCase()
         );
+        console.log("indexToSet", indexToSet)
+        console.log("setActiveTabs", indexToSet !== -1 ? indexToSet : 0)
         setActiveTab(indexToSet !== -1 ? indexToSet : 0);
       }
     } catch (error) {
