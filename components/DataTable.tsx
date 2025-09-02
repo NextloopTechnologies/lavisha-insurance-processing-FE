@@ -97,6 +97,7 @@ export function DataTable({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
   const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
+  const [assignedClaimRefNumber, setAssignedClaimRefNumber] = useState<string>("");
 
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) => {
@@ -272,7 +273,10 @@ export function DataTable({
                             users={users} // pass list of users to assign
                             onUpdate={(id, newAssignee) => {
                               // conditional visibility for view option in action
-                              if(newAssignee) setIsClaimAssigned(true)
+                              if(newAssignee) {
+                                setIsClaimAssigned(true)
+                                setAssignedClaimRefNumber(row.refNumber)
+                              }
                               setClaims((prev) =>
                                 prev.map((c) =>
                                   c.id === id
@@ -309,7 +313,7 @@ export function DataTable({
                                   />
                                 </Link>
                               ) : ( */}
-                              {(row.assignee!==null || isClaimAssigned) && (
+                              {(row.assignee!==null || (isClaimAssigned && assignedClaimRefNumber===row.refNumber)) && (
                                 <Link href={`/claims/${row?.refNumber}`}>
                                   <Eye
                                     // onClick={() => row.patient.id}
