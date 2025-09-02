@@ -130,7 +130,7 @@ export default function PatientClaimDetails() {
     }
   }, [tabFromQuery]);
 
-  const fetchClaims = async () => {
+  const fetchClaims = async (isFromUpdateClaim?: boolean) => {
     try {
       setLoading(true);
       const res = await getClaimsById(id);
@@ -154,6 +154,14 @@ export default function PatientClaimDetails() {
       let tabs = allTabLabels.slice(0, maxIndex + 1);
       tabs = filterTabsByData(tabs, res?.data);
       setVisibleTabLabels(tabs);
+      // only if it is coming from update status modal
+      if(isFromUpdateClaim) {
+        const indexToSet = tabs.findIndex(
+          (label) =>
+            label.toLowerCase() === statusToTabLabel[currentStatus].toLowerCase()
+        );
+        setActiveTab(indexToSet !== -1 ? indexToSet : 0);
+      }
     } catch (err) {
       console.error("Failed to fetch claims:", err);
     } finally {
@@ -248,29 +256,8 @@ export default function PatientClaimDetails() {
           const result = await updateClaims({ status }, id);
           if (result?.status !== 200) throw new Error("Failed to update status!");
         }
-        fetchClaims();
-        fetchClaimsById();
-        setSelectedStatuses([status]);
-        setFilteredStatusOptions(getStatusVisibility(status));
-        setClaims((prev: any) => ({ ...prev, status }));
-
-        const maxIndex = statusMaxIndexMap[status];
-        let updatedVisibleTabs = allTabLabels.slice(0, maxIndex + 1)
-        // [detials, comments, queried, enhancement, discharged]
-        // updatedVisibleTabs = filterTabsByData(updatedVisibleTabs, result?.data);
-        console.log("claims", claims)
-        updatedVisibleTabs = filterTabsByData(updatedVisibleTabs, claims);
-        setVisibleTabLabels(updatedVisibleTabs);
-
-        console.log("updatedVisibleTabs", updatedVisibleTabs)
-
-        const indexToSet = updatedVisibleTabs.findIndex(
-          (label) =>
-            label.toLowerCase() === statusToTabLabel[status].toLowerCase()
-        );
-        console.log("indexToSet", indexToSet)
-        console.log("setActiveTabs", indexToSet !== -1 ? indexToSet : 0)
-        setActiveTab(indexToSet !== -1 ? indexToSet : 0);
+        // passing true to update the claim and set the current status as active tab
+        fetchClaims(true);
       }
     } catch (error) {
       console.log("UPDATE_STATUS_AFTER_MODAL", error);
