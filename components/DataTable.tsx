@@ -96,6 +96,8 @@ export function DataTable({
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
+  const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
+  const [assignedClaimRefNumber, setAssignedClaimRefNumber] = useState<string>("");
 
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) => {
@@ -277,6 +279,11 @@ export function DataTable({
                             currentAssignee={row?.assignee?.id}
                             users={users} // pass list of users to assign
                             onUpdate={(id, newAssignee) => {
+                              // conditional visibility for view option in action
+                              if(newAssignee) {
+                                setIsClaimAssigned(true)
+                                setAssignedClaimRefNumber(row.refNumber)
+                              }
                               setClaims((prev) =>
                                 prev.map((c) =>
                                   c.id === id
@@ -313,12 +320,14 @@ export function DataTable({
                                   />
                                 </Link>
                               ) : ( */}
-                              <Link href={`/claims/${row?.refNumber}`}>
-                                <Eye
-                                  // onClick={() => row.patient.id}
-                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                />
-                              </Link>
+                              {(row.assignee!==null || (isClaimAssigned && assignedClaimRefNumber===row.refNumber)) && (
+                                <Link href={`/claims/${row?.refNumber}`}>
+                                  <Eye
+                                    // onClick={() => row.patient.id}
+                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                                  />
+                                </Link>
+                              )}
                               {/* )} */}
                               {/* {!roles?.includes("ADMIN") && ( */}
                               <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
