@@ -172,18 +172,22 @@ export function DataTable({
           />
           <DatePicker date={selectedDate} onChange={setSelectedDate} />
         </div>
-        {(!roles.includes("ADMIN") || !roles.includes("SUPER_ADMIN")) && (
-          <Button
-            onClick={() => router.push("/newClaim")}
-            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
-          >
-            <Plus className="mr-2 h-4 w-4" /> New Claim
-          </Button>
+        {(roles.includes(UserRole.HOSPITAL) ||
+          roles.includes(UserRole.HOSPITAL_MANAGER)) && (
+          <>
+            <Button
+              onClick={() => router.push("/newClaim")}
+              className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+            >
+              <Plus className="mr-2 h-4 w-4" /> New Claim
+            </Button>
+
+            <Plus
+              onClick={() => router.push("/newClaim")}
+              className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
+            />
+          </>
         )}
-        <Plus
-          onClick={() => router.push("/newClaim")}
-          className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
-        />
       </div>
 
       {/* Table */}
@@ -245,9 +249,12 @@ export function DataTable({
                         {row?.refNumber}
                       </TableCell>
                       <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.description}
+                        {row?.description?.length > 30
+                          ? row?.description.slice(0, 30) + "..."
+                          : row?.description}
                       </TableCell>
-                      {!roles?.includes("ADMIN") && (
+                      {(!roles?.includes(UserRole.ADMIN) ||
+                        !roles?.includes(UserRole.SUPER_ADMIN)) && (
                         <TableCell className=" border p-5 ">
                           {STATUS_LABELS[row.status]}
                         </TableCell>

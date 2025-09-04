@@ -46,29 +46,25 @@ type User = {
   claimId: string;
   preAuthStatus: string;
 };
-type DATA = {
-  id?: number;
-  patientName?: string;
-  status?: string;
-  doctorName?: string;
-  createdAt: string;
-  description?: string;
-  claimId: string;
-  refNumber?: string;
-  isPreAuth: string;
-  tpaName?: string;
-  insuranceCompany?: string;
-  assignee?: {
-    id?: string;
-    name?: string;
-  };
-  patient: {
-    id?: string;
-    name?: string;
-  };
+const Role = {
+  ADMIN: "Admin",
+  SUPER_ADMIN: "Super Admin",
+  HOSPITAL: "Hospital",
+  HOSPITAL_MANAGER: "Hospital Manager",
 };
 
-export function SettledDataTable({
+type DATA = {
+  name?: string;
+  email?: string;
+  address?: string;
+  hospital?: {
+    id?: string;
+    name?: string;
+  };
+  role: string;
+};
+
+export function UserTable({
   data,
   sortByClaim,
   page,
@@ -85,60 +81,36 @@ export function SettledDataTable({
   page: number;
   setPage: any;
   total: number;
-  handleDeleteClaim: any;
-  getSearchData: (value?: string[] | string | Date, name?: string) => void;
+  handleDeleteClaim?: any;
+  getSearchData?: (value?: string[] | string | Date, name?: string) => void;
   initialSearchTerm?: string;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-  const [selectedStatuses, setSelectedStatuses] = useState<string[]>([
-    "SETTLED",
-  ]);
+
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
-  const [assignee, setAssignee] = useState("");
   const router = useRouter();
-  const toggleStatus = (status: string) => {
-    setSelectedStatuses((prev) => {
-      return prev.includes(status)
-        ? prev.filter((item) => item !== status)
-        : [...prev, status];
-    });
-  };
-  useEffect(() => {
-    if (initialSearchTerm) {
-      setSearchTerm(initialSearchTerm); // shows in input
-      setDebouncedSearchTerm(initialSearchTerm);
-      getSearchData(initialSearchTerm, "debouncedSearchTerm"); // triggers search
-    }
-  }, [initialSearchTerm]);
-
-  useEffect(() => {
-    if (selectedStatuses?.length > 0) {
-      getSearchData(selectedStatuses, "selectedStatuses");
-    }
-  }, [selectedStatuses]);
-  useEffect(() => {
-    if (selectedDate) {
-      getSearchData(selectedDate, "selectedDate");
-    }
-  }, [selectedDate]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-      getSearchData(searchTerm, "debouncedSearchTerm");
-    }, 500); // 500ms debounce
-
-    return () => {
-      clearTimeout(handler); // Cleanup if user keeps typing
-    };
-  }, [searchTerm]);
 
   const totalPages = Math.ceil(total);
   const handleChange = (name, value) => {};
 
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm) return data;
+
+    return data.filter((user) => {
+      const search = searchTerm.toLowerCase();
+      return (
+        user.name?.toLowerCase().includes(search) ||
+        user.email?.toLowerCase().includes(search) ||
+        user.role?.toLowerCase().includes(search) ||
+        user.hospital?.name?.toLowerCase().includes(search) ||
+        user.hospital?.name?.toLowerCase().includes(search) ||
+        user.address?.toLowerCase().includes(search)
+      );
+    });
+  }, [searchTerm, data]);
+
   return (
-    <div className="min-h-[calc(100vh-75px)] p-4">
+    <div className="min-h-[calc(100vh-255px)] p-4">
       {/* Top bar */}
 
       <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
@@ -190,42 +162,28 @@ export function SettledDataTable({
 
       {/* Table */}
       <div className="  overflow-x-auto">
-        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-300px)] md:h-[calc(100vh-210px)]">
+        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-500px)] md:h-[calc(100vh-350px)]">
           <Table className="min-w-full ">
             <TableHeader className="text-red-400  w-full">
               <TableRow className="bg-white text-[#FBBC05]">
                 {/* <div className="rounded-md border  w-20"> */}
                 {/* <TableHead className="text-[#FBBC05] border p-3">S No.</TableHead> */}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
-                  Patient Name
+                  Name
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
-                  Claim ID
+                  Email
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Description
-                </TableHead>
-                {(!roles?.includes(UserRole.ADMIN) ||
-                  !roles?.includes(UserRole.SUPER_ADMIN)) && (
-                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                    Status
-                  </TableHead>
-                )}
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Created Date
+                  Address
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Dr. Name
+                  Hospital Name
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Pre-Auth Status
+                  Role
                 </TableHead>
-                {(roles?.includes(UserRole.ADMIN) ||
-                  roles?.includes(UserRole.SUPER_ADMIN)) && (
-                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                    Assingee
-                  </TableHead>
-                )}
+
                 <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
                   Action
                 </TableHead>
@@ -235,78 +193,31 @@ export function SettledDataTable({
             {/* <br /> */}
             <div className="mb-2 block"></div>
             <TableBody className="bg-white">
-              {data?.length
-                ? data?.map((row, index) => (
-                    <TableRow
-                      key={index + "_" + row?.patient.name}
-                      className=""
-                    >
+              {filteredUsers?.length
+                ? filteredUsers?.map((row, index) => (
+                    <TableRow key={index + "_" + row?.name} className="">
                       {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
-                      <TableCell className=" border p-5">
-                        {row?.patient.name}
-                      </TableCell>
+                      <TableCell className=" border p-5">{row?.name}</TableCell>
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                        {row?.refNumber}
+                        {row?.email}
                       </TableCell>
                       <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.description?.length > 30
-                          ? row?.description.slice(0, 30) + "..."
-                          : row?.description}
+                        {row?.address}
                       </TableCell>
-                      {(!roles?.includes(UserRole.ADMIN) ||
-                        !roles?.includes(UserRole.SUPER_ADMIN)) && (
-                        <TableCell className=" border p-5 ">
-                          {STATUS_LABELS[row.status]}
-                        </TableCell>
-                      )}
-                      <TableCell className=" border p-5 ">
-                        {format(new Date(row.createdAt), "yyyy/MM/dd")}
+
+                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
+                        {row?.hospital?.name}
                       </TableCell>
-                      <TableCell className=" border p-5 ">
-                        {row?.doctorName}
+                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
+                        {Role[row?.role]}
                       </TableCell>
-                      <TableCell className=" border p-5 ">
-                        {row?.isPreAuth ? "True" : "False"}
-                      </TableCell>
-                      {(roles?.includes(UserRole.ADMIN) ||
-                        roles?.includes(UserRole.SUPER_ADMIN)) && (
-                        <TableCell className=" border p-5 ">
-                          {row?.assignee?.name || "---"}
-                        </TableCell>
-                      )}
                       <TableCell className=" border p-5">
                         <div className="flex gap-2 justify-start text-muted-foreground">
-                          {!roles?.includes(UserRole.ADMIN) && (
-                            <Link href={`/newClaim/${row?.refNumber}`}>
-                              <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
-                            </Link>
-                          )}
-                          {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
-                          {row?.status !== StatusType.DRAFT && (
-                            <>
-                              {roles?.includes(UserRole.ADMIN) ? (
-                                <Link
-                                  href={`/claims/${row?.refNumber}?showStatus=true&tab=5`}
-                                >
-                                  <Eye
-                                    // onClick={() => row.patient.id}
-                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                  />
-                                </Link>
-                              ) : (
-                                <Link href={`/claims/${row?.refNumber}`}>
-                                  <Eye
-                                    // onClick={() => row.patient.id}
-                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                  />
-                                </Link>
-                              )}
-                              {!roles?.includes(UserRole.ADMIN) && (
-                                <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
-                              )}
-                            </>
-                          )}
+                          <Eye
+                            // onClick={() => row.patient.id}
+                            className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                          />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -314,7 +225,7 @@ export function SettledDataTable({
                 : ""}
             </TableBody>
           </Table>
-          {data?.length == 0 ? (
+          {filteredUsers?.length == 0 ? (
             <div className="text-center w-full flex justify-center items-center h-[calc(100%-300px)] md:h-[calc(100%-210px)]">
               No record found
             </div>
