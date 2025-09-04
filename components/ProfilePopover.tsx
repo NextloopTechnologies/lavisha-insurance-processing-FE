@@ -8,6 +8,7 @@ import { ChevronDown, Pencil, Eye } from "lucide-react";
 import { Dispatch, SetStateAction, useState } from "react";
 import Image from "next/image";
 import { userImage } from "@/assets";
+import { UserRole } from "@/types/comments";
 
 interface UserPopoverProps {
   userName?: string;
@@ -16,6 +17,7 @@ interface UserPopoverProps {
   address?: string;
   loggedInUserName: string;
   setOpenEditProfile: any;
+  roles?: string;
   profileData?: [
     {
       hospitalName?: string;
@@ -36,6 +38,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
   profileData,
   loggedInUserName,
   setOpenEditProfile,
+  roles,
 }) => {
   const [openProfile, setOpenProfile] = useState(false);
   const handleViewRateList = (file) => {
@@ -96,15 +99,20 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
             <p className="text-xs text-muted-foreground">
               {profileData?.[0]?.address}
             </p>
-            <div
-              onClick={() => handleViewRateList(profileData?.[0]?.rateListUrl)}
-              className="flex justify-start items-start gap-x-2 my-1 px-4 py-2 hover:bg-[#3E79D6]"
-            >
-              <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />{" "}
-              <a href="#" className="text-xs font-medium  block">
-                View Rate list
-              </a>
-            </div>
+            {(roles?.includes(UserRole.HOSPITAL) ||
+              roles?.includes(UserRole.HOSPITAL_MANAGER)) && (
+              <div
+                onClick={() =>
+                  handleViewRateList(profileData?.[0]?.rateListUrl)
+                }
+                className="flex justify-start items-start gap-x-2 my-1 px-4 py-2 hover:bg-[#3E79D6]"
+              >
+                <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />{" "}
+                <a href="#" className="text-xs font-medium  block">
+                  View Rate list
+                </a>
+              </div>
+            )}
             <div
               onClick={() => setOpenEditProfile(true)}
               className="flex justify-start items-start gap-x-2 px-4 py-2 bg-[#3E79D6]"
