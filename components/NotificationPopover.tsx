@@ -31,11 +31,15 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
   const [openNotification, setOpenNotification] = useState(false);
   const [loading, setLoading] = useState(false);
   const [notificationData, setNotificationData] = useState([]);
+  const [unReadCount, setUnReadCount] = useState<number>();
 
   const getNotifications = async () => {
     setLoading(true);
     try {
-      const res = await getNotificationsByParams({ isRead: true });
+      // const res = await getNotificationsByParams({ isRead: true });
+      const res = await getNotificationsByParams({});
+      if(res && res.status!==200) return console.error("error notification read")
+      setUnReadCount(res.data.total)
       setNotificationData(res.data.data);
       setLoading(false);
     } catch (err) {
@@ -65,7 +69,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
         <div className="border-b" />
         {notificationData.length > 0 && (
           <div className="border-b my-4">
-            <p className="text-xs text-gray-700 my-4 pl-4">Unread</p>
+            <p className="text-xs text-gray-700 my-4 pl-4">Unread {unReadCount}</p>
             {notificationData.map((item, index) => (
               <div
                 key={index}
@@ -79,14 +83,16 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
                       className="overflow-hidden"
                     />
                   ) : (
-                    <span>{item.name[0]}</span>
+                    // <span>{item.name[0]}</span>
+                    <span>{item.message.charAt(0)}</span>
                   )}
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-normal text-gray-700">
                     {item.message}
                   </p>
-                  <span className="text-xs text-gray-500">{item.time}</span>
+                  {/* <span className="text-xs text-gray-500">{item.time}</span> */}
+                  <span className="text-xs text-gray-500">{item.createdAt}</span>
                 </div>
               </div>
             ))}
@@ -98,11 +104,11 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
             <p className="text-xs text-gray-700 my-4 pl-4">Recent</p>
             {notificationData.map((item, index) => (
               <div key={index} className="flex gap-2 items-start px-4">
-                <div className="w-8 h-8 text-center block rounded-full bg-black text-white overflow-hidden">
+                {/* <div className="w-8 h-8 text-center block rounded-full bg-black text-white overflow-hidden">
                   <span className="text-[20px] font-semibold text-center">
                     {item.name[0]}
                   </span>
-                </div>
+                </div> */}
                 <div className="flex-1 pb-4">
                   <p className="text-sm text-gray-700">{item.message}</p>
                   <div className="mt-1 flex items-center gap-2 border w-fit p-2">
@@ -115,7 +121,8 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
                       </span>
                     )}
                   </div>
-                  <span className="text-xs text-gray-500">{item.time}</span>
+                  {/* <span className="text-xs text-gray-500">{item.time}</span> */}
+                  <span className="text-xs text-gray-500">{item.createdAt}</span>
                 </div>
               </div>
             ))}
