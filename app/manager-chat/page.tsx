@@ -26,6 +26,7 @@ export default function ManagerChat() {
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
+  const [isWelcomeScreenEnabled, setIsWelcomeScreenEnabled] = useState<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -47,11 +48,16 @@ export default function ManagerChat() {
     }
   };
   useEffect(() => {
-    fetchAdminManagerComments();
-  }, []);
-  const fetchManagerComments = async (hispotalId?: string) => {
+    if(([UserRole.ADMIN,UserRole.SUPER_ADMIN] as string[]).includes(loggedInUserRole)) {
+      fetchAdminManagerComments()
+      // set welcome screen enabled flag on first render
+      setIsWelcomeScreenEnabled(true)
+    };
+  }, [loggedInUserRole]);
+
+  const fetchManagerComments = async (hospitalId?: string) => {
     try {
-      const res = await getlManagerComments(hispotalId);
+      const res = await getlManagerComments(hospitalId);
       if (res.status == 200) {
         const modifyData = res?.data
           ?.filter((type) => type?.type == CommentType.HOSPITAL_NOTE)
@@ -82,7 +88,9 @@ export default function ManagerChat() {
   };
   useEffect(() => {
     fetchManagerComments(hispotalId);
+    if(hispotalId) setIsWelcomeScreenEnabled(false);
   }, [hispotalId]);
+
   const handleCommentRead = async (hospitalId, id) => {
     try {
       if (hospitalId && id) {
@@ -124,142 +132,152 @@ export default function ManagerChat() {
   return (
     <SidebarLayout>
       <div className="p-4 bg-white">
-        <h1 className="bg-white font-semibold">Manager Chat</h1>
+        {(loggedInUserRole===UserRole.ADMIN || loggedInUserRole===UserRole.SUPER_ADMIN) && (
+          <h1 className="bg-white font-semibold">Manager Chat</h1>
+        )}
         <div className="flex h-[calc(100vh-110px)] bg-white overflow-y-auto">
           {/* Sidebar */}
-
-          <div className="w-1/4 border-r border-gray-200 py-4 pr-4">
-            <input
-              type="text"
-              placeholder="Search here..."
-              className="w-full p-2 mb-4 border rounded-full text-sm"
-            />
-            <div className="space-y-3">
-              {adminManagerComments?.length
-                ? adminManagerComments?.map((hospital, idx) => (
-                    <div
-                      key={idx}
-                      className={`${
-                        hospital?.hospitalId == hispotalId
-                          ? "bg-[#3E79D6] text-white"
-                          : "text-black"
-                      } group flex items-center justify-start cursor-pointer hover:bg-[#3E79D6] hover:text-white`}
-                      onClick={() =>
-                        handleCommentRead(hospital?.hospitalId, hospital?.id)
-                      }
-                    >
-                      <div className="pl-1">
-                        <div className="w-10 h-10  mx-auto rounded-full bg-gray-200 text-center flex justify-center items-center overflow-hidden">
-                          <span className="text-[28px]  font-semibold text-[#3E79D6]">
-                            {hospital?.hospitalName.charAt(0)}
-                          </span>
+          {(loggedInUserRole===UserRole.ADMIN || loggedInUserRole===UserRole.SUPER_ADMIN) && (
+            <>
+              <div className="w-1/4 border-r border-gray-200 py-4 pr-4">
+                <input
+                  type="text"
+                  placeholder="Search here..."
+                  className="w-full p-2 mb-4 border rounded-full text-sm"
+                />
+                <div className="space-y-3">
+                  {adminManagerComments?.length
+                    ? adminManagerComments?.map((hospital, idx) => (
+                        <div
+                          key={idx}
+                          className={`${
+                            hospital?.hospitalId == hispotalId
+                              ? "bg-[#3E79D6] text-white"
+                              : "text-black"
+                          } group flex items-center justify-start cursor-pointer hover:bg-[#3E79D6] hover:text-white`}
+                          onClick={() =>
+                            handleCommentRead(hospital?.hospitalId, hospital?.id)
+                          }
+                        >
+                          <div className="pl-1">
+                            <div className="w-10 h-10  mx-auto rounded-full bg-gray-200 text-center flex justify-center items-center overflow-hidden">
+                              <span className="text-[28px]  font-semibold text-[#3E79D6]">
+                                {hospital?.hospitalName.charAt(0)}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="w-full flex items-center justify-between p-2 ">
+                            <div>
+                              <p className="font-semibold text-sm">
+                                {hospital?.hospitalName}
+                              </p>
+                              <p className="text-xs ">{hospital?.text}</p>
+                            </div>
+                            <div className="text-xs text-end">
+                              <span>
+                                {formatDateTime(hospital?.createdAt)?.time}
+                              </span>
+                              {hospital?.unreadCount > 0 && (
+                                <h1
+                                  className={`font-bold my-1 w-5 h-5 rounded-full ${
+                                    hospital?.unreadCount > 0
+                                      ? "bg-[#3E79D6] text-white"
+                                      : "bg-white text-[#3E79D6]"
+                                  }  text-center flex justify-center items-center  group-hover:bg-white group-hover:text-[#3E79D6]`}
+                                >
+                                  {hospital?.unreadCount}
+                                </h1>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="w-full flex items-center justify-between p-2 ">
-                        <div>
-                          <p className="font-semibold text-sm">
-                            {hospital?.hospitalName}
-                          </p>
-                          <p className="text-xs ">{hospital?.text}</p>
-                        </div>
-                        <div className="text-xs text-end">
-                          <span>
-                            {formatDateTime(hospital?.createdAt)?.time}
-                          </span>
-                          {hospital?.unreadCount > 0 && (
-                            <h1
-                              className={`font-bold my-1 w-5 h-5 rounded-full ${
-                                hospital?.unreadCount > 0
-                                  ? "bg-[#3E79D6] text-white"
-                                  : "bg-white text-[#3E79D6]"
-                              }  text-center flex justify-center items-center  group-hover:bg-white group-hover:text-[#3E79D6]`}
-                            >
-                              {hospital?.unreadCount}
-                            </h1>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                : ""}
-            </div>
-          </div>
+                      ))
+                    : ""}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Chat Area */}
           <div className="flex flex-col flex-1">
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {managerComments?.length && hispotalId ? (
-                managerComments?.map((msg) => (
-                  <div key={msg.id}>
-                    {msg.type == CommentType.HOSPITAL_NOTE && (
-                      <div
-                        key={msg.id}
-                        className={`flex ${
-                          msg.position === "self"
-                            ? "justify-end"
-                            : "justify-start"
-                        }`}
-                      >
-                        <div className="flex justify-start items-start gap-x-2">
-                          {msg.position === "other" && (
-                            <div className="w-7 h-7  mx-auto rounded-full bg-gray-300 text-center flex justify-center items-center overflow-hidden">
-                              <span className="text-[22px]  font-semibold text-[#3E79D6] ">
-                                {msg.sender.charAt(0)}
-                              </span>
-                            </div>
-                          )}
+              {/* add a flag that loads on first render and trigger welcome screen */}
+              {isWelcomeScreenEnabled ? (
+                <div className="flex justify-center items-center h-full">{`Welcome ${loggedInUserName} to Manager Chat Screen`}</div>
+              ) : (
+                <>
+                  { managerComments?.length && managerComments?.map((msg) => (
+                    <div key={msg.id}>
+                      {msg.type == CommentType.HOSPITAL_NOTE && (
+                        <div
+                          key={msg.id}
+                          className={`flex ${
+                            msg.position === "self"
+                              ? "justify-end"
+                              : "justify-start"
+                          }`}
+                        >
+                          <div className="flex justify-start items-start gap-x-2">
+                            {msg.position === "other" && (
+                              <div className="w-7 h-7  mx-auto rounded-full bg-gray-300 text-center flex justify-center items-center overflow-hidden">
+                                <span className="text-[22px]  font-semibold text-[#3E79D6] ">
+                                  {msg.sender.charAt(0)}
+                                </span>
+                              </div>
+                            )}
 
-                          <div className="min-w-[25%] bg-[#3E79D61A] p-2 rounded-lg shadow-sm">
-                            <div className="w-full text-sm text-gray-500 font-semibold mb-1 flex justify-between gap-x-8">
-                              <span>{msg.sender} </span>{" "}
-                              <span className="text-xs text-gray-400 font-normal">
-                                {msg.date}
-                              </span>
-                            </div>
-                            <div className="  text-sm text-[#6D6D6D] my-3">
-                              <p>{msg.message}</p>
-                            </div>
-                            <div className="text-xs text-gray-400 mt-1 flex justify-between">
-                              <span>{msg.time}</span>
+                            <div className="min-w-[25%] bg-[#3E79D61A] p-2 rounded-lg shadow-sm">
+                              <div className="w-full text-sm text-gray-500 font-semibold mb-1 flex justify-between gap-x-8">
+                                <span>{msg.sender} </span>{" "}
+                                <span className="text-xs text-gray-400 font-normal">
+                                  {msg.date}
+                                </span>
+                              </div>
+                              <div className="  text-sm text-[#6D6D6D] my-3">
+                                <p>{msg.message}</p>
+                              </div>
+                              <div className="text-xs text-gray-400 mt-1 flex justify-between">
+                                <span>{msg.time}</span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="flex justify-center items-center h-full">{`Welcome ${loggedInUserName} to Manager Chat Screen`}</div>
+                      )}
+                    </div>
+                  ))}
+                </>
               )}
             </div>
 
             {/* Input Box */}
-            <div className={` p-4  flex items-center space-x-3`}>
-              <input
-                type="text"
-                placeholder="Add a comment"
-                value={commentInput}
-                onChange={(e) => setCommentInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleCreateManagerChat();
-                  }
-                }}
-                // disabled={disable}
-                className={`${
-                  Boolean(false) ? " cursor-not-allowed" : ""
-                } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
-              />
-              <button
-                // disabled={disable}
-                onClick={handleCreateManagerChat}
-                className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-3 text-sm cursor-pointer"
-              >
-                Send
-              </button>
-            </div>
+            {!isWelcomeScreenEnabled && (
+              <div className={` p-4  flex items-center space-x-3`}>
+                <input
+                  type="text"
+                  placeholder="Add a comment"
+                  value={commentInput}
+                  onChange={(e) => setCommentInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleCreateManagerChat();
+                    }
+                  }}
+                  // disabled={disable}
+                  className={`${
+                    Boolean(false) ? " cursor-not-allowed" : ""
+                  } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
+                />
+                <button
+                  // disabled={disable}
+                  onClick={handleCreateManagerChat}
+                  className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-3 text-sm cursor-pointer"
+                >
+                  Send
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
