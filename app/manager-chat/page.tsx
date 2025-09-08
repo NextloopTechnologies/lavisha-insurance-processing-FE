@@ -207,7 +207,7 @@ export default function ManagerChat() {
                 <div className="flex justify-center items-center h-full">{`Welcome ${loggedInUserName} to Manager Chat Screen`}</div>
               ) : (
                 <>
-                  { managerComments?.length && managerComments?.map((msg) => (
+                  { managerComments?.length>0 && managerComments?.map((msg) => (
                     <div key={msg.id}>
                       {msg.type == CommentType.HOSPITAL_NOTE && (
                         <div

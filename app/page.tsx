@@ -54,7 +54,7 @@ const Dashboard = () => {
   }, [dateRange, selectHospital]);
   const hospitalStatCardData = [
     {
-      value: "90%",
+      value: (dashboardData.averageSettlementPercentage ?? 0) + '%',
       label: "Average Settlement Amount %",
     },
     {
