@@ -16,6 +16,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { DatePicker } from "@/components/DatePicker";
 import { useRouter } from "next/navigation";
 import {
@@ -249,11 +255,22 @@ export function SettledDataTable({
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
                         {row?.refNumber}
                       </TableCell>
-                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.description?.length > 30
-                          ? row?.description.slice(0, 30) + "..."
-                          : row?.description}
-                      </TableCell>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
+                              <span className="truncate block max-w-[200px] ">
+                                {row?.description?.length > 30
+                                  ? row?.description.slice(0, 30) + "..."
+                                  : row?.description}
+                              </span>
+                            </TableCell>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs break-words">
+                            {row?.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {(!roles?.includes(UserRole.ADMIN) ||
                         !roles?.includes(UserRole.SUPER_ADMIN)) && (
                         <TableCell className=" border p-5 ">
@@ -302,9 +319,9 @@ export function SettledDataTable({
                                   />
                                 </Link>
                               )}
-                              {!roles?.includes(UserRole.ADMIN) && (
+                              {/* {!roles?.includes(UserRole.ADMIN) && (
                                 <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
-                              )}
+                              )} */}
                             </>
                           )}
                         </div>

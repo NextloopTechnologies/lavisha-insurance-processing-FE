@@ -16,6 +16,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { DatePicker } from "@/components/DatePicker";
 import { useRouter } from "next/navigation";
 import {
@@ -161,7 +167,7 @@ export function UserTable({
       </div>
 
       {/* Table */}
-      <div className="  overflow-x-auto">
+      <div className="overflow-x-auto">
         <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-500px)] md:h-[calc(100vh-350px)]">
           <Table className="min-w-full ">
             <TableHeader className="text-red-400  w-full">
@@ -202,9 +208,22 @@ export function UserTable({
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
                         {row?.email}
                       </TableCell>
-                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.address}
-                      </TableCell>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TableCell className="border p-5 md:w-48 min-w-[200px] cursor-pointer">
+                              <span className="truncate block max-w-[190px] ">
+                                {row?.address?.length > 30
+                                  ? row?.address.slice(0, 30) + "..."
+                                  : row?.address}
+                              </span>
+                            </TableCell>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs break-words">
+                            {row?.address}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
 
                       <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
                         {row?.hospital?.name}

@@ -21,7 +21,7 @@ const Dashboard = () => {
 
     return { from, to };
   });
-  const [selectHospital, setSelectHospital] = useState("");
+  const [selectHospital, setSelectHospital] = useState(" ");
   const handleHospitalChange = (value: string) => {
     setSelectHospital(value);
   };
