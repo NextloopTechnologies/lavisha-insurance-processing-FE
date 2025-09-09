@@ -67,7 +67,7 @@ export default function EditClaimForm() {
         } = claimInputs;
         const payload = {
           ...others,
-          status: value,
+          status: value ? value : undefined,
           documents: [
             CLINIC_PAPER,
             ICP,

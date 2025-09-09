@@ -84,8 +84,10 @@ const SidebarItem = ({
               )}
             </span>
             <span>{item.label}</span>
-            {(item.path==='/manager-chat' && managerChatsUnReadCount>0 )&& (
-              <span>{managerChatsUnReadCount}</span>
+            {(item.path==='/manager-chat' && managerChatsUnReadCount>0) && (
+              <span className={`${isActive ? 'bg-white text-blue-500' : 'bg-blue-500 text-white'} text-[11px] w-5 h-4 rounded-full`}>
+                {managerChatsUnReadCount}
+              </span>
             )} 
           </Link>
         ) : (
