@@ -395,14 +395,14 @@ export default function CreateClaim({
                 onClick={() => handleCreateClaim("PENDING")}
                 className="bg-[#3E79D6] px-4"
               >
-                Move to Pending
+                Create Claim
               </Button>
               <Button
                 disabled={loading}
                 onClick={() => handleCreateClaim()}
                 className="bg-[#3E79D6] px-4"
               >
-                Update Claim
+                Update Draft
               </Button>
             </>
           ) : (
