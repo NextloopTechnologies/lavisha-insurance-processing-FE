@@ -68,11 +68,7 @@ export default function Comments({ claimId, disable, data }: CommentsProps) {
   const handleCreateComment = async () => {
     const payload = {
       text: commentInput,
-
-      ...((loggedInUserRole == UserRole.HOSPITAL_MANAGER ||
-        loggedInUserRole == UserRole.HOSPITAL) && {
-        insuranceRequestId: claimId,
-      }),
+      insuranceRequestId: claimId,
       ...((loggedInUserRole == UserRole.ADMIN ||
         loggedInUserRole == UserRole.SUPER_ADMIN) && {
         hospitalId: data?.patient?.hospital?.id,
