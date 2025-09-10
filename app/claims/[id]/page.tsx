@@ -393,6 +393,10 @@ export default function PatientClaimDetails() {
                 claimId={claims?.id}
                 disable={Boolean(statusFromQuery)}
                 data={claims}
+                // for status based comment updates
+                status={filteredStatusOptions}
+                updateClaimStatus={updateClaimStatus}
+                isClaimDetailsSelect={true}
               />
             </div>
           )}
