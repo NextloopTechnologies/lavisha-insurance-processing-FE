@@ -84,7 +84,8 @@ const SidebarItem = ({
               )}
             </span>
             <span>{item.label}</span>
-            {(item.path==='/manager-chat' && managerChatsUnReadCount>0) && (
+            {/* only show to hospital manager */}
+            {(item.path==='/manager-chat' && managerChatsUnReadCount>0 && userRole===UserRole.HOSPITAL_MANAGER) && (
               <span className={`${isActive ? 'bg-white text-blue-500' : 'bg-blue-500 text-white'} text-[11px] w-5 h-4 rounded-full`}>
                 {managerChatsUnReadCount}
               </span>
