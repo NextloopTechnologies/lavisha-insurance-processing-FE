@@ -3,27 +3,25 @@ import { chatMessages } from "@/constants/dummy";
 import { createComments, getComments } from "@/services/comments";
 import { CommentType, TComments, UserRole } from "@/types/comments";
 import Image from "next/image";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Avtar from "./Avtar";
 import { formatDateTime } from "@/lib/utils";
 import { Paperclip } from "lucide-react";
-import { StatusMetaDataType } from "@/types/claims";
+import { StatusMetaDataType, StatusType } from "@/types/claims";
 
 type CommentsProps = {
   claimId: string;
   disable?: boolean;
   data?: any;
   status?: StatusMetaDataType[];
-  updateClaimStatus?: (value: string) => void;
-  isClaimDetailsSelect?: boolean;
+  updateClaimStatus?: (status: StatusType, updateStatusActionFromComments?: boolean ) => void;
 };
 export default function Comments({ 
   claimId, 
   disable, 
   data, 
   status, 
-  updateClaimStatus, 
-  isClaimDetailsSelect 
+  updateClaimStatus,
 }: CommentsProps) {
   const [comments, setComments] = useState<TComments[]>([]);
   const [loading, setLoading] = useState(false);
@@ -32,6 +30,8 @@ export default function Comments({
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const popoverRef = useRef<HTMLDivElement|null>(null);
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -39,6 +39,25 @@ export default function Comments({
       setLoggedInUserId(localStorage.getItem("userId"));
     }
   }, []);
+
+  // Close popover on outside click 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        popoverRef.current &&
+        !popoverRef.current.contains(event.target as Node) &&
+        triggerRef.current &&
+        !triggerRef.current.contains(event.target as Node)
+      ) {
+        setIsPopoverOpen(false);
+      }
+    }
+    if (isPopoverOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } 
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isPopoverOpen]);
+
   const fetchComments = async () => {
     try {
       setLoading(true);
@@ -173,92 +192,64 @@ export default function Comments({
       </div>
 
       <div className="relative">
+        <div className="p-4 flex items-center space-x-3">
+          {/* Input + Paperclip in one box */}
+          <div className="flex-1 flex items-center bg-[#F3F3F3] border rounded-xl px-3 py-2">
+            <input
+              type="text"
+              placeholder="Add a comment"
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleCreateComment();
+                }
+              }}
+              disabled={disable}
+              className="flex-1 bg-transparent text-sm focus:outline-none disabled:cursor-not-allowed"
+            />
 
-        <div className={`p-4  flex items-center space-x-3`}>
-          <input
-            type="text"
-            placeholder="Add a comment"
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                handleCreateComment();
-              }
-            }}
-            disabled={disable}
-            className={`${
-              Boolean(disable) ? " cursor-not-allowed" : ""
-            } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
-          />
-          {/* Popover Trigger */}
-          <button
-            type="button"
-            disabled={disable}
-            onClick={() => setIsPopoverOpen((p) => !p)}
-            className="p-2 rounded-full bg-white shadow hover:bg-[#F3F3F3] transition cursor-pointer"
-          >
-            <Paperclip className="w-5 h-5 text-[#3E79D6]" />
-          </button>
+            {/* Popover Trigger inside input box */}
+            <button
+              ref={triggerRef}
+              type="button"
+              disabled={disable || [StatusType.SETTLED as string].includes(status[0].key)}
+              onClick={() => setIsPopoverOpen((p) => !p)}
+              className="p-2 rounded-full hover:bg-[#E6E6E6] transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Paperclip className="w-5 h-5 text-[#3E79D6]" />
+            </button>
+          </div>
+
+          {/* Post button */}
           <button
             disabled={disable}
             onClick={handleCreateComment}
-            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-2 text-sm cursor-pointer"
+            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-2 text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
             Post
           </button>
+
           {/* WhatsApp-style Popover */}
-          {/* <AnimatePresence>
-            {open && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.8, y: 20 }}
-                transition={{ duration: 0.2 }}
-                className="absolute bottom-16 right-16 bg-white shadow-lg rounded-2xl p-4 grid grid-cols-3 gap-4 w-72 z-50"
-              >
-                {statusOptions.map((item) => (
-                  <button
-                    key={item.key}
-                    onClick={() => {
-                      console.log("Clicked:", item.key);
-                      setOpen(false);
-                    }}
-                    className="flex flex-col items-center justify-center text-center space-y-2 hover:bg-[#F3F3F3] rounded-xl p-2 transition"
-                  >
-                    <img src={item.icon} alt={item.name} className="w-8 h-8" />
-                    <span className="text-xs text-[#6D6D6D]">{item.name}</span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence> */}
           <div
+            ref={popoverRef}
             className={`absolute bottom-full mb-3 right-4 bg-white shadow-lg rounded-2xl p-4 
               grid grid-cols-4 sm:grid-cols-3 lg:grid-cols-4 gap-4 w-[90vw] sm:w-80 
               transform transition-all duration-300 origin-bottom-right
               ${isPopoverOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-2 pointer-events-none"}
             `}
-            // className={`absolute bottom-16 right-16 bg-white shadow-lg rounded-2xl p-4 grid grid-cols-3 gap-4 w-72 z-50 
-            //   transform transition-all duration-300 origin-bottom-right
-            //   ${isPopoverOpen ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-90 translate-y-4 pointer-events-none"}
-            // `}
           >
-            {status.map((item, index) => (
+            {status.slice(1).map((item) => (
               <button
                 key={item.key}
                 onClick={() => {
-                  console.log("Clicked:", item.key);
                   setIsPopoverOpen(false);
+                  if (updateClaimStatus) updateClaimStatus(item.key as StatusType, true);
                 }}
-                className={`flex flex-col items-center justify-center text-center space-y-2 rounded-xl p-2 transition ${index===0 ? 'cursor-not-allowed bg-[#3E79D61A]' : ' cursor-pointer hover:bg-[#3E79D61A]'}`}
+                className="flex flex-col items-center justify-center text-center space-y-2 rounded-xl p-2 transition cursor-pointer hover:bg-[#3E79D61A]"
               >
-                {/* <img src={item.icon} alt={item.name} className="w-8 h-8" /> */}
                 <Image src={item.icon} alt={item.name} className="w-5 h-5" />
-                {/* {index===0 ? (  
-                  <span className="text-xs text-[#6D6D6D]">{item.name}</span>
-                ): (
-                )} */}
                 <span className="text-xs text-[#6D6D6D]">{item.name}</span>
               </button>
             ))}

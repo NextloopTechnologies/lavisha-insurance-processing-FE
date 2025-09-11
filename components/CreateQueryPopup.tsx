@@ -24,6 +24,7 @@ import { createEnhancements } from "@/services/enhancement";
 import { createQuery, updateQuery } from "@/services/query";
 import { DialogClose } from "@radix-ui/react-dialog";
 import { StatusType } from "@/types/claims";
+import { toast } from "sonner";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -237,8 +238,10 @@ export default function CreateQueryPopup({
           onOpenChange(!open);
           setSelectedQuery(null);
           setLoading(false);
+          toast.success("Query created!")
         }
       } catch (error) {
+        toast.error("Failed to create query!")
         console.error("Upload error:", error);
       } finally {
         // setLoading(false);
