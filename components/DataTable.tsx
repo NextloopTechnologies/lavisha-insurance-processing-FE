@@ -190,8 +190,8 @@ export function DataTable({
             )}{" "}
           </div>
         </div>
-        {(roles.includes(UserRole.HOSPITAL) ||
-          roles.includes(UserRole.HOSPITAL_MANAGER)) && (
+        {/* {(roles.includes(UserRole.HOSPITAL) ||
+          roles.includes(UserRole.HOSPITAL_MANAGER)) && ( */}
           <>
             <Button
               onClick={() => router.push("/newClaim")}
@@ -205,7 +205,7 @@ export function DataTable({
               className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
             />
           </>
-        )}
+        {/* )} */}
       </div>
 
       {/* Table */}
@@ -282,12 +282,12 @@ export function DataTable({
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
-                      {(!roles?.includes(UserRole.ADMIN) ||
-                        !roles?.includes(UserRole.SUPER_ADMIN)) && (
+                      {/* {(!roles?.includes(UserRole.ADMIN) ||
+                        !roles?.includes(UserRole.SUPER_ADMIN)) && ( */}
                         <TableCell className=" border p-5 ">
                           {STATUS_LABELS[row.status]}
                         </TableCell>
-                      )}
+                      {/* )} */}
                       <TableCell className=" border p-5 ">
                         {format(new Date(row.createdAt), "yyyy/MM/dd")}
                       </TableCell>

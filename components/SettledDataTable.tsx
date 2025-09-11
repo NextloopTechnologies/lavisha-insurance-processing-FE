@@ -179,15 +179,15 @@ export function SettledDataTable({
           /> */}
           {/* <DatePicker date={selectedDate} onChange={setSelectedDate} /> */}
         </div>
-        {(roles.includes(UserRole.HOSPITAL) ||
-          roles.includes(UserRole.HOSPITAL_MANAGER)) && (
+        {/* {(roles.includes(UserRole.HOSPITAL) ||
+          roles.includes(UserRole.HOSPITAL_MANAGER)) && ( */}
           <Button
             onClick={() => router.push("/newClaim")}
             className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
           >
             <Plus className="mr-2 h-4 w-4" /> New Claim
           </Button>
-        )}
+        {/* )} */}
         <Plus
           onClick={() => router.push("/newClaim")}
           className="mr-2 h-4 w-4 block md:hidden cursor-pointer"

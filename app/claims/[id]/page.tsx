@@ -24,7 +24,11 @@ import CreateEnhancementPopup from "@/components/CreateEnhancementPopup";
 import EnhancementDateDropdown from "@/components/EnhancementDateDropdown";
 import CreateQueryPopup from "@/components/CreateQueryPopup";
 import CreateDischargePopup from "@/components/CreateDischargePopup";
-import { filterTabsByData, getStatusVisibility, statusMaxIndexMap } from "@/lib/utils";
+import {
+  filterTabsByData,
+  getStatusVisibility,
+  statusMaxIndexMap,
+} from "@/lib/utils";
 import { StatusType } from "@/types/claims";
 
 const allTabLabels = [
@@ -155,10 +159,11 @@ export default function PatientClaimDetails() {
       tabs = filterTabsByData(tabs, res?.data);
       setVisibleTabLabels(tabs);
       // only if it is coming from update status modal
-      if(isFromUpdateClaim) {
+      if (isFromUpdateClaim) {
         const indexToSet = tabs.findIndex(
           (label) =>
-            label.toLowerCase() === statusToTabLabel[currentStatus].toLowerCase()
+            label.toLowerCase() ===
+            statusToTabLabel[currentStatus].toLowerCase()
         );
         setActiveTab(indexToSet !== -1 ? indexToSet : 0);
       }
@@ -252,9 +257,10 @@ export default function PatientClaimDetails() {
     try {
       setLoading(true);
       if (modalDependentStatus.includes(status)) {
-        if([StatusType.QUERIED, StatusType.ENHANCEMENT].includes(status)) {
+        if ([StatusType.QUERIED, StatusType.ENHANCEMENT].includes(status)) {
           const result = await updateClaims({ status }, id);
-          if (result?.status !== 200) throw new Error("Failed to update status!");
+          if (result?.status !== 200)
+            throw new Error("Failed to update status!");
         }
         // passing true to update the claim and set the current status as active tab
         fetchClaims(true);
@@ -268,7 +274,7 @@ export default function PatientClaimDetails() {
 
   return (
     <SidebarLayout>
-      <div className="p-6">
+      <div className="p-6 h-[calc(100vh-80px)] overflow-y-scroll">
         <div className="flex justify-between gap-x-3 items-center mb-4">
           <div className="flex justify-start gap-x-3 items-center">
             <h2 className="text-xl font-semibold">{claims?.patient?.name}</h2>

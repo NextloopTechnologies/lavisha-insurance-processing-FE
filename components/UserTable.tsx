@@ -60,6 +60,7 @@ const Role = {
 };
 
 type DATA = {
+  id?: string;
   name?: string;
   email?: string;
   address?: string;
@@ -80,6 +81,8 @@ export function UserTable({
   getSearchData,
   initialSearchTerm = "",
   roles,
+  handlegetUser,
+  setOpenDialog,
 }: {
   roles?: string[];
   data: DATA[];
@@ -90,37 +93,39 @@ export function UserTable({
   handleDeleteClaim?: any;
   getSearchData?: (value?: string[] | string | Date, name?: string) => void;
   initialSearchTerm?: string;
+  handlegetUser?: (id?: string) => void;
+  setOpenDialog?: any;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
 
   const totalPages = Math.ceil(total);
-  const handleChange = (name, value) => {};
 
-  const filteredUsers = useMemo(() => {
-    if (!searchTerm) return data;
+  useEffect(() => {
+    if (selectedDate) {
+      getSearchData(selectedDate, "selectedDate");
+    }
+  }, [selectedDate]);
 
-    return data.filter((user) => {
-      const search = searchTerm.toLowerCase();
-      return (
-        user.name?.toLowerCase().includes(search) ||
-        user.email?.toLowerCase().includes(search) ||
-        user.role?.toLowerCase().includes(search) ||
-        user.hospital?.name?.toLowerCase().includes(search) ||
-        user.hospital?.name?.toLowerCase().includes(search) ||
-        user.address?.toLowerCase().includes(search)
-      );
-    });
-  }, [searchTerm, data]);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+      getSearchData(searchTerm, "debouncedSearchTerm");
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(handler); // Cleanup if user keeps typing
+    };
+  }, [searchTerm]);
 
   return (
-    <div className="min-h-[calc(100vh-255px)] p-4">
+    <div className="min-h-[calc(100vh-265px)] p-4">
       {/* Top bar */}
 
       <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
-        <div className="flex gap-2 md:flex-wrap">
+        <div className="flex md:min-w-full gap-2 justify-between items-center ">
           <div className="relative">
             <Input
               placeholder="Search here"
@@ -142,33 +147,20 @@ export function UserTable({
               </svg>
             </span>
           </div>
-          {/* <MultiSelect
-            mode="multi"
-            selectedStatuses={selectedStatuses}
-            status={statusOptions.filter((item) => item?.name == "Settled")}
-            toggleStatus={toggleStatus}
-            setSelectedStatuses={setSelectedStatuses}
-          /> */}
-          {/* <DatePicker date={selectedDate} onChange={setSelectedDate} /> */}
+          <div className="">
+            <Button
+              onClick={() => setOpenDialog(true)}
+              className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+            >
+              <Plus className="mr-2 h-4 w-4" /> Create User
+            </Button>
+          </div>
         </div>
-        {(roles.includes(UserRole.HOSPITAL) ||
-          roles.includes(UserRole.HOSPITAL_MANAGER)) && (
-          <Button
-            onClick={() => router.push("/newClaim")}
-            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
-          >
-            <Plus className="mr-2 h-4 w-4" /> New Claim
-          </Button>
-        )}
-        <Plus
-          onClick={() => router.push("/newClaim")}
-          className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
-        />
       </div>
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-500px)] md:h-[calc(100vh-350px)]">
+        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-100px)] md:h-[calc(100vh-210px)]">
           <Table className="min-w-full ">
             <TableHeader className="text-red-400  w-full">
               <TableRow className="bg-white text-[#FBBC05]">
@@ -180,16 +172,19 @@ export function UserTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Email
                 </TableHead>
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Address
-                </TableHead>
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Hospital Name
-                </TableHead>
+                {roles.includes(UserRole.HOSPITAL) && (
+                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                    Address
+                  </TableHead>
+                )}{" "}
+                {roles.includes(UserRole.HOSPITAL_MANAGER) && (
+                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                    Hospital Name
+                  </TableHead>
+                )}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Role
                 </TableHead>
-
                 <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
                   Action
                 </TableHead>
@@ -199,8 +194,8 @@ export function UserTable({
             {/* <br /> */}
             <div className="mb-2 block"></div>
             <TableBody className="bg-white">
-              {filteredUsers?.length
-                ? filteredUsers?.map((row, index) => (
+              {data?.length
+                ? data?.map((row, index) => (
                     <TableRow key={index + "_" + row?.name} className="">
                       {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
@@ -208,35 +203,52 @@ export function UserTable({
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
                         {row?.email}
                       </TableCell>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <TableCell className="border p-5 md:w-48 min-w-[200px] cursor-pointer">
-                              <span className="truncate block max-w-[190px] ">
-                                {row?.address?.length > 30
-                                  ? row?.address.slice(0, 30) + "..."
-                                  : row?.address}
-                              </span>
-                            </TableCell>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs break-words">
-                            {row?.address}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
+                      {roles.includes(UserRole.HOSPITAL) && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <TableCell className="border p-5 md:w-48 min-w-[200px] cursor-pointer">
+                                <span className="truncate block max-w-[190px] ">
+                                  {row?.address?.length > 30
+                                    ? row?.address.slice(0, 30) + "..."
+                                    : row?.address}
+                                </span>
+                              </TableCell>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs break-words">
+                              {row?.address}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
 
-                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.hospital?.name}
-                      </TableCell>
+                      {roles.includes(UserRole.HOSPITAL_MANAGER) && (
+                        <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
+                          {row?.hospital?.name}
+                        </TableCell>
+                      )}
+
                       <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
                         {Role[row?.role]}
                       </TableCell>
+
                       <TableCell className=" border p-5">
                         <div className="flex gap-2 justify-start text-muted-foreground">
-                          <Eye
-                            // onClick={() => row.patient.id}
+                          {/* <Eye
                             className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                          /> */}
+                          {/* <Link href={`/user/${row?.id}`}> */}
+                          <Pencil
+                            onClick={() => handlegetUser(row?.id)}
+                            className="w-4 h-4 hover:text-green-600 cursor-pointer"
                           />
+                          {/* </Link> */}
+                          {Role[row?.role] !== "Super Admin" && (
+                            <Trash2
+                              onClick={() => handleDeleteClaim(row.id)}
+                              className="w-4 h-4 hover:text-red-600 cursor-pointer"
+                            />
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -244,7 +256,7 @@ export function UserTable({
                 : ""}
             </TableBody>
           </Table>
-          {filteredUsers?.length == 0 ? (
+          {data?.length == 0 ? (
             <div className="text-center w-full flex justify-center items-center h-[calc(100%-300px)] md:h-[calc(100%-210px)]">
               No record found
             </div>

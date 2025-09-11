@@ -18,6 +18,7 @@ import Link from "next/link";
 import Avtar from "@/components/Avtar";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import User from "../user/page";
 
 export default function Patients() {
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);

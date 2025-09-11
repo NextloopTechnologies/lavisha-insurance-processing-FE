@@ -99,8 +99,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
             <p className="text-xs text-muted-foreground">
               {profileData?.[0]?.address}
             </p>
-            {(roles?.includes(UserRole.HOSPITAL) ||
-              roles?.includes(UserRole.HOSPITAL_MANAGER)) && (
+            {roles?.includes(UserRole.HOSPITAL) && (
               <div
                 onClick={() =>
                   handleViewRateList(profileData?.[0]?.rateListUrl)

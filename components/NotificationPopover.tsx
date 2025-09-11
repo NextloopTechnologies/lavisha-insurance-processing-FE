@@ -81,7 +81,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
                 ?.map((item, index) => (
                   <div
                     key={index}
-                    className="flex gap-4 items-start bg-[#0061FE14]  px-4 my-2"
+                    className="flex gap-4 items-start bg-[#0061FE14]  px-4 border-b-1"
                   >
                     <div className="w-8 h-8 block rounded-full overflow-hidden mt-1">
                       {item.avatar ? (
@@ -91,7 +91,7 @@ export const NotificationPopover: React.FC<NotificationPopoverProps> = ({
                           className="overflow-hidden"
                         />
                       ) : (
-                        <span>{item.message.charAt(0)}</span>
+                        <span>{item?.message?.charAt(0)}</span>
                       )}
                     </div>
                     <div className="flex-1">
