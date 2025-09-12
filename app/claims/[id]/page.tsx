@@ -237,6 +237,7 @@ export default function PatientClaimDetails() {
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
+        setCommentLevelStatusUpdate(false) // once the status is update make it false
       }
 
       if (modalDependentStatus.includes(status)) {
@@ -259,7 +260,10 @@ export default function PatientClaimDetails() {
           if (result?.status !== 200) throw new Error("Failed to update status!");
         }
         // skip true for staying in comment/history tabs
-        if(commentLevelStatusUpdate) return fetchClaims()
+        if(commentLevelStatusUpdate) {
+          setCommentLevelStatusUpdate(false)
+          return fetchClaims()
+        }
         // passing true to update the claim and set the current status as active tab
         fetchClaims(true);
       }
