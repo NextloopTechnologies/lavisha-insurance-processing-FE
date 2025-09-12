@@ -217,9 +217,11 @@ export default function CreateSettlementPopup({
           setModalProcessingStatus?.("");
           // setLoading(false);
           onOpenChange(!open);
+          toast.success("Updated Claim with Settlement!")
         }
       }
     } catch (error) {
+      toast.error("Failed to update claim with settlement!")
       console.error("Upload error:", error);
     } finally {
       setLoading(false);

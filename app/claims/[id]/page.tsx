@@ -61,7 +61,7 @@ const modalDependentStatus = [
 export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [openParentLevelModal, setOpenParentLevelModal] = useState(false);
-
+  const [commentLevelStatusUpdate, setCommentLevelStatusUpdate] = useState(false);
   const [activeTab, setActiveTab] = useState(0);
   const [patients, setPatients] = useState<any>([]);
   const [loading, setLoading] = useState(false);
@@ -225,9 +225,11 @@ export default function PatientClaimDetails() {
     setSelectedQuery(filteredQueries);
   };
   // need memoization with MultiSelect in future performances
-  const updateClaimStatus = async (status: StatusType) => {
+  const updateClaimStatus = async (status: StatusType, updateStatusActionFromComments?: boolean) => {
     try {
       setLoading(true);
+      // to keep the active tab as comment/history
+      if(updateStatusActionFromComments) setCommentLevelStatusUpdate(true)
 
       if (directUpdateStatus.includes(status)) {
         const res = await updateClaims({ status }, id);
@@ -235,6 +237,7 @@ export default function PatientClaimDetails() {
         setSelectedStatuses([status]);
         setFilteredStatusOptions(getStatusVisibility(status));
         setClaims((prev: any) => ({ ...prev, status }));
+        setCommentLevelStatusUpdate(false) // once the status is update make it false
       }
 
       if (modalDependentStatus.includes(status)) {
@@ -255,6 +258,11 @@ export default function PatientClaimDetails() {
         if([StatusType.QUERIED, StatusType.ENHANCEMENT].includes(status)) {
           const result = await updateClaims({ status }, id);
           if (result?.status !== 200) throw new Error("Failed to update status!");
+        }
+        // skip true for staying in comment/history tabs
+        if(commentLevelStatusUpdate) {
+          setCommentLevelStatusUpdate(false)
+          return fetchClaims()
         }
         // passing true to update the claim and set the current status as active tab
         fetchClaims(true);
@@ -393,6 +401,8 @@ export default function PatientClaimDetails() {
                 claimId={claims?.id}
                 disable={Boolean(statusFromQuery)}
                 data={claims}
+                status={filteredStatusOptions}
+                updateClaimStatus={updateClaimStatus}
               />
             </div>
           )}
