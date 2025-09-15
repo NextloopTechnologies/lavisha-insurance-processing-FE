@@ -136,6 +136,8 @@ export default function SidebarLayout({ children }: Props) {
     logout();
     router.push("/login");
   };
+    const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
+  
 
   useEffect(() => {
     const userRole = Cookies.get("user_role");
@@ -261,9 +263,9 @@ export default function SidebarLayout({ children }: Props) {
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="flex justify-center items-center gap-2 ml-auto">
               <NotificationPopover
-                unreadNotifications={unread}
-                recentNotifications={recent}
-                unreadCount={unread.length}
+                // unreadNotifications={unread}
+                // recentNotifications={recent}
+                // unreadCount={unread.length}
                 // setOpenNotification={setOpenNotification}
                 // openNotification={openNotification}
               />
@@ -275,6 +277,7 @@ export default function SidebarLayout({ children }: Props) {
                 loggedInUserName={loggedInUserName}
                 setOpenEditProfile={setOpenEditProfile}
                 profileData={profileData}
+                roles={roles}
               />
               <ProfileEditModal
                 openEditProfile={openEditProfile}
