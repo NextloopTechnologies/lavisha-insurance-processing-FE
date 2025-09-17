@@ -16,6 +16,12 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 import { DatePicker } from "@/components/DatePicker";
 import { useRouter } from "next/navigation";
 import {
@@ -58,7 +64,10 @@ type DATA = {
   isPreAuth: string;
   tpaName?: string;
   insuranceCompany?: string;
-  assignee?: string;
+  assignee?: {
+    id?: string;
+    name?: string;
+  };
   patient: {
     id?: string;
     name?: string;
@@ -170,12 +179,15 @@ export function SettledDataTable({
           /> */}
           {/* <DatePicker date={selectedDate} onChange={setSelectedDate} /> */}
         </div>
-        <Button
-          onClick={() => router.push("/newClaim")}
-          className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
-        >
-          <Plus className="mr-2 h-4 w-4" /> New Claim
-        </Button>
+        {/* {(roles.includes(UserRole.HOSPITAL) ||
+          roles.includes(UserRole.HOSPITAL_MANAGER)) && ( */}
+          <Button
+            onClick={() => router.push("/newClaim")}
+            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+          >
+            <Plus className="mr-2 h-4 w-4" /> New Claim
+          </Button>
+        {/* )} */}
         <Plus
           onClick={() => router.push("/newClaim")}
           className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
@@ -199,7 +211,8 @@ export function SettledDataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Description
                 </TableHead>
-                {!roles?.includes("ADMIN") && (
+                {(!roles?.includes(UserRole.ADMIN) ||
+                  !roles?.includes(UserRole.SUPER_ADMIN)) && (
                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                     Status
                   </TableHead>
@@ -213,7 +226,8 @@ export function SettledDataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Pre-Auth Status
                 </TableHead>
-                {roles?.includes("ADMIN") && (
+                {(roles?.includes(UserRole.ADMIN) ||
+                  roles?.includes(UserRole.SUPER_ADMIN)) && (
                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                     Assingee
                   </TableHead>
@@ -229,7 +243,10 @@ export function SettledDataTable({
             <TableBody className="bg-white">
               {data?.length
                 ? data?.map((row, index) => (
-                    <TableRow key={index} className="">
+                    <TableRow
+                      key={index + "_" + row?.patient.name}
+                      className=""
+                    >
                       {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
                       <TableCell className=" border p-5">
@@ -238,10 +255,24 @@ export function SettledDataTable({
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
                         {row?.refNumber}
                       </TableCell>
-                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.description}
-                      </TableCell>
-                      {!roles?.includes("ADMIN") && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
+                              <span className="truncate block max-w-[200px] ">
+                                {row?.description?.length > 30
+                                  ? row?.description.slice(0, 30) + "..."
+                                  : row?.description}
+                              </span>
+                            </TableCell>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs break-words">
+                            {row?.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {(!roles?.includes(UserRole.ADMIN) ||
+                        !roles?.includes(UserRole.SUPER_ADMIN)) && (
                         <TableCell className=" border p-5 ">
                           {STATUS_LABELS[row.status]}
                         </TableCell>
@@ -258,12 +289,12 @@ export function SettledDataTable({
                       {(roles?.includes(UserRole.ADMIN) ||
                         roles?.includes(UserRole.SUPER_ADMIN)) && (
                         <TableCell className=" border p-5 ">
-                          {row?.assignee || "---"}
+                          {row?.assignee?.name || "---"}
                         </TableCell>
                       )}
                       <TableCell className=" border p-5">
                         <div className="flex gap-2 justify-start text-muted-foreground">
-                          {!roles?.includes("ADMIN") && (
+                          {!roles?.includes(UserRole.ADMIN) && (
                             <Link href={`/newClaim/${row?.refNumber}`}>
                               <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                             </Link>
@@ -271,7 +302,7 @@ export function SettledDataTable({
                           {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
                           {row?.status !== StatusType.DRAFT && (
                             <>
-                              {roles?.includes("ADMIN") ? (
+                              {roles?.includes(UserRole.ADMIN) ? (
                                 <Link
                                   href={`/claims/${row?.refNumber}?showStatus=true&tab=5`}
                                 >
@@ -288,16 +319,16 @@ export function SettledDataTable({
                                   />
                                 </Link>
                               )}
-                              {!roles?.includes("ADMIN") && (
+                              {/* {!roles?.includes(UserRole.ADMIN) && (
                                 <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
-                              )}
+                              )} */}
                             </>
                           )}
                         </div>
                       </TableCell>
                     </TableRow>
                   ))
-                : " "}
+                : ""}
             </TableBody>
           </Table>
           {data?.length == 0 ? (

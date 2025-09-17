@@ -7,3 +7,16 @@ export const getNotificationsByParams = (params: {
 }) => {
   return api.get('/notifications', { params });
 };
+
+// export const markAllRead = (params: {
+//   isRead?:boolean
+// }) => {
+//   return api.get('/notifications', { params });
+// };
+
+export const markAllRead = async (ids: string[], markAll = false) => {
+  return api.patch("/notifications", {
+    markAllRead: markAll,
+    batchRead: ids,
+  });
+};

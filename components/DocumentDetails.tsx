@@ -43,7 +43,7 @@ export default function DocumentDetails({ data, type }) {
       {filteredDocs?.map((doc, idx) => (
         <div
           key={idx}
-          className="relative flex flex-col justify-between items-center border rounded-md p-4  bg-white shadow-sm"
+          className="relative flex flex-col justify-between items-center border rounded-md p-4  bg-white shadow-sm cursor-pointer"
         >
           <div onClick={() => handleFileClick(doc)}>
             {getFileIconType(doc?.fileName) == "image" ? (

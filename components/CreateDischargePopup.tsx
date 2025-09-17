@@ -21,6 +21,7 @@ import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { StatusType } from "@/types/claims";
+import { toast } from "sonner";
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -201,8 +202,10 @@ export default function CreateDischargePopup({
         setLoading(false);
         onOpenChange(!open);
         fetchClaimsById();
+        toast.success("Updated Claim with Discharge!")
       }
     } catch (error) {
+      toast.error("Failed to update claim with discharge!")
       console.error("Upload error:", error);
     } finally {
       // setLoading(false);

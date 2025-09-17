@@ -36,6 +36,12 @@ import { format } from "date-fns";
 import { STATUS_LABELS } from "@/lib/utils";
 import AssigneeDropdown from "./AssigneeDropdown";
 import { UserRole } from "@/types/comments";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "./ui/tooltip";
 
 type User = {
   id: number;
@@ -96,7 +102,9 @@ export function DataTable({
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
-
+  const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
+  const [assignedClaimRefNumber, setAssignedClaimRefNumber] =
+    useState<string>("");
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) => {
       return prev.includes(status)
@@ -113,12 +121,12 @@ export function DataTable({
   }, [initialSearchTerm]);
 
   useEffect(() => {
-    if (selectedStatuses?.length > 0) {
+    if (selectedStatuses?.length >= 0) {
       getSearchData(selectedStatuses, "selectedStatuses");
     }
   }, [selectedStatuses]);
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate || selectedDate == undefined) {
       getSearchData(selectedDate, "selectedDate");
     }
   }, [selectedDate]);
@@ -170,20 +178,34 @@ export function DataTable({
             toggleStatus={toggleStatus}
             setSelectedStatuses={setSelectedStatuses}
           />
-          <DatePicker date={selectedDate} onChange={setSelectedDate} />
+          <div>
+            <DatePicker date={selectedDate} onChange={setSelectedDate} />
+            {selectedDate && (
+              <span
+                className="text-2xl ml-2 cursor-pointer"
+                onClick={() => setSelectedDate(undefined)}
+              >
+                X
+              </span>
+            )}{" "}
+          </div>
         </div>
-        {(!roles.includes("ADMIN") || !roles.includes("SUPER_ADMIN")) && (
-          <Button
-            onClick={() => router.push("/newClaim")}
-            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
-          >
-            <Plus className="mr-2 h-4 w-4" /> New Claim
-          </Button>
-        )}
-        <Plus
-          onClick={() => router.push("/newClaim")}
-          className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
-        />
+        {/* {(roles.includes(UserRole.HOSPITAL) ||
+          roles.includes(UserRole.HOSPITAL_MANAGER)) && ( */}
+          <>
+            <Button
+              onClick={() => router.push("/newClaim")}
+              className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+            >
+              <Plus className="mr-2 h-4 w-4" /> New Claim
+            </Button>
+
+            <Plus
+              onClick={() => router.push("/newClaim")}
+              className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
+            />
+          </>
+        {/* )} */}
       </div>
 
       {/* Table */}
@@ -244,14 +266,28 @@ export function DataTable({
                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
                         {row?.refNumber}
                       </TableCell>
-                      <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {row?.description}
-                      </TableCell>
-                      {!roles?.includes("ADMIN") && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
+                              <span className="truncate block max-w-[200px] ">
+                                {row?.description?.length > 30
+                                  ? row?.description.slice(0, 30) + "..."
+                                  : row?.description}
+                              </span>
+                            </TableCell>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs break-words">
+                            {row?.description}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                      {/* {(!roles?.includes(UserRole.ADMIN) ||
+                        !roles?.includes(UserRole.SUPER_ADMIN)) && ( */}
                         <TableCell className=" border p-5 ">
                           {STATUS_LABELS[row.status]}
                         </TableCell>
-                      )}
+                      {/* )} */}
                       <TableCell className=" border p-5 ">
                         {format(new Date(row.createdAt), "yyyy/MM/dd")}
                       </TableCell>
@@ -270,6 +306,11 @@ export function DataTable({
                             currentAssignee={row?.assignee?.id}
                             users={users} // pass list of users to assign
                             onUpdate={(id, newAssignee) => {
+                              // conditional visibility for view option in action
+                              if (newAssignee) {
+                                setIsClaimAssigned(true);
+                                setAssignedClaimRefNumber(row.refNumber);
+                              }
                               setClaims((prev) =>
                                 prev.map((c) =>
                                   c.id === id
@@ -306,15 +347,20 @@ export function DataTable({
                                   />
                                 </Link>
                               ) : ( */}
-                              <Link href={`/claims/${row?.refNumber}`}>
-                                <Eye
-                                  // onClick={() => row.patient.id}
-                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                />
-                              </Link>
+                              {(row.assignee !== null ||
+                                (isClaimAssigned &&
+                                  assignedClaimRefNumber ===
+                                    row.refNumber)) && (
+                                <Link href={`/claims/${row?.refNumber}`}>
+                                  <Eye
+                                    // onClick={() => row.patient.id}
+                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
+                                  />
+                                </Link>
+                              )}
                               {/* )} */}
                               {/* {!roles?.includes("ADMIN") && ( */}
-                              <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
+                              {/* <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" /> */}
                               {/* )} */}
                             </>
                           )}

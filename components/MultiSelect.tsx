@@ -52,10 +52,10 @@ export function MultiSelect({
     } else {
       // set status for multi mode
       if (!isClaimDetailsSelect) setSelectedStatuses(value);
-      // for claim details select
-      if (["SENT_TO_TPA", "DENIED", "APPROVED"].includes(value)) {
-        setSelectedStatuses(value);
-      }
+      // for claim details select to update local state value without refresh
+      // if (["SENT_TO_TPA", "DENIED", "APPROVED"].includes(value)) {
+      //   setSelectedStatuses(value);
+      // }
       if (updateClaimStatus) updateClaimStatus(value);
     }
   };

@@ -21,6 +21,7 @@ import { createClaims, updateClaims } from "@/services/claims";
 import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { StatusType } from "@/types/claims";
+import { toast } from "sonner";
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -188,34 +189,42 @@ export default function CreateSettlementPopup({
         actualQuotedAmount,
         ...others
       } = claimInputs;
-      const payload = {
-        ...others,
-        settlementSummary,
-        settlementAmount,
-        actualQuotedAmount,
-        status: StatusType.SETTLED,
-        documents: [
-          //   CLINIC_PAPER,
-          //   ICP,
-          //   PAST_INVESTIGATION,
-          //   CURRENT_INVESTIGATION,
-          SETTLEMENT_LETTER,
-          ...(OTHER || []), // if OTHER is an array, ensure it's not null
-        ].filter(Boolean),
-      };
-      setLoading(true);
-      const res = await updateClaims(payload, claimId);
-      if (res?.status == 200) {
-        fetchClaimsById();
-        await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
-        setModalProcessingStatus?.("");
-        setLoading(false);
-        onOpenChange(!open);
+      if( !actualQuotedAmount || 
+        !settlementAmount 
+      ) {
+        toast.error("Amount fields are required!")
+      } else {
+        const payload = {
+          ...others,
+          settlementSummary,
+          settlementAmount,
+          actualQuotedAmount,
+          status: StatusType.SETTLED,
+          documents: [
+            //   CLINIC_PAPER,
+            //   ICP,
+            //   PAST_INVESTIGATION,
+            //   CURRENT_INVESTIGATION,
+            SETTLEMENT_LETTER,
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
+          ].filter(Boolean),
+        };
+        setLoading(true);
+        const res = await updateClaims(payload, claimId);
+        if (res?.status == 200) {
+          fetchClaimsById();
+          await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
+          setModalProcessingStatus?.("");
+          // setLoading(false);
+          onOpenChange(!open);
+          toast.success("Updated Claim with Settlement!")
+        }
       }
     } catch (error) {
+      toast.error("Failed to update claim with settlement!")
       console.error("Upload error:", error);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
   const handleClose = () => {
@@ -234,7 +243,7 @@ export default function CreateSettlementPopup({
           </DialogHeader>
           <div className="realtive w-full">
             <div className="bg-white  w-full  mx-auto mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+              {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <Input
                   placeholder="Doctor Name"
                   className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
@@ -243,15 +252,15 @@ export default function CreateSettlementPopup({
                     handleSelectChange(e.target.value, "doctorName")
                   }
                 />
-              </div>
+              </div> */}
 
               <div className="my-4">
                 <textarea
-                  value={claimInputs.description}
+                  value={claimInputs.settlementSummary}
                   onChange={(e) =>
-                    handleSelectChange(e.target.value, "description")
+                    handleSelectChange(e.target.value, "settlementSummary")
                   }
-                  placeholder="Description"
+                  placeholder="Settlement Summary"
                   className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
                 />
               </div>

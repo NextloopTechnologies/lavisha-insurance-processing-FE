@@ -29,6 +29,12 @@ interface Props {
   handleHospitalChange?: (e: any) => void;
   selectHospital?: string;
 }
+const ADMIN_CHART = {
+  threeMonths: "Three Months",
+  sixMonths: "Six Months",
+  nineMonths: "Nine Months",
+  oneYear: "One Year",
+};
 
 const AdminDashboard: React.FC<Props> = ({
   dashboardData,
@@ -59,6 +65,13 @@ const AdminDashboard: React.FC<Props> = ({
   useEffect(() => {
     fetchUsersDropdown();
   }, []);
+
+  let adminChartData = [
+    { name: ADMIN_CHART.threeMonths, count: dashboardData.threeMonths },
+    { name: ADMIN_CHART.sixMonths, count: dashboardData.sixMonths },
+    { name: ADMIN_CHART.nineMonths, count: dashboardData.nineMonths },
+    { name: ADMIN_CHART.oneYear, count: dashboardData.oneYear },
+  ];
   return (
     <>
       <div className="flex justify-between items-center">
@@ -72,14 +85,18 @@ const AdminDashboard: React.FC<Props> = ({
               <Select
                 value={selectHospital}
                 onValueChange={handleHospitalChange}
+                defaultValue=" "
               >
                 <SelectTrigger className="w-[180px]">
                   <SelectValue placeholder="All Hospital" />
                 </SelectTrigger>
                 <SelectContent className=" w-full">
                   <SelectGroup>
+                    <SelectItem value={" "}>All Hospital</SelectItem>
                     {users?.map((item, index) => (
-                      <SelectItem value={item?.id}>{item?.name}</SelectItem>
+                      <SelectItem key={index} value={item?.id}>
+                        {item?.name}
+                      </SelectItem>
                     ))}
                   </SelectGroup>
                 </SelectContent>
@@ -95,7 +112,11 @@ const AdminDashboard: React.FC<Props> = ({
             <h2 className="text-3xl font-semibold mt-4">Welcome!</h2>
             <p className="text-gray-600">{loggedInUserName}</p>
           </div>
-          <img src="assets/doctor-hospital.svg" alt="doctor" className="h-32" />
+          <img
+            src="assets/doctor-hospital.svg"
+            alt="doctor"
+            className="h-20 md:h-20"
+          />
         </Card>
 
         <Card className="md:col-span-4 grid grid-cols-3 md:gap-10 md:px-10 px-2">
@@ -122,7 +143,7 @@ const AdminDashboard: React.FC<Props> = ({
           {/* <BarCharts data={dashboardData} /> */}
           {(roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN")) && (
             <BarCharts
-              data={dashboardData}
+              data={adminChartData}
               showDropdown={false}
               dropdownLabel="Claims By"
             />

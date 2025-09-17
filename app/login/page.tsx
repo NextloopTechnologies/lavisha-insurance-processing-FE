@@ -134,7 +134,7 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </span>
             </div>
-            <div className="flex items-center gap-2 text-sm">
+            {/* <div className="flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
                 id="remember"
@@ -143,7 +143,7 @@ export default function LoginPage() {
               <label htmlFor="remember" className="text-gray-600">
                 Remember me
               </label>
-            </div>
+            </div> */}
             <button
               type="submit"
               className="w-full bg-[#3E79D6] hover:bg-[#3E79D6] text-white py-2 rounded-full font-semibold text-sm cursor-pointer"

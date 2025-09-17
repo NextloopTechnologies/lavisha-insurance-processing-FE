@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { uploadFiles } from "@/services/files";
-import { createUsers, getUsersDropdown } from "@/services/users";
+import { createUsers, getUsersDropdown, updateUser } from "@/services/users";
 import FileDrag from "./FileDrag";
 import SelectComponent from "./SelectComponent";
 import { toast } from "sonner";
@@ -42,7 +42,7 @@ type HospitalPayload = BasePayload & {
 
 type Payload = BasePayload | HospitalPayload;
 
-export default function CreateUser() {
+export default function CreateUser({ userData, setUserData, setOpenDialog }) {
   const [user, setUser] = useState({
     role: "",
     name: "",
@@ -58,6 +58,24 @@ export default function CreateUser() {
   const [loading, setLoading] = useState(false);
   const [users, setUsers] = useState([]);
   const [fileUpload, setFileUpload] = useState({});
+
+  useEffect(() => {
+    if (!userData) {
+      return;
+    } else {
+      setUser({
+        role: userData?.role,
+        name: userData?.name,
+        email: userData?.email,
+        password: userData?.password,
+        address: userData?.address,
+        hospitalName: userData?.hospital?.id,
+        rateListFileName: userData?.rateListFileName,
+        hospitalId: userData?.hospitalId,
+      });
+    }
+  }, [userData]);
+
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
     formData.append("file", value[0]);
@@ -133,24 +151,33 @@ export default function CreateUser() {
           rateListFileName: user.rateListFileName,
         } as HospitalPayload;
       }
-
-      const res = await createUsers(payload);
-      if (res?.status === 201) {
-        setLoading(false);
-        toast.success("Created Successfully");
-        setUser({
-          role: "",
-          name: "",
-          email: "",
-          password: "",
-          address: "",
-          hospitalName: "",
-          rateListFileName: "",
-          hospitalId: "",
-        });
+      if (userData) {
+        const res = await updateUser(payload, userData?.id);
+        if (res?.status === 200) {
+          setLoading(false);
+          toast.success("Updated Successfully");
+        }
+      } else {
+        const res = await createUsers(payload);
+        if (res?.status === 201) {
+          setLoading(false);
+          toast.success("Created Successfully");
+        }
       }
     } catch (error) {
       console.error("User Create error:", error);
+      toast.error("User Create error:");
+    } finally {
+      setUser({
+        role: "",
+        name: "",
+        email: "",
+        password: "",
+        address: "",
+        hospitalName: "",
+        rateListFileName: "",
+        hospitalId: "",
+      });
     }
   };
   const fetchUsersDropdown = async () => {
@@ -172,9 +199,11 @@ export default function CreateUser() {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-200px)] w-full p-4">
-      <div className="max-w-6xl mx-auto bg-white rounded-2xl shadow p-8 ">
-        <h2 className="text-xl font-semibold mb-6">Create User</h2>
+    <div className="h-[calc(100vh-200px)] overflow-auto w-full">
+      <div className="max-w-full mx-auto bg-white rounded-2xl p-4">
+        {/* <h2 className="text-xl font-semibold mb-6">
+          {userData?.id ? "Update User" : "Create User"}
+        </h2> */}
 
         <div className="flex flex-col items-center mb-6">
           <label htmlFor="profile-upload" className="cursor-pointer">
@@ -216,6 +245,7 @@ export default function CreateUser() {
               <SelectItem value="ADMIN">Admin</SelectItem>
               <SelectItem value="HOSPITAL">Hospital</SelectItem>
               <SelectItem value="HOSPITAL_MANAGER">Hospital Manager</SelectItem>
+              <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
             </SelectContent>
           </Select>
           {user.role == "HOSPITAL_MANAGER" && (
@@ -311,6 +341,20 @@ export default function CreateUser() {
 
         <div className="flex justify-center gap-4 mt-8">
           <Button
+            onClick={() => {
+              setOpenDialog(false);
+              setUserData(null);
+              setUser({
+                role: "",
+                name: "",
+                email: "",
+                password: "",
+                address: "",
+                hospitalName: "",
+                rateListFileName: "",
+                hospitalId: "",
+              });
+            }}
             variant="ghost"
             className="text-[#3E79D6] bg-[#3E79D61C] hover:text-[#3E79D6] hover:bg-[#3E79D61C] cursor-pointer"
           >
@@ -320,7 +364,7 @@ export default function CreateUser() {
             className="bg-[#3E79D6] text-[#FFF] rounded-md px-4 py-4 hover:bg-[#6f94cf] cursor-pointer"
             onClick={handleCreate}
           >
-            Create
+            {userData?.id ? "Update User" : "Create User"}
           </Button>
         </div>
       </div>
