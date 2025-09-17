@@ -224,7 +224,7 @@ export default function Comments({
 
           {/* Post button */}
           <button
-            disabled={disable}
+            disabled={!(commentInput.trim()) || disable}
             onClick={handleCreateComment}
             className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-2 text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
           >
