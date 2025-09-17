@@ -388,14 +388,23 @@ export default function CreateClaim({
               Save as Draft
             </Button>
           )}
-          {claimInputs.status == "DRAFT" ? (
-            <Button
-              disabled={loading}
-              onClick={() => handleCreateClaim("PENDING")}
-              className="bg-[#3E79D6] px-4"
-            >
-              {isEditMode ? "Update Claim" : "Create Claim"}
-            </Button>
+          {claimInputs.status === "DRAFT" ? (
+            <>
+              <Button
+                disabled={loading}
+                onClick={() => handleCreateClaim("PENDING")}
+                className="bg-[#3E79D6] px-4"
+              >
+                Create Claim
+              </Button>
+              <Button
+                disabled={loading}
+                onClick={() => handleCreateClaim()}
+                className="bg-[#3E79D6] px-4"
+              >
+                Update Draft
+              </Button>
+            </>
           ) : (
             <Button
               disabled={loading}

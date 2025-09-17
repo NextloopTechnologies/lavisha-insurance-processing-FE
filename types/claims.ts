@@ -9,3 +9,9 @@ export enum StatusType {
     DISCHARGED = 'DISCHARGED',
     SETTLED = 'SETTLED'
 }
+
+export type StatusMetaDataType = {
+    name: string;
+    icon: string;
+    key: string;
+}

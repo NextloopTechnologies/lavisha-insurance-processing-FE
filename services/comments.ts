@@ -1,4 +1,5 @@
 import api from "@/lib/axios";
+import { CommentType } from "@/types/comments";
 
 export const getComments = (params: {
   role: string;
@@ -22,8 +23,14 @@ export const getAdminHospitalManagerCommentList = () => {
   return api.get(`/comments/list_manager_comments`);
 };
 
+export const getManagerChatsUnReadCount = () => {
+  return api.get(`/comments/manager_chats_unReadCount`);
+};
+
 export const getlManagerComments = (hospitalId?: string) => {
-  return api.get(`/comments?hospitalId=${hospitalId}`);
+  // hospitalId is required for admin and superadmin and type is required for manager chats
+  const query = hospitalId ? `hospitalId=${hospitalId}` : `type=${CommentType.HOSPITAL_NOTE}`;
+  return api.get(`/comments?${query}`);
 };
 
 export const markReadForAdminManagerComments = (hospitalId?: string) => {

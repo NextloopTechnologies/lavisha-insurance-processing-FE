@@ -21,7 +21,7 @@ import { useEffect, useState } from "react";
 
 type ChartItem = {
   name: string;
-  count: number;
+  count?: number;
 };
 
 type BarChartsProps = {
