@@ -66,7 +66,7 @@ export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [openParentLevelModal, setOpenParentLevelModal] = useState(false);
   const [commentLevelStatusUpdate, setCommentLevelStatusUpdate] = useState(false);
-  const [activeTab, setActiveTab] = useState(0);
+  const [activeTab, setActiveTab] = useState(1);
   const [patients, setPatients] = useState<any>([]);
   const [loading, setLoading] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<string[]>([]);
