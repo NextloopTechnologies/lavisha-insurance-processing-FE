@@ -23,6 +23,7 @@ import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { createEnhancements, updateEnhancements } from "@/services/enhancement";
 import { StatusType } from "@/types/claims";
+import { toast } from "sonner";
 interface CreateEnhancementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -173,7 +174,7 @@ export default function CreateEnhancementPopup({
         } = enhancementInputs;
         const payload = {
           ...others,
-          status: "ENHANCEMENT",
+          // status: "ENHANCEMENT",  //once the status dropdown for enhancement is added this will work for 
           insuranceRequestId: claimId,
           numberOfDays: Number(numberOfDays),
           documents: [
@@ -185,7 +186,7 @@ export default function CreateEnhancementPopup({
         const res = await updateEnhancements(payload, selectedEnhancement?.id);
         if (res.status == 200) {
           await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
-          setLoading(false);
+          // setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();
           setSelectedEnhancement(null);
@@ -193,7 +194,7 @@ export default function CreateEnhancementPopup({
       } catch (error) {
         console.error("Upload error:", error);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     } else {
       try {
@@ -207,7 +208,7 @@ export default function CreateEnhancementPopup({
         } = enhancementInputs;
         const payload = {
           ...others,
-          status: StatusType.ENHANCEMENT,
+          // status: StatusType.ENHANCEMENT,  //this is for enhancement so default pending will be used
           insuranceRequestId: claimId,
           numberOfDays: Number(numberOfDays),
           documents: [
@@ -221,14 +222,16 @@ export default function CreateEnhancementPopup({
           await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
           setModalProcessingStatus?.("")
           setSelectedEnhancement(null);
-          setLoading(false);
+          // setLoading(false);
           onOpenChange(!open);
           fetchClaimsById();
+          toast.success("Enhancement Created!")
         }
       } catch (error) {
+        toast.error("Failed to create enhancement!")
         console.error("Upload error:", error);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     }
   };

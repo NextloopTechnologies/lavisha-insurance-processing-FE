@@ -160,12 +160,12 @@ export const navItems = [
         icon: claim,
         activeIcon: claimActive,
       },
-      // {
-      //   label: "Patients",
-      //   path: "/patients",
-      //   icon: patient,
-      //   activeIcon: patientActive,
-      // },
+      {
+        label: "Patients",
+        path: "/patients",
+        icon: patient,
+        activeIcon: patientActive,
+      },
       {
         label: "Settlements",
         path: "/settlements",
@@ -202,12 +202,12 @@ export const navItems = [
         icon: claim,
         activeIcon: claimActive,
       },
-      // {
-      //   label: "Patients",
-      //   path: "/patients",
-      //   icon: patient,
-      //   activeIcon: patientActive,
-      // },
+      {
+        label: "Patients",
+        path: "/patients",
+        icon: patient,
+        activeIcon: patientActive,
+      },
       {
         label: "Settlements",
         path: "/settlements",

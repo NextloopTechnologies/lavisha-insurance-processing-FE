@@ -28,7 +28,7 @@ export default function ClaimsContent() {
   const fetchUsersDropdown = async () => {
     // setLoading(true);
     try {
-      const res = await getUsersDropdown("HOSPITAL");
+      const res = await getUsersDropdown("ADMIN");
       if (res?.status === 200) {
         setUsers(res?.data);
       }

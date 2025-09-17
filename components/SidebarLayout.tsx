@@ -22,6 +22,8 @@ import { ProfilePopover } from "./ProfilePopover";
 import { ProfileEditModal } from "./ProfileEditModal";
 import { getProfileById } from "@/services/profile";
 import Cookies from "js-cookie";
+import { getManagerChatsUnReadCount } from "@/services/comments";
+import { UserRole } from "@/types/comments";
 
 type Props = {
   children: React.ReactNode;
@@ -40,15 +42,21 @@ const SidebarItem = ({
   item,
   level = 0,
   pathname,
+  managerChatsUnReadCount
 }: {
   item: NavItem;
   level?: number;
   pathname?: string;
+  managerChatsUnReadCount?: number
 }) => {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(true);  
 
   const hasChildren = item.children && item.children.length > 0;
   const isActive = pathname === item.path;
+  const userRole = Cookies.get("user_role");
+  
+  if(isActive && userRole===UserRole.HOSPITAL_MANAGER) managerChatsUnReadCount = 0
+  
   return (
     <div className={`pl-${level * 4} text-sm`}>
       <div
@@ -76,6 +84,12 @@ const SidebarItem = ({
               )}
             </span>
             <span>{item.label}</span>
+            {/* only show to hospital manager */}
+            {(item.path==='/manager-chat' && managerChatsUnReadCount>0 && userRole===UserRole.HOSPITAL_MANAGER) && (
+              <span className={`${isActive ? 'bg-white text-blue-500' : 'bg-blue-500 text-white'} text-[11px] w-5 h-4 rounded-full`}>
+                {managerChatsUnReadCount}
+              </span>
+            )} 
           </Link>
         ) : (
           <div className="flex justify-start items-center gap-x-2 w-full ">
@@ -114,6 +128,7 @@ export default function SidebarLayout({ children }: Props) {
   const [openEditProfile, setOpenEditProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
   const [menu, setMenu] = useState([]);
+  const [unReadCount, setUnReadCount] = useState(0);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -121,12 +136,15 @@ export default function SidebarLayout({ children }: Props) {
     logout();
     router.push("/login");
   };
+    const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
+  
 
   useEffect(() => {
     const userRole = Cookies.get("user_role");
     if (userRole) {
       const list = navItems.filter((item) => item.role == userRole);
       setMenu(list[0]?.menu);
+      if(userRole!==UserRole.HOSPITAL) fetchUnReadCount()
     }
   }, []);
 
@@ -136,6 +154,7 @@ export default function SidebarLayout({ children }: Props) {
       setLoggedInUserId(localStorage.getItem("userId"));
     }
   }, []);
+
   const fetchProfileData = async () => {
     setLoading(true);
     try {
@@ -147,11 +166,27 @@ export default function SidebarLayout({ children }: Props) {
       console.error("Failed to fetch patients:", err);
     }
   };
+
+  const fetchUnReadCount = async () => {
+    try {
+      setLoading(true);
+      const response = await getManagerChatsUnReadCount();
+      if(response.status===200){
+        setUnReadCount(response.data.count)
+      }
+    } catch (err) {
+      console.error("Failed to fetch patients:", err);
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (loggedInUserId) {
       fetchProfileData();
     }
   }, [loggedInUserId, openEditProfile]);
+
   return (
     <div className="relative flex min-h-screen bg-gray-100 w-full ">
       <aside
@@ -174,7 +209,12 @@ export default function SidebarLayout({ children }: Props) {
           {isOpen && (
             <div className="space-y-4 text-gray-800 font-medium pl-6 pt-2">
               {menu?.map((item) => (
-                <SidebarItem key={item.label} item={item} pathname={pathname} />
+                <SidebarItem 
+                  key={item.label} 
+                  item={item} 
+                  pathname={pathname} 
+                  managerChatsUnReadCount={unReadCount}
+                />
               ))}
             </div>
           )}
@@ -223,9 +263,9 @@ export default function SidebarLayout({ children }: Props) {
           <div className="flex flex-col items-center gap-2 w-full">
             <div className="flex justify-center items-center gap-2 ml-auto">
               <NotificationPopover
-                unreadNotifications={unread}
-                recentNotifications={recent}
-                unreadCount={unread.length}
+                // unreadNotifications={unread}
+                // recentNotifications={recent}
+                // unreadCount={unread.length}
                 // setOpenNotification={setOpenNotification}
                 // openNotification={openNotification}
               />
@@ -237,6 +277,7 @@ export default function SidebarLayout({ children }: Props) {
                 loggedInUserName={loggedInUserName}
                 setOpenEditProfile={setOpenEditProfile}
                 profileData={profileData}
+                roles={roles}
               />
               <ProfileEditModal
                 openEditProfile={openEditProfile}
