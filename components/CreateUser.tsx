@@ -245,7 +245,7 @@ export default function CreateUser({ userData, setUserData, setOpenDialog }) {
               <SelectItem value="ADMIN">Admin</SelectItem>
               <SelectItem value="HOSPITAL">Hospital</SelectItem>
               <SelectItem value="HOSPITAL_MANAGER">Hospital Manager</SelectItem>
-              <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+              {/* <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem> */}
             </SelectContent>
           </Select>
           {user.role == "HOSPITAL_MANAGER" && (

@@ -9,8 +9,8 @@ const ROLE_PERMISSIONS: Record<string, string[]> = {
   "/claims": ["HOSPITAL", "SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
   "/settlements": ["HOSPITAL", "SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
   "/manager-chat": ["SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
-  "/patients": ["HOSPITAL", "HOSPITAL_MANAGER", "Admin", "SUPER_ADMIN"],
-  "/newClaim": ["HOSPITAL"],
+  "/patients": ["HOSPITAL", "HOSPITAL_MANAGER", "ADMIN", "SUPER_ADMIN"],
+  "/newClaim": ["HOSPITAL","ADMIN"],
   "/": ["HOSPITAL", "SUPER_ADMIN", "ADMIN", "HOSPITAL_MANAGER"],
   "/user": ["ADMIN", "SUPER_ADMIN"],
 };

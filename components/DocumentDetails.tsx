@@ -39,7 +39,7 @@ export default function DocumentDetails({ data, type }) {
   };
 
   return (
-    <div className="grid grid-cols-6 gap-4 mt-6">
+    <div className="grid md:grid-cols-6 grid-cols-2 gap-4 mt-6">
       {filteredDocs?.map((doc, idx) => (
         <div
           key={idx}
