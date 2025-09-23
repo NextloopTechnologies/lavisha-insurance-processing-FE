@@ -165,88 +165,89 @@ export function ProfileEditModal({
   };
   return (
     <Dialog open={openEditProfile} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md rounded-2xl px-6 py-8">
+      <DialogContent className="sm:max-w-md h-[calc(100vh-100px)]  rounded-2xl px-6 py-8">
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
             Profile edit
           </DialogTitle>
         </DialogHeader>
+        <div className="overflow-y-scroll">
+          <div className="flex flex-col items-center justify-center gap-3 my-4 ">
+            <label htmlFor="profile-photo" className="cursor-pointer">
+              {profileInput?.profileUrl != null ? (
+                <div className="w-full flex justify-center items-center">
+                  <img
+                    src={profileInput?.profileUrl}
+                    alt="Preview"
+                    className="w-24 h-24 object-cover rounded-full border"
+                  />
+                </div>
+              ) : (
+                <div className="w-24 h-24 flex items-center justify-center rounded-full border ">
+                  {/* <Eye className="w-8 h-8 text-gray-400" /> */}
+                  <span className="text-[50px] font-semibold text-[#3E79D6] ">
+                    {profileInput?.name?.[0]}
+                  </span>
+                </div>
+              )}
+              <input
+                id="profile-photo"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <p className="text-sm text-center mt-2 text-gray-600 w-full">
+                Change Profile Photo
+              </p>
+            </label>
+          </div>
 
-        <div className="flex flex-col items-center justify-center gap-3 my-4">
-          <label htmlFor="profile-photo" className="cursor-pointer">
-            {profileInput?.profileUrl != null ? (
-              <div className="w-full flex justify-center items-center">
-                <img
-                  src={profileInput?.profileUrl}
-                  alt="Preview"
-                  className="w-24 h-24 object-cover rounded-full border"
-                />
-              </div>
-            ) : (
-              <div className="w-24 h-24 flex items-center justify-center rounded-full border ">
-                {/* <Eye className="w-8 h-8 text-gray-400" /> */}
-                <span className="text-[50px] font-semibold text-[#3E79D6] ">
-                  {profileInput?.name?.[0]}
-                </span>
-              </div>
-            )}
-            <input
-              id="profile-photo"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
-            />
-            <p className="text-sm text-center mt-2 text-gray-600 w-full">
-              Change Profile Photo
-            </p>
-          </label>
-        </div>
+          <InputComponent
+            placeHolder={"Hospital Name"}
+            Icon={UserIcon}
+            value={profileInput.hospitalName}
+            onChange={(e) => handleInputChange(e.target.value, "hospitalName")}
+          />
 
-        <InputComponent
-          placeHolder={"Hospital Name"}
-          Icon={UserIcon}
-          value={profileInput.hospitalName}
-          onChange={(e) => handleInputChange(e.target.value, "hospitalName")}
-        />
-
-        {/* <InputComponent
+          {/* <InputComponent
           placeHolder={"Address"}
           Icon={UserIcon}
           value={profileInput.address}
           onChange={(e) => handleInputChange(e.target.value, "address")}
         /> */}
 
-        <div className="my-4">
-          <textarea
-            value={profileInput.address}
-            onChange={(e) => handleInputChange(e.target.value, "address")}
-            placeholder="Address"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+          <div className="my-4">
+            <textarea
+              value={profileInput.address}
+              onChange={(e) => handleInputChange(e.target.value, "address")}
+              placeholder="Address"
+              className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+            />
+          </div>
+
+          <FileDrag
+            title={"RateList FileName"}
+            multiple={false}
+            onChange={handleFileChange}
+            name={"rateListFileName"}
+            claimInputs={[profileInput?.rateListFileName]}
           />
-        </div>
 
-        <FileDrag
-          title={"RateList FileName"}
-          multiple={false}
-          onChange={handleFileChange}
-          name={"rateListFileName"}
-          claimInputs={[profileInput?.rateListFileName]}
-        />
-
-        <div className="flex justify-center gap-4 w-full">
-          <DialogClose asChild>
-            <Button
-              // onClick={handleClose}
-              className="text-[#3E79D6]"
-              variant="outline"
-            >
-              Cancel
+          <div className="flex justify-center gap-4 w-full">
+            <DialogClose asChild>
+              <Button
+                // onClick={handleClose}
+                className="text-[#3E79D6]"
+                variant="outline"
+              >
+                Cancel
+              </Button>
+            </DialogClose>
+            <Button onClick={handleUpdateProfile} className=" bg-[#3E79D6]">
+              Save
             </Button>
-          </DialogClose>
-          <Button onClick={handleUpdateProfile} className=" bg-[#3E79D6]">
-            Save
-          </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

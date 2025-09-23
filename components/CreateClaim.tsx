@@ -372,7 +372,7 @@ export default function CreateClaim({
         </div>
 
         {/* Action Buttons */}
-        <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 right-20">
+        <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 sm:right-20 right-5">
           <Link href="/claims">
             <Button className="text-[#3E79D6]" variant="outline">
               Cancel

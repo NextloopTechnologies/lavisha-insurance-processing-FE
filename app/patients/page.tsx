@@ -4,7 +4,7 @@ import Image from "next/image";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DeletePopup from "@/components/DeletePopup";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import PatientFormDialog from "@/components/CreateEdit";
 import {
   createPatient,
@@ -31,20 +31,11 @@ export default function Patients() {
 
   const router = useRouter();
   const [patients, setPatients] = useState([]);
-  // const fetchPatients = async () => {
-  //   setLoading(true);
-  //   try {
-  //     const res = await getPatients();
-  //     setPatients(res.data.data);
-  //     setLoading(false);
-  //   } catch (err) {
-  //     setLoading(false);
-  //     console.error("Failed to fetch patients:", err);
-  //   }
-  // };
-  // useEffect(() => {
-  //   fetchPatients();
-  // }, []);
+
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10); // number of patients per request
+  const [hasMore, setHasMore] = useState(true);
+  const loaderRef = useRef<HTMLDivElement | null>(null);
   const handleDelete = (id: string) => {
     setSelectedId(id);
     setOpenDeleteDialog(true);
@@ -103,25 +94,6 @@ export default function Patients() {
     }
   };
 
-  // const filteredPatientData = useMemo(() => {
-  //   return patients.filter((row) => {
-  //     const matchesSearch = Object.values(row).some((val) =>
-  //       val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
-  //     );
-
-  //     // const matchesStatus =
-  //     //   statusFilter === "All" || row.status === statusFilter;
-  //     // const matchesStatus =
-  //     //   selectedStatuses.length === 0 ||
-  //     //   selectedStatuses
-  //     //     ?.toString()
-  //     //     .toLowerCase()
-  //     //     .includes(row.status?.toLowerCase());
-
-  //     return matchesSearch;
-  //   });
-  // }, [searchTerm, patients]);
-
   const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
   useEffect(() => {
@@ -134,42 +106,60 @@ export default function Patients() {
     };
   }, [searchTerm]);
 
-  const fetchPatients = async () => {
+  const fetchPatients = async (pageNum = 1, reset = false) => {
     setLoading(true);
     try {
       const query: any = {
-        // skip: (page - 1) * pageSize,
-        // take: pageSize,
-        // sortBy: "createdAt",
+        skip: (pageNum - 1) * pageSize,
+        take: pageSize,
         sortOrder: "desc",
       };
 
       if (debouncedSearchTerm) query.name = debouncedSearchTerm;
 
       const res = await getPatientsByParams(query);
-      if (res?.status == 200) {
-        setPatients(res.data.data);
-        setLoading(false);
+      if (res?.status === 200) {
+        const newData = res.data.data;
+        setPatients((prev) => (reset ? newData : [...prev, ...newData]));
+        setHasMore(newData.length === pageSize); // if less than pageSize, no more data
       }
-
-      // const totalPages = Math.ceil(res?.data?.total / pageSize);
-      // setTotal(totalPages);
     } catch (err) {
-      console.error("Failed to fetch claims:", err);
+      console.error("Failed to fetch patients:", err);
     } finally {
       setLoading(false);
     }
   };
+
   useEffect(() => {
-    fetchPatients();
-  }, [
-    // page, pageSize,
-    debouncedSearchTerm,
-  ]);
+    setPage(1);
+    fetchPatients(1, true);
+  }, [debouncedSearchTerm]);
 
   const handleClaimView = (id: string) => {
     router.push(`/claims?name=${encodeURIComponent(id)}`);
   };
+
+  useEffect(() => {
+    if (!loaderRef.current || !hasMore) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !loading) {
+          setPage((prev) => prev + 1);
+        }
+      },
+      { threshold: 1 }
+    );
+
+    observer.observe(loaderRef.current);
+
+    return () => observer.disconnect();
+  }, [loaderRef.current, hasMore, loading]);
+
+  // fetch when page changes
+  useEffect(() => {
+    if (page > 1) fetchPatients(page);
+  }, [page]);
 
   return (
     <SidebarLayout>
@@ -203,8 +193,8 @@ export default function Patients() {
             onClick={handleCreatePatient}
             className="bg-[#3E79D6] text-white px-4 py-2 rounded-md hover:bg-[#3E79D6] flex items-center gap-2 cursor-pointer"
           >
-            <Plus className="w-4 h-4" />
-            New Patients
+            <Plus className="w-4 h-4 " />
+            <span className="hidden sm:block">New Patients</span>
           </button>
         </div>
 
@@ -297,6 +287,11 @@ export default function Patients() {
           </div>
         ) : (
           ""
+        )}
+        {hasMore && (
+          <div ref={loaderRef} className="flex justify-center py-6">
+            <span className="text-gray-500">Loading more...</span>
+          </div>
         )}
         <PatientFormDialog
           open={openPatientDialog}
