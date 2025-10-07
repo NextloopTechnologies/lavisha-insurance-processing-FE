@@ -1,6 +1,6 @@
 // components/Tabs.js
 export const Tabs = ({ labels, activeTab, onTabChange }) => (
-  <div className="flex border-b">
+  <div className="flex border-b overflow-x-auto">
     {labels.map((label, index) => (
       <button
         key={index}
