@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import DeletePopup from "@/components/DeletePopup";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PatientFormDialog from "@/components/CreateEdit";
+import {  getUsersDropdown } from "@/services/users";
 import {
   createPatient,
   deletePatient,
@@ -28,6 +29,7 @@ export default function Patients() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [hospitals, setHospitals] = useState([]);
 
   const router = useRouter();
   const [patients, setPatients] = useState([]);
@@ -46,7 +48,9 @@ export default function Patients() {
     setOpenDeleteDialog(false);
     const res = await deletePatient(selectedId);
     if (res?.status == 200) {
-      fetchPatients();
+      // fetchPatients();
+        setPage(1);
+    fetchPatients(1, true);
     }
   };
 
@@ -63,13 +67,16 @@ export default function Patients() {
   const handleSubmitPatient = async (payload) => {
     if (selectedPatient) {
       const { name, age, fileName, url } = payload;
+    
       try {
         setLoading(true);
         const response = await updatePatient(
-          { name, age, fileName, url },
+         { name, age, fileName, url },
           selectedPatient.id
         );
-        fetchPatients();
+        // fetchPatients();
+          setPage(1);
+    fetchPatients(1, true);
       } catch (error: any) {
         setLoading(false);
         console.error(
@@ -78,12 +85,16 @@ export default function Patients() {
         );
       }
     } else {
-      const { name, age, fileName, url } = payload;
+      const { name, age, fileName, url,hospitalId } = payload;
+   const dataToSend = isUserAdminOrSuperAdmin ? { name, age, fileName, url, hospitalId } : { name, age, fileName, url };
+
       try {
         setLoading(true);
-        const response = await createPatient({ name, age, fileName, url });
+        const response = await createPatient(dataToSend);
         // setPatients(response.data);
-        fetchPatients();
+        // fetchPatients();
+          setPage(1);
+    fetchPatients(1, true);
       } catch (error: any) {
         setLoading(false);
         console.error(
@@ -94,17 +105,38 @@ export default function Patients() {
     }
   };
 
-  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
+  const roles = Cookies.get("user_role")?.split(",") || []; 
+    const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPERADMIN");
+
+
+  const fetchHospitalsDropdown = async () => {
+    // setLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL");
+      if (res?.status === 200) {
+        setHospitals(res?.data);
+        console.log(res?.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch hospitals:", err);
+    } finally {
+      // setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHospitalsDropdown();
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms debounce
+    }, 500); 
 
     return () => {
-      clearTimeout(handler); // Cleanup if user keeps typing
+      clearTimeout(handler); 
     };
-  }, [searchTerm]);
+  }, [searchTerm])
 
   const fetchPatients = async (pageNum = 1, reset = false) => {
     setLoading(true);
@@ -121,7 +153,7 @@ export default function Patients() {
       if (res?.status === 200) {
         const newData = res.data.data;
         setPatients((prev) => (reset ? newData : [...prev, ...newData]));
-        setHasMore(newData.length === pageSize); // if less than pageSize, no more data
+        setHasMore(newData.length === pageSize); 
       }
     } catch (err) {
       console.error("Failed to fetch patients:", err);
@@ -299,6 +331,7 @@ export default function Patients() {
           onSubmit={handleSubmitPatient}
           defaultData={selectedPatient}
           isEditMode={!!selectedPatient}
+           hospitals={hospitals} 
         />
         <DeletePopup
           open={openDeleteDialog}
