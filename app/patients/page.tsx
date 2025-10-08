@@ -44,13 +44,13 @@ export default function Patients() {
   };
 
   const confirmDelete = async () => {
-    // perform deletion logic here
     setOpenDeleteDialog(false);
     const res = await deletePatient(selectedId);
     if (res?.status == 200) {
-      // fetchPatients();
-        setPage(1);
-    fetchPatients(1, true);
+      if (res?.status === 200) {
+    // Remove the deleted patient from state
+    setPatients((prevPatients) => prevPatients.filter((p) => p.id !== selectedId));
+  }
     }
   };
 
@@ -65,45 +65,59 @@ export default function Patients() {
   };
 
   const handleSubmitPatient = async (payload) => {
-    if (selectedPatient) {
-      const { name, age, fileName, url } = payload;
+  if (selectedPatient) {
+    // Update existing patient
+    const { name, age, fileName, url } = payload;
     
-      try {
-        setLoading(true);
-        const response = await updatePatient(
-         { name, age, fileName, url },
-          selectedPatient.id
-        );
-        // fetchPatients();
-          setPage(1);
-    fetchPatients(1, true);
-      } catch (error: any) {
-        setLoading(false);
-        console.error(
-          "Error creating patient:",
-          error.response?.data || error.message
-        );
-      }
-    } else {
-      const { name, age, fileName, url,hospitalId } = payload;
-   const dataToSend = isUserAdminOrSuperAdmin ? { name, age, fileName, url, hospitalId } : { name, age, fileName, url };
+    try {
+      setLoading(true);
+      const response = await updatePatient(
+        { name, age, fileName, url },
+        selectedPatient.id
+      );
 
-      try {
-        setLoading(true);
-        const response = await createPatient(dataToSend);
-        // setPatients(response.data);
-        // fetchPatients();
-          setPage(1);
-    fetchPatients(1, true);
-      } catch (error: any) {
-        setLoading(false);
-        console.error(
-          "Error creating patient:",
-          error.response?.data || error.message
+      if (response?.status === 200) {
+        const updatedPatient = response.data;
+
+        // Update local state for just that patient
+        setPatients((prevPatients) =>
+          prevPatients.map((patient) =>
+            patient.id === updatedPatient.id ? { ...patient, ...updatedPatient } : patient
+          )
         );
       }
+    } catch (error: any) {
+      console.error(
+        "Error updating patient:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false); // Ensure the loader stops regardless of success or failure
     }
-  };
+  } else {
+    // Create new patient
+    const { name, age, fileName, url, hospitalId } = payload;
+    const dataToSend = isUserAdminOrSuperAdmin
+      ? { name, age, fileName, url, hospitalId }
+      : { name, age, fileName, url };
+
+    try {
+      setLoading(true);
+      const response = await createPatient(dataToSend);
+ 
+        setPage(1);
+        fetchPatients(1, true);
+    } catch (error: any) {
+      console.error(
+        "Error creating patient:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false); 
+    }
+  }
+  
+};
 
   const roles = Cookies.get("user_role")?.split(",") || []; 
     const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPERADMIN");
