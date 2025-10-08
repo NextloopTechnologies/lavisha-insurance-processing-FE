@@ -41,11 +41,11 @@ export default function DocumentDetails({ data, type }) {
   return (
     <div className="grid md:grid-cols-6 grid-cols-2 gap-4 mt-6">
       {filteredDocs?.map((doc, idx) => (
-        <div
+        <div onClick={() => handleFileClick(doc)}
           key={idx}
           className="relative flex flex-col justify-between items-center border rounded-md p-4  bg-white shadow-sm cursor-pointer"
         >
-          <div onClick={() => handleFileClick(doc)}>
+          <div>
             {getFileIconType(doc?.fileName) == "image" ? (
               // <Image
               //   onClick={() => {

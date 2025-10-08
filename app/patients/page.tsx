@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import DeletePopup from "@/components/DeletePopup";
 import { useEffect, useMemo, useRef, useState } from "react";
 import PatientFormDialog from "@/components/CreateEdit";
+import {  getUsersDropdown } from "@/services/users";
 import {
   createPatient,
   deletePatient,
@@ -28,6 +29,7 @@ export default function Patients() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+    const [hospitals, setHospitals] = useState([]);
 
   const router = useRouter();
   const [patients, setPatients] = useState([]);
@@ -42,11 +44,13 @@ export default function Patients() {
   };
 
   const confirmDelete = async () => {
-    // perform deletion logic here
     setOpenDeleteDialog(false);
     const res = await deletePatient(selectedId);
     if (res?.status == 200) {
-      fetchPatients();
+      if (res?.status === 200) {
+    // Remove the deleted patient from state
+    setPatients((prevPatients) => prevPatients.filter((p) => p.id !== selectedId));
+  }
     }
   };
 
@@ -61,50 +65,92 @@ export default function Patients() {
   };
 
   const handleSubmitPatient = async (payload) => {
-    if (selectedPatient) {
-      const { name, age, fileName, url } = payload;
-      try {
-        setLoading(true);
-        const response = await updatePatient(
-          { name, age, fileName, url },
-          selectedPatient.id
-        );
-        fetchPatients();
-      } catch (error: any) {
-        setLoading(false);
-        console.error(
-          "Error creating patient:",
-          error.response?.data || error.message
-        );
-      }
-    } else {
-      const { name, age, fileName, url } = payload;
-      try {
-        setLoading(true);
-        const response = await createPatient({ name, age, fileName, url });
-        // setPatients(response.data);
-        fetchPatients();
-      } catch (error: any) {
-        setLoading(false);
-        console.error(
-          "Error creating patient:",
-          error.response?.data || error.message
+  if (selectedPatient) {
+    // Update existing patient
+    const { name, age, fileName, url } = payload;
+    
+    try {
+      setLoading(true);
+      const response = await updatePatient(
+        { name, age, fileName, url },
+        selectedPatient.id
+      );
+
+      if (response?.status === 200) {
+        const updatedPatient = response.data;
+
+        // Update local state for just that patient
+        setPatients((prevPatients) =>
+          prevPatients.map((patient) =>
+            patient.id === updatedPatient.id ? { ...patient, ...updatedPatient } : patient
+          )
         );
       }
+    } catch (error: any) {
+      console.error(
+        "Error updating patient:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false); // Ensure the loader stops regardless of success or failure
+    }
+  } else {
+    // Create new patient
+    const { name, age, fileName, url, hospitalId } = payload;
+    const dataToSend = isUserAdminOrSuperAdmin
+      ? { name, age, fileName, url, hospitalId }
+      : { name, age, fileName, url };
+
+    try {
+      setLoading(true);
+      const response = await createPatient(dataToSend);
+ 
+        setPage(1);
+        fetchPatients(1, true);
+    } catch (error: any) {
+      console.error(
+        "Error creating patient:",
+        error.response?.data || error.message
+      );
+    } finally {
+      setLoading(false); 
+    }
+  }
+  
+};
+
+  const roles = Cookies.get("user_role")?.split(",") || []; 
+    const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPERADMIN");
+
+
+  const fetchHospitalsDropdown = async () => {
+    setLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL");
+      if (res?.status === 200) {
+        setHospitals(res?.data);
+        console.log(res?.data)
+      }
+    } catch (err) {
+      console.error("Failed to fetch hospitals:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
+  useEffect(() => {
+    fetchHospitalsDropdown();
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); // 500ms debounce
+    }, 500); 
 
     return () => {
-      clearTimeout(handler); // Cleanup if user keeps typing
+      clearTimeout(handler); 
     };
-  }, [searchTerm]);
+  }, [searchTerm])
 
   const fetchPatients = async (pageNum = 1, reset = false) => {
     setLoading(true);
@@ -121,7 +167,7 @@ export default function Patients() {
       if (res?.status === 200) {
         const newData = res.data.data;
         setPatients((prev) => (reset ? newData : [...prev, ...newData]));
-        setHasMore(newData.length === pageSize); // if less than pageSize, no more data
+        setHasMore(newData.length === pageSize); 
       }
     } catch (err) {
       console.error("Failed to fetch patients:", err);
@@ -299,6 +345,7 @@ export default function Patients() {
           onSubmit={handleSubmitPatient}
           defaultData={selectedPatient}
           isEditMode={!!selectedPatient}
+           hospitals={hospitals} 
         />
         <DeletePopup
           open={openDeleteDialog}
