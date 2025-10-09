@@ -124,6 +124,7 @@ export default function CreateClaim({
           [name]: {
             fileName: res?.data?.key,
             type: name,
+            file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
@@ -173,7 +174,36 @@ export default function CreateClaim({
     // page, pageSize,
     debouncedSearchTerm,
   ]);
+  const fetchPatientsById = async () => {
+    setSearchLoading(true);
+    try {
+      if (claimInputs.patientId && !patients.some(patient => patient.id === claimInputs.patientId)) {
+        const res = await getPatientById(claimInputs.patientId);
+        if (res?.status == 200) {
+          setPatients((prevPatients) => {
+            const patientExists = prevPatients.some(patient => patient.id === res.data.id);
+            if (!patientExists) {
+              return [...prevPatients, res.data];
+            }
+            return prevPatients;
+          });
+          setLoading(false);
+        }
 
+      }
+
+    } catch (err) {
+      setLoading(false);
+      console.error("Failed to fetch patients:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+  useEffect(() => {
+    fetchPatientsById();
+  }, [
+    claimInputs,
+  ]);
   // const filteredPatients = patients.filter((patient) =>
   //   patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   // );
@@ -230,7 +260,7 @@ export default function CreateClaim({
           <Select
             value={claimInputs.patientId}
             onValueChange={(value) => handleSelectChange(value, "patientId")}
-            // disabled={!!claimInputs.patientId}
+          // disabled={!!claimInputs.patientId}
           >
             <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black ">
               <SelectValue placeholder="Patient Name" />
@@ -255,7 +285,7 @@ export default function CreateClaim({
               {searchLoading
                 ? "Loading..."
                 : patients?.length
-                ? patients.map((item) => (
+                  ? patients.map((item) => (
                     <SelectItem
                       key={item.id}
                       value={item.id}
@@ -270,7 +300,7 @@ export default function CreateClaim({
                       {item.name}
                     </SelectItem>
                   ))
-                : "No Patients"}
+                  : "No Patients"}
               {/* <SelectItem value="Jane Smith">Jane Smith</SelectItem> */}
             </SelectContent>
           </Select>
@@ -331,26 +361,28 @@ export default function CreateClaim({
           multiple={false}
           onChange={handleFileChange}
           name={"ICP"}
-          claimInputs={claimInputs?.ICP}
+          claimInputs={claimInputs?.ICP ? [claimInputs?.ICP] : []}
         />
         <FileDrag
           title={"Clinic Paper"}
           multiple={false}
           onChange={handleFileChange}
           name={"CLINIC_PAPER"}
+          claimInputs={claimInputs?.CLINIC_PAPER ? [claimInputs?.CLINIC_PAPER] : []}
         />
         <FileDrag
           title={"Past Investigation"}
           multiple={false}
           onChange={handleFileChange}
           name={"PAST_INVESTIGATION"}
-          claimInputs={claimInputs?.PAST_INVESTIGATION}
+          claimInputs={claimInputs?.PAST_INVESTIGATION ? [claimInputs?.PAST_INVESTIGATION] : []}
         />
         <FileDrag
           title={"Current Investigation"}
           multiple={false}
           onChange={handleFileChange}
           name={"CURRENT_INVESTIGATION"}
+          claimInputs={claimInputs?.CURRENT_INVESTIGATION ? [claimInputs?.CURRENT_INVESTIGATION] : []}
         />
         <FileDrag
           title={"Misc Documents "}
