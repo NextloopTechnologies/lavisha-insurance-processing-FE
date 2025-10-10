@@ -164,7 +164,27 @@ return (
 
         {/* Form */}
                   <div className="space-y-3 text-left">
-          <div>
+          {/* Hospital Dropdown (only visible to admins) */}
+          {isAdmin && hospitals.length > 0 && (
+            <div>
+              <select
+                id="hospital"
+                className={`w-full mt-3 p-2 border rounded-md disabled:cursor-not-allowed ${errors.hospitalId ? 'border-red-500' : ''}`}
+                value={hospitalId}
+                onChange={handleHospitalChange}
+                 disabled={isEditMode} 
+              >
+                <option value="">Select Hospital</option>
+                {hospitals.map((hospital) => (
+                  <option key={hospital.id} value={hospital.id}>
+                    {hospital.name}
+                  </option>
+                ))}
+              </select>
+              {errors.hospitalId && <p className="text-red-500 text-sm">{errors.hospitalId}</p>}
+            </div>
+          )}
+            <div>
             <Input
               id="name"
               placeholder="Name"
@@ -185,27 +205,6 @@ return (
             />
             {errors.age && <p className="text-red-500 text-sm">{errors.age}</p>}
           </div>
-
-          {/* Hospital Dropdown (only visible to admins) */}
-          {isAdmin && hospitals.length > 0 && (
-            <div>
-              <select
-                id="hospital"
-                className={`w-full mt-3 p-2 border rounded-md ${errors.hospitalId ? 'border-red-500' : ''}`}
-                value={hospitalId}
-                onChange={handleHospitalChange}
-                 disabled={isEditMode} 
-              >
-                <option value="">Select Hospital</option>
-                {hospitals.map((hospital) => (
-                  <option key={hospital.id} value={hospital.id}>
-                    {hospital.name}
-                  </option>
-                ))}
-              </select>
-              {errors.hospitalId && <p className="text-red-500 text-sm">{errors.hospitalId}</p>}
-            </div>
-          )}
         </div>
 
         <Button

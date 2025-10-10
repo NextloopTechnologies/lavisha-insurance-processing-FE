@@ -63,35 +63,34 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     }
   };
 
-  const handleFileClick = (file) => {
-      const fileURL = URL.createObjectURL(file);
-
-      if (file.type.startsWith("image/")) {
-        // Show image in modal
-        setModalOpen(true);
-        setImagePreview({ fileURL, file: file.name });
-      } else if (file.type === "application/pdf") {
-        // Open PDF in print view
-        const newWindow = window.open(fileURL, "_blank");
-        newWindow.onload = () => {
-          newWindow.print();
-        };
-      } else if (
-        file.type ===
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" || // .xlsx
-        file.type === "application/vnd.ms-excel" // .xls
-      ) {
-        // Open Excel files in a new tab
-        window.open(fileURL, "_blank");
-      } else {
-        // Default fallback
-        window.open(fileURL, "_blank");
-    }
-  };
-
   const removeFile = (index: number) => {
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
+  const handleFileClick = (file) => {
+  if (!file || (!file.url && !file.fileName)) {
+    console.error("File or file URL is missing.");
+    return; 
+  }
+
+  
+  const fileURL = file?.url || URL.createObjectURL(file.file); 
+  const fileType = getFileIconType(file?.fileName);
+
+  if (fileType === "image") {
+    setModalOpen(true);
+    setImagePreview({ fileURL, file: file?.fileName });
+  } else if (fileType === "pdf") {
+    const newWindow = window.open(fileURL, "_blank");
+    newWindow.onload = () => {
+      newWindow.print();
+    };
+  } else if (fileType === "excel") {
+    window.open(fileURL, "_blank");
+  } else {
+    window.open(fileURL, "_blank");
+  }
+};
+
 
   return (
     <div className="border rounded-md bg-blue-50 p-0 w-full max-w-full mb-3">

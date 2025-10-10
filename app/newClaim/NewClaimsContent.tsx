@@ -66,6 +66,22 @@ export default function NewClaimsContent() {
         status,
         ...others
       } = claimInputs;
+      const removeKeys = (obj) => {
+  delete obj.url;
+  delete obj.file;
+  return obj;
+};
+
+removeKeys(CLINIC_PAPER);
+removeKeys(PAST_INVESTIGATION);
+removeKeys(CURRENT_INVESTIGATION);
+removeKeys(OTHER);
+removeKeys(ICP);
+removeKeys(preAuth);
+removeKeys(status);
+if (Array.isArray(OTHER)) {
+  OTHER.forEach(removeKeys); 
+}
       const payload = {
         ...others,
         documents: [
