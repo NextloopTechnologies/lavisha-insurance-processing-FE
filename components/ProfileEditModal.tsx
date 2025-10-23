@@ -55,6 +55,25 @@ export function ProfileEditModal({
         profileUrl: "",
       });
     } else {
+      // Map documents by their type
+      const documentMap = profileData.reduce((acc, doc) => {
+        if (doc.type === "OTHER") {
+          acc[doc.type] = acc[doc.type] || [];
+          acc[doc.type].push({
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            remark: doc.remark,
+          });
+        } else {
+          acc[doc.type] = {
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+          };
+        }
+        return acc;
+      }, {});
       setProfileInput({
         name: profileData?.[0]?.name || loggedInUserName,
         address: profileData?.[0]?.address,

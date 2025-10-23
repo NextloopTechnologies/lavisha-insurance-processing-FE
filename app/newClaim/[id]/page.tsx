@@ -117,6 +117,9 @@ export default function EditClaimForm() {
           ...others
         } = claimInputs;
         const removeKeys = (obj) => {
+          if(!obj){
+            return;
+          }
           delete obj.url;
           delete obj.file;
           return obj;

@@ -63,33 +63,66 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     }
   };
 
-  const removeFile = (index: number) => {
+  // const removeFile = (index: number) => {
+  //   setFiles((prev) => prev.filter((_, i) => i !== index));
+  // };
+
+
+  const removeFile = (index, file) => {
+    onChange?.(file, "remove", false);
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
   const handleFileClick = (file) => {
-  if (!file || (!file.url && !file.fileName)) {
-    console.error("File or file URL is missing.");
-    return; 
-  }
+    if (Array.isArray(file)) {
+      // If it's an array, loop through the files and handle them
+      file.forEach((f) => {
+        if (!f || (!f.url && !f.fileName)) {
+          console.error("File or file URL is missing for an array element.");
+          return;
+        }
 
-  
-  const fileURL = file?.url || URL.createObjectURL(file.file); 
-  const fileType = getFileIconType(file?.fileName);
+        const fileURL = f?.url || URL.createObjectURL(f?.file);
+        const fileType = getFileIconType(f?.fileName);
 
-  if (fileType === "image") {
-    setModalOpen(true);
-    setImagePreview({ fileURL, file: file?.fileName });
-  } else if (fileType === "pdf") {
-    const newWindow = window.open(fileURL, "_blank");
-    newWindow.onload = () => {
-      newWindow.print();
-    };
-  } else if (fileType === "excel") {
-    window.open(fileURL, "_blank");
-  } else {
-    window.open(fileURL, "_blank");
-  }
-};
+        if (fileType === "image") {
+          setModalOpen(true);
+          setImagePreview({ fileURL, file: f?.fileName });
+        } else if (fileType === "pdf") {
+          const newWindow = window.open(fileURL, "_blank");
+          newWindow.onload = () => {
+            newWindow.print();
+          };
+        } else if (fileType === "excel") {
+          window.open(fileURL, "_blank");
+        } else {
+          window.open(fileURL, "_blank");
+        }
+      });
+    } else {
+      // If it's a single file, apply the same logic as before
+      if (!file || (!file.url && !file.fileName)) {
+        console.error("File or file URL is missing.");
+        return;
+      }
+
+      const fileURL = file?.url || URL.createObjectURL(file.file);
+      const fileType = getFileIconType(file?.fileName);
+
+      if (fileType === "image") {
+        setModalOpen(true);
+        setImagePreview({ fileURL, file: file?.fileName });
+      } else if (fileType === "pdf") {
+        const newWindow = window.open(fileURL, "_blank");
+        newWindow.onload = () => {
+          newWindow.print();
+        };
+      } else if (fileType === "excel") {
+        window.open(fileURL, "_blank");
+      } else {
+        window.open(fileURL, "_blank");
+      }
+    }
+  };
 
 
   return (
@@ -97,10 +130,9 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
       {/* Header */}
       <div
         className={`w-full min-h-[50px] rounded-md p-4 flex items-center justify-center transition-all duration-200 cursor-pointer 
-          ${
-            isDragging
-              ? "border-2 border-dashed border-blue-400 bg-blue-50"
-              : "bg-[#F2F7FC] border border-gray-200"
+          ${isDragging
+            ? "border-2 border-dashed border-blue-400 bg-blue-50"
+            : "bg-[#F2F7FC] border border-gray-200"
           }`}
         onClick={() => inputRef.current.click()}
         onDragOver={handleDragOver}
@@ -156,7 +188,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
                 {file?.name}
               </div>
               <span
-                onClick={() => removeFile(index)}
+                onClick={() => removeFile(index, file)}
                 className="cursor-pointer text-sm absolute -top-2 -right-1 text-red-500"
               >
                 X
