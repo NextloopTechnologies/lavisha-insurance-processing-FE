@@ -99,8 +99,7 @@ export default function CreateQueryPopup({
       }
       return acc;
     }, {});
-      
-         console.log(documentMap)
+    
       setQueryInputs({
         notes: selectedQuery?.notes,
         OTHER: documentMap.OTHER || [],

@@ -83,7 +83,6 @@ export default function CreateClaim({
   const handleFileChange = async (value, name, multiple) => {
 
     if(name == "remove"){
-      console.log(value);
       if(value.type == "OTHER"){
 
       }else{

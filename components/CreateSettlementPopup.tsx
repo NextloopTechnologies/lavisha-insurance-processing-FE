@@ -95,7 +95,6 @@ export default function CreateSettlementPopup({
       }
       return acc;
     }, {});
-    console.log(documentMap)
 
     setClaimInputs({
       isPreAuth: data.isPreAuth,
@@ -163,10 +162,7 @@ export default function CreateSettlementPopup({
       try {
         const res = await uploadFiles(formData);
         const existingDocument = claimInputs?.[name];
-        console.log(existingDocument);
         const existingDocumentId = existingDocument ? existingDocument.id : null;
-        console.log(existingDocumentId);
-
         // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
@@ -205,7 +201,6 @@ export default function CreateSettlementPopup({
       } = claimInputs;
 
       const removeKeys = (obj) => {
-        console.log(obj)
         delete obj.url;
         delete obj.file;
         return obj;
@@ -267,7 +262,7 @@ export default function CreateSettlementPopup({
     setModalProcessingStatus?.("");
     onOpenChange(!open);
   };
-  console.log(claimInputs)
+ 
   return (
     <>
       {loading && <LoadingOverlay />}

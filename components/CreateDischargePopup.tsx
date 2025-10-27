@@ -191,9 +191,7 @@ export default function CreateDischargePopup({
         //   },
         // }));
         const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
-        console.log(existingDocument);
         const existingDocumentId = existingDocument ? existingDocument.id : null;
-        console.log(existingDocumentId);
 
         // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
@@ -281,8 +279,7 @@ export default function CreateDischargePopup({
     setModalProcessingStatus?.("")
     onOpenChange(!open);
   };
-  console.log("Data analyst")
-  console.log(claimInputs);
+
 
   return (
     <>

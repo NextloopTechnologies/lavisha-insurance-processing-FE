@@ -274,7 +274,6 @@ export default function PatientClaimDetails() {
         fetchClaims(true);
       }
     } catch (error) {
-      console.log("UPDATE_STATUS_AFTER_MODAL", error);
     } finally {
       setLoading(false);
     }
