@@ -72,45 +72,46 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     onChange?.(file, "remove", false);
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
-  
-  const handleFileClick = (input) => {
-  // Ensure we always have an array to loop through
-  const files = Array.isArray(input) ? input : [input];
 
-  files.forEach((file) => {
-    if (!file || (!file.url && !file.fileName)) {
-      console.error("File or file URL is missing.");
-      return;
-    }
-
-    const fileURL = file?.url || URL.createObjectURL(file.file);
-    const fileType = getFileIconType(file?.fileName);
-
-    switch (fileType) {
-      case "image":
-        setModalOpen(true);
-        setImagePreview({ fileURL, file: file?.fileName });
-        break;
-
-      case "pdf":
-        const pdfWindow = window.open(fileURL, "_blank");
-        if (pdfWindow) {
-          pdfWindow.onload = () => pdfWindow.print();
+  const handleFileClick = (file) => {
+    if (Array.isArray(file)) {
+      // If it's an array, loop through the files and handle them
+      file.forEach((f) => {
+        if (!f || (!f.url && !f.fileName)) {
+          console.error("File or file URL is missing for an array element.");
+          return;
         }
-        break;
+        openFileInNewTab(f);
 
-      case "excel":
-        window.open(fileURL, "_blank");
-        break;
-
-      default:
-        window.open(fileURL, "_blank");
-        break;
+      });
+    } else {
+      // If it's a single file, apply the same logic as before
+      if (!file || (!file.url && !file.fileName)) {
+        console.error("File or file URL is missing.");
+        return;
+      }
+      openFileInNewTab(file);
     }
-  });
-};
+  };
 
+  function openFileInNewTab(f) {
+    const fileURL = f?.url || URL.createObjectURL(f?.file);
+    const fileType = getFileIconType(f?.fileName);
 
+    if (fileType === "image") {
+      setModalOpen(true);
+      setImagePreview({ fileURL, file: f?.fileName });
+    } else if (fileType === "pdf") {
+      const newWindow = window.open(fileURL, "_blank");
+      newWindow.onload = () => {
+        newWindow.print();
+      };
+    } else if (fileType === "excel") {
+      window.open(fileURL, "_blank");
+    } else {
+      window.open(fileURL, "_blank");
+    }
+  }
 
   return (
     <div className="border rounded-md bg-blue-50 p-0 w-full max-w-full mb-3">

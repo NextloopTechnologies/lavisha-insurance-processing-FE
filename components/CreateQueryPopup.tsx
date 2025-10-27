@@ -99,7 +99,7 @@ export default function CreateQueryPopup({
       }
       return acc;
     }, {});
-    
+
       setQueryInputs({
         notes: selectedQuery?.notes,
         OTHER: documentMap.OTHER || [],
@@ -162,6 +162,7 @@ export default function CreateQueryPopup({
           [name]: {
             fileName: res?.data?.key,
             type: name,
+            file:value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
