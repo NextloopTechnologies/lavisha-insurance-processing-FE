@@ -129,7 +129,6 @@ export default function Patients() {
       const res = await getUsersDropdown("HOSPITAL");
       if (res?.status === 200) {
         setHospitals(res?.data);
-        console.log(res?.data)
       }
     } catch (err) {
       console.error("Failed to fetch hospitals:", err);

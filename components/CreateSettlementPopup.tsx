@@ -83,12 +83,14 @@ export default function CreateSettlementPopup({
           fileName: doc.fileName,
           type: doc.type,
           remark: doc.remark,
+          url: doc.url
         });
       } else {
         acc[doc.type] = {
           id: doc.id,
           fileName: doc.fileName,
           type: doc.type,
+          url: doc.url
         };
       }
       return acc;
@@ -113,6 +115,7 @@ export default function CreateSettlementPopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      SETTLEMENT_OTHER: documentMap.SETTLEMENT_OTHER || "",
     });
   }, [data]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -158,11 +161,16 @@ export default function CreateSettlementPopup({
 
       try {
         const res = await uploadFiles(formData);
+        const existingDocument = claimInputs?.[name];
+        const existingDocumentId = existingDocument ? existingDocument.id : null;
+        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
-            fileName: res?.data?.key,
+            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+            fileName: res?.data?.key, // The new file key (filename)
             type: name,
+            file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
@@ -187,10 +195,32 @@ export default function CreateSettlementPopup({
         settlementSummary,
         settlementAmount,
         actualQuotedAmount,
+        DISCHARGE_OTHER,
+        SETTLEMENT_OTHER,
         ...others
       } = claimInputs;
-      if( !actualQuotedAmount || 
-        !settlementAmount 
+
+      const removeKeys = (obj) => {
+        delete obj.url;
+        delete obj.file;
+        return obj;
+      };
+
+      // removeKeys(CLINIC_PAPER);
+      // removeKeys(PAST_INVESTIGATION);
+      // removeKeys(CURRENT_INVESTIGATION);
+      // removeKeys(DISCHARGE_OTHER);
+      // removeKeys(OTHER);
+      // removeKeys(ICP);
+      // removeKeys(preAuth);
+      // removeKeys(status);
+      removeKeys(SETTLEMENT_OTHER),
+        removeKeys(SETTLEMENT_LETTER)
+      if (Array.isArray(OTHER)) {
+        OTHER.forEach(removeKeys);
+      }
+      if (!actualQuotedAmount ||
+        !settlementAmount
       ) {
         toast.error("Amount fields are required!")
       } else {
@@ -206,6 +236,7 @@ export default function CreateSettlementPopup({
             //   PAST_INVESTIGATION,
             //   CURRENT_INVESTIGATION,
             SETTLEMENT_LETTER,
+            SETTLEMENT_OTHER,
             ...(OTHER || []), // if OTHER is an array, ensure it's not null
           ].filter(Boolean),
         };
@@ -231,6 +262,7 @@ export default function CreateSettlementPopup({
     setModalProcessingStatus?.("");
     onOpenChange(!open);
   };
+ 
   return (
     <>
       {loading && <LoadingOverlay />}
@@ -290,15 +322,15 @@ export default function CreateSettlementPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"SETTLEMENT_LETTER"}
-                //   claimInputs={claimInputs.SETTLEMENT_LETTER}
+                claimInputs={claimInputs?.SETTLEMENT_LETTER ? [claimInputs?.SETTLEMENT_LETTER] : []}
               />
 
               <FileDrag
                 title={"Miscellaneous Documents"}
-                multiple={true}
+                multiple={false}
                 onChange={handleFileChange}
-                name={"OTHER"}
-                claimInputs={claimInputs.OTHER}
+                name={"SETTLEMENT_OTHER"}
+                claimInputs={claimInputs?.SETTLEMENT_OTHER ? [claimInputs?.SETTLEMENT_OTHER] : []}
               />
 
               {/* Action Buttons */}

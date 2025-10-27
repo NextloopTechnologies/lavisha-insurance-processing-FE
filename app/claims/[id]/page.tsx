@@ -62,7 +62,7 @@ const modalDependentStatus = [
   StatusType.SETTLED,
 ];
 
-export default function PatientClaimDetails() {
+export default function PatientClaimDetails() { 
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [openParentLevelModal, setOpenParentLevelModal] = useState(false);
   const [commentLevelStatusUpdate, setCommentLevelStatusUpdate] = useState(false);
@@ -219,7 +219,7 @@ export default function PatientClaimDetails() {
       setQueryId(claims?.queries?.[0]?.raisedAt ?? null);
     }
   }, [claims]);
-
+  
   const handleEditEnhancement = () => {
     setOpenPatientDialog(true);
     setSelectedEnhancement(filteredEnhancement);
@@ -274,7 +274,6 @@ export default function PatientClaimDetails() {
         fetchClaims(true);
       }
     } catch (error) {
-      console.log("UPDATE_STATUS_AFTER_MODAL", error);
     } finally {
       setLoading(false);
     }
@@ -354,7 +353,7 @@ export default function PatientClaimDetails() {
             <CreateDischargePopup
               open={openParentLevelModal}
               onOpenChange={setOpenParentLevelModal}
-              isEditMode={true}
+              isEditMode={false}
               data={claims}
               claimId={id}
               selectedTab={"Discharge"}
@@ -365,6 +364,7 @@ export default function PatientClaimDetails() {
               setModalProcessingStatus={setModalProcessingStatus}
             />
           )}
+          
 
         {modalProcessingStatus === StatusType.SETTLED &&
           openParentLevelModal && (
@@ -397,7 +397,13 @@ export default function PatientClaimDetails() {
                   description: true,
                 }}
               />
-              <DocumentDetails data={claims?.documents} type="all" />
+              <DocumentDetails data={claims?.documents} type={[
+                    "ICP",
+                    "OTHER",
+                    "CLINICAL_PAPER",
+                    "CURRENT_INVESTIGATION",
+                    "EXCEL_REPORT",
+                  ]}/>
             </>
           )}
 
@@ -528,7 +534,7 @@ export default function PatientClaimDetails() {
                     notes: true,
                     noOfDays: false,
                     additionalNotes: true,
-                    description: true,
+                    description: false,
                   }}
                 />
                 <DocumentDetails
@@ -577,9 +583,9 @@ export default function PatientClaimDetails() {
                 />
                 <DocumentDetails
                   data={claims?.documents}
-                  type={["ICP", "OTHER"]}
+                  type={["DISCHARGE_OTHER"]}
                 />
-              </>
+              </> 
             </div>
           )}
           {visibleTabLabels[activeTab] === "Settlement" && (
@@ -617,7 +623,7 @@ export default function PatientClaimDetails() {
                 />
                 <DocumentDetails
                   data={claims?.documents}
-                  type={["ICP", "SETTLEMENT_LETTER", "OTHER"]}
+                  type={[ "SETTLEMENT_LETTER", "SETTLEMENT_OTHER"]}
                 />
               </>
             </div>

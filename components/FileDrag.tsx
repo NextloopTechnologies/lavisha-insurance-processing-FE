@@ -63,33 +63,53 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     }
   };
 
-  const removeFile = (index: number) => {
+  // const removeFile = (index: number) => {
+  //   setFiles((prev) => prev.filter((_, i) => i !== index));
+  // };
+
+
+  const removeFile = (index, file) => {
+    onChange?.(file, "remove", false);
     setFiles((prev) => prev.filter((_, i) => i !== index));
   };
-  const handleFileClick = (file) => {
-  if (!file || (!file.url && !file.fileName)) {
-    console.error("File or file URL is missing.");
-    return; 
-  }
-
   
-  const fileURL = file?.url || URL.createObjectURL(file.file); 
-  const fileType = getFileIconType(file?.fileName);
+  const handleFileClick = (input) => {
+  // Ensure we always have an array to loop through
+  const files = Array.isArray(input) ? input : [input];
 
-  if (fileType === "image") {
-    setModalOpen(true);
-    setImagePreview({ fileURL, file: file?.fileName });
-  } else if (fileType === "pdf") {
-    const newWindow = window.open(fileURL, "_blank");
-    newWindow.onload = () => {
-      newWindow.print();
-    };
-  } else if (fileType === "excel") {
-    window.open(fileURL, "_blank");
-  } else {
-    window.open(fileURL, "_blank");
-  }
+  files.forEach((file) => {
+    if (!file || (!file.url && !file.fileName)) {
+      console.error("File or file URL is missing.");
+      return;
+    }
+
+    const fileURL = file?.url || URL.createObjectURL(file.file);
+    const fileType = getFileIconType(file?.fileName);
+
+    switch (fileType) {
+      case "image":
+        setModalOpen(true);
+        setImagePreview({ fileURL, file: file?.fileName });
+        break;
+
+      case "pdf":
+        const pdfWindow = window.open(fileURL, "_blank");
+        if (pdfWindow) {
+          pdfWindow.onload = () => pdfWindow.print();
+        }
+        break;
+
+      case "excel":
+        window.open(fileURL, "_blank");
+        break;
+
+      default:
+        window.open(fileURL, "_blank");
+        break;
+    }
+  });
 };
+
 
 
   return (
@@ -97,10 +117,9 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
       {/* Header */}
       <div
         className={`w-full min-h-[50px] rounded-md p-4 flex items-center justify-center transition-all duration-200 cursor-pointer 
-          ${
-            isDragging
-              ? "border-2 border-dashed border-blue-400 bg-blue-50"
-              : "bg-[#F2F7FC] border border-gray-200"
+          ${isDragging
+            ? "border-2 border-dashed border-blue-400 bg-blue-50"
+            : "bg-[#F2F7FC] border border-gray-200"
           }`}
         onClick={() => inputRef.current.click()}
         onDragOver={handleDragOver}
@@ -156,7 +175,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
                 {file?.name}
               </div>
               <span
-                onClick={() => removeFile(index)}
+                onClick={() => removeFile(index, file)}
                 className="cursor-pointer text-sm absolute -top-2 -right-1 text-red-500"
               >
                 X

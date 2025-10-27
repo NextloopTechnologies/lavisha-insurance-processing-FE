@@ -79,25 +79,27 @@ export default function CreateQueryPopup({
       });
     } else {
       // Map documents by their type
-      const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
-        if (doc.type === "OTHER") {
-          acc[doc.type] = acc[doc.type] || [];
-          acc[doc.type].push({
-            id: doc.id,
-            fileName: doc.fileName,
-            type: doc.type,
-            remark: doc.remark,
-          });
-        } else {
-          acc[doc.type] = {
-            id: doc.id,
-            fileName: doc.fileName,
-            type: doc.type,
-          };
-        }
-        return acc;
-      }, {});
-
+    const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
+      if (doc.type === "OTHER") {
+        acc[doc.type] = acc[doc.type] || [];
+        acc[doc.type].push({
+          id: doc.id,
+          fileName: doc.fileName,
+          type: doc.type,
+          remark: doc.remark,
+          url: doc.url
+        });
+      } else {
+        acc[doc.type] = {
+          id: doc.id,
+          fileName: doc.fileName,
+          type: doc.type,
+          url: doc.url
+        };
+      }
+      return acc;
+    }, {});
+    
       setQueryInputs({
         notes: selectedQuery?.notes,
         OTHER: documentMap.OTHER || [],
@@ -183,6 +185,22 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
+       const removeKeys = (obj) => {
+          if(!obj){
+            return;
+          }
+          delete obj.url;
+          delete obj.file;
+          return obj;
+        };
+        removeKeys(EXCEL_REPORT);
+        removeKeys(CURRENT_INVESTIGATION);
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
+        if (Array.isArray(OTHER)) {
+          OTHER.forEach(removeKeys);
+        }
         const payload = {
           ...others,
           insuranceRequestId: claimId,
@@ -305,7 +323,7 @@ export default function CreateQueryPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"EXCEL_REPORT"}
-                claimInputs={queryInputs?.EXCEL_REPORT}
+                claimInputs={queryInputs?.EXCEL_REPORT ? [queryInputs?.EXCEL_REPORT] : []}
               />
 
               <FileDrag
@@ -313,14 +331,14 @@ export default function CreateQueryPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"ICP"}
-                claimInputs={queryInputs?.ICP}
+                claimInputs={queryInputs?.ICP ? [queryInputs?.ICP] : []}
               />
               <FileDrag
                 title={"Investigation"}
                 multiple={false}
                 onChange={handleFileChange}
                 name={"CURRENT_INVESTIGATION"}
-                claimInputs={queryInputs?.CURRENT_INVESTIGATION}
+                claimInputs={queryInputs?.CURRENT_INVESTIGATION ? [queryInputs?.CURRENT_INVESTIGATION] : []}
               />
 
               <FileDrag
@@ -328,7 +346,7 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-                claimInputs={queryInputs?.OTHER}
+               claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
               />
 
               {/* Action Buttons */}
