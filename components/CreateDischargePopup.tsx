@@ -169,7 +169,6 @@ export default function CreateDischargePopup({
           [name]: uploadedFiles,
         }));
       } catch (error) {
-        setLoading(false);
         console.error("Bulk upload failed:", error);
       }
     } else {
