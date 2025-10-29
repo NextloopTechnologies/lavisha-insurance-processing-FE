@@ -134,7 +134,7 @@ export default function UserTableContent() {
           onOpenChange={handleCloseDialog}
           isEditMode={user ? true : false}
         >
-          <CreateUser userData={user} setUserData={setUser} setOpenDialog={setOpenDialog}
+          <CreateUser userData={user} setUserData={setUser} setOpenDialog={setOpenDialog} fetchUsers={fetchUsers} 
           
           />
         </CreateEditUser>

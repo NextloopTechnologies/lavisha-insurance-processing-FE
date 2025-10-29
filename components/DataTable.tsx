@@ -122,11 +122,13 @@ export function DataTable({
 
   useEffect(() => {
     if (selectedStatuses?.length >= 0) {
+      setPage(1);
       getSearchData(selectedStatuses, "selectedStatuses");
     }
   }, [selectedStatuses]);
   useEffect(() => {
     if (selectedDate || selectedDate == undefined) {
+      setPage(1);
       getSearchData(selectedDate, "selectedDate");
     }
   }, [selectedDate]);
@@ -134,6 +136,7 @@ export function DataTable({
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
+      setPage(1);
       getSearchData(searchTerm, "debouncedSearchTerm");
     }, 500); // 500ms debounce
 

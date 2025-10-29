@@ -79,26 +79,26 @@ export default function CreateQueryPopup({
       });
     } else {
       // Map documents by their type
-    const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
-        acc[doc.type] = acc[doc.type] || [];
-        acc[doc.type].push({
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          remark: doc.remark,
-          url: doc.url
-        });
-      } else {
-        acc[doc.type] = {
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          url: doc.url
-        };
-      }
-      return acc;
-    }, {});
+      const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
+        if (doc.type === "OTHER") {
+          acc[doc.type] = acc[doc.type] || [];
+          acc[doc.type].push({
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            remark: doc.remark,
+            url: doc.url
+          });
+        } else {
+          acc[doc.type] = {
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            url: doc.url
+          };
+        }
+        return acc;
+      }, {});
 
       setQueryInputs({
         notes: selectedQuery?.notes,
@@ -162,7 +162,7 @@ export default function CreateQueryPopup({
           [name]: {
             fileName: res?.data?.key,
             type: name,
-            file:value[0],
+            file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
@@ -171,7 +171,14 @@ export default function CreateQueryPopup({
       }
     }
   };
-
+  const removeKeys = (obj) => {
+    if (!obj) {
+      return;
+    }
+    delete obj.url;
+    delete obj.file;
+    return obj;
+  };
   const handleCreateQuery = async () => {
     if (selectedQuery?.id) {
       try {
@@ -186,14 +193,7 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
-       const removeKeys = (obj) => {
-          if(!obj){
-            return;
-          }
-          delete obj.url;
-          delete obj.file;
-          return obj;
-        };
+
         removeKeys(EXCEL_REPORT);
         removeKeys(CURRENT_INVESTIGATION);
         removeKeys(OTHER);
@@ -238,6 +238,11 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
+        removeKeys(EXCEL_REPORT);
+        removeKeys(CURRENT_INVESTIGATION);
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
         const payload = {
           ...others,
           insuranceRequestId: claimId,
@@ -347,7 +352,7 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-               claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
+                claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
               />
 
               {/* Action Buttons */}
