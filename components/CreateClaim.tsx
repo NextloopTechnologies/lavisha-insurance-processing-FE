@@ -82,20 +82,20 @@ export default function CreateClaim({
 
   const handleFileChange = async (value, name, multiple) => {
 
-    if(name == "remove"){
-      if(value.type == "OTHER"){
+    if (name == "remove") {
+      if (value.type == "OTHER") {
 
-      }else{
-   setClaimInputs((prev) => {
-      const updatedInputs = { ...prev };
-       updatedInputs[value.type]=""; // Removes the entry for this `name` from state
-      return updatedInputs;
-    });
+      } else {
+        setClaimInputs((prev) => {
+          const updatedInputs = { ...prev };
+          updatedInputs[value.type] = ""; // Removes the entry for this `name` from state
+          return updatedInputs;
+        });
       }
-   
+
     }
 
-   else if (multiple) {
+    else if (multiple) {
       const formData = new FormData();
 
       // Append all files as 'files[]'
@@ -114,8 +114,8 @@ export default function CreateClaim({
           fileName: file?.key,
           type: name,
           ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-  
+        }));     
+
         setClaimInputs((prev) => ({
           ...prev,
           [name]: uploadedFiles,
@@ -129,20 +129,27 @@ export default function CreateClaim({
       formData.append("file", value[0]);
       formData.append("folder", "claims");
 
-      try {
+        try {
         setLoading(true);
         const res = await uploadFiles(formData);
         setLoading(false);
+
+        const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
+        const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
-            fileName: res?.data?.key,
+            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+            fileName: res?.data?.key, // The new file key (filename)
             type: name,
             file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
-      } catch (error) {
+
+      }  catch (error) {
         setLoading(false);
         console.error("Single upload failed:", error);
       }
@@ -250,7 +257,7 @@ export default function CreateClaim({
       );
     }
   };
-      
+
   return (
     <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
       <div className="flex justify-start gap-x-10 items-center mt-2 pl-16">

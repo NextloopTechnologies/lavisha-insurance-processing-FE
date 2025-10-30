@@ -77,7 +77,9 @@ export default function ClaimsContent() {
       const res = await getClaimsByParams(query);
       if (res?.status === 200) {
         setClaims(res.data.data);
-        setTotal(Math.ceil(res.data.total / pageSize));
+        // setTotal(Math.ceil(res.data.total / pageSize));
+        setTotal(Math.max(1, Math.ceil(res.data.total / pageSize)));
+
       }
     } catch (err) {
       console.error("Failed to fetch claims:", err);

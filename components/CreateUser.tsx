@@ -42,7 +42,7 @@ type HospitalPayload = BasePayload & {
 
 type Payload = BasePayload | HospitalPayload;
 
-export default function CreateUser({ userData, setUserData, setOpenDialog }) {
+export default function CreateUser({ userData, setUserData, setOpenDialog, fetchUsers }) {
   const [user, setUser] = useState({
     role: "",
     name: "",
@@ -164,6 +164,12 @@ export default function CreateUser({ userData, setUserData, setOpenDialog }) {
           toast.success("Created Successfully");
         }
       }
+
+      await fetchUsers();
+      setOpenDialog(false);
+      setUserData(null);
+
+
     } catch (error) {
       console.error("User Create error:", error);
       toast.error("User Create error:");
@@ -310,7 +316,7 @@ export default function CreateUser({ userData, setUserData, setOpenDialog }) {
                 multiple={false}
                 onChange={handleFileChange}
                 name={"rateListFileName"}
-                // claimInputs={[profileInput?.rateListFileName]}
+              // claimInputs={[profileInput?.rateListFileName]}
               />
             )}
           </div>

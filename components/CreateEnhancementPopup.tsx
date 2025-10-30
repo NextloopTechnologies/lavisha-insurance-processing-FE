@@ -94,7 +94,7 @@ export default function CreateEnhancementPopup({
         }
         return acc;
       }, {});
-
+      
       setEnhancementInputs({
         doctorName: selectedEnhancement.doctorName,
         notes: selectedEnhancement?.notes,
@@ -148,18 +148,39 @@ export default function CreateEnhancementPopup({
 
       try {
         const res = await uploadFiles(formData);
-        setEnhancementInputs((prev) => ({
-          ...prev,
-          [name]: {
-            fileName: res?.data?.key,
-            type: name,
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
+
+        setEnhancementInputs((prev) => {
+    const updatedQueryInputs = { ...prev };
+    if (updatedQueryInputs[name]) {
+      // If the type exists, update the fileName and leave the other properties intact
+      updatedQueryInputs[name] = {
+        ...updatedQueryInputs[name],
+        fileName: res?.data?.key,    
+      };
+    } else {
+      // Otherwise, add a new entry
+      updatedQueryInputs[name] = {
+        fileName: res?.data?.key,
+        type: name,
+        file: value[0],
+        ...(name === "OTHER" && { remark: "custom remark" }),
+      };
+    }
+
+    return updatedQueryInputs;
+  });
       } catch (error) {
         console.error("Single upload failed:", error);
       }
     }
+  };
+    const removeKeys = (obj) => {
+    if (!obj) {
+      return;
+    }
+    delete obj.url;
+    delete obj.file;
+    return obj;
   };
   const handleCreateEnhancement = async () => {
     if (selectedEnhancement?.id) {
@@ -172,6 +193,12 @@ export default function CreateEnhancementPopup({
           numberOfDays,
           ...others
         } = enhancementInputs;
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
+        if (Array.isArray(OTHER)) {
+          OTHER.forEach(removeKeys);
+        }
         const payload = {
           ...others,
           // status: "ENHANCEMENT",  //once the status dropdown for enhancement is added this will work for 
@@ -206,6 +233,12 @@ export default function CreateEnhancementPopup({
           numberOfDays,
           ...others
         } = enhancementInputs;
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
+        if (Array.isArray(OTHER)) {
+          OTHER.forEach(removeKeys);
+        }
         const payload = {
           ...others,
           // status: StatusType.ENHANCEMENT,  //this is for enhancement so default pending will be used
@@ -292,7 +325,7 @@ export default function CreateEnhancementPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"ICP"}
-                claimInputs={enhancementInputs?.ICP}
+                claimInputs={enhancementInputs?.ICP ? [enhancementInputs?.ICP] : []}
               />
 
               <FileDrag

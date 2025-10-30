@@ -400,8 +400,9 @@ export default function PatientClaimDetails() {
               <DocumentDetails data={claims?.documents} type={[
                     "ICP",
                     "OTHER",
-                    "CLINICAL_PAPER",
+                    "CLINIC_PAPER",
                     "CURRENT_INVESTIGATION",
+                    "PAST_INVESTIGATION",
                     "EXCEL_REPORT",
                   ]}/>
             </>
@@ -471,7 +472,7 @@ export default function PatientClaimDetails() {
                     notes: true,
                     noOfDays: true,
                     additionalNotes: true,
-                    description: true,
+                    description: false,
                   }}
                 />
                 <DocumentDetails

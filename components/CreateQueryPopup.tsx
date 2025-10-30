@@ -79,26 +79,26 @@ export default function CreateQueryPopup({
       });
     } else {
       // Map documents by their type
-    const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
-        acc[doc.type] = acc[doc.type] || [];
-        acc[doc.type].push({
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          remark: doc.remark,
-          url: doc.url
-        });
-      } else {
-        acc[doc.type] = {
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          url: doc.url
-        };
-      }
-      return acc;
-    }, {});
+      const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
+        if (doc.type === "OTHER") {
+          acc[doc.type] = acc[doc.type] || [];
+          acc[doc.type].push({
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            remark: doc.remark,
+            url: doc.url
+          });
+        } else {
+          acc[doc.type] = {
+            id: doc.id,
+            fileName: doc.fileName,
+            type: doc.type,
+            url: doc.url
+          };
+        }
+        return acc;
+      }, {});
 
       setQueryInputs({
         notes: selectedQuery?.notes,
@@ -156,22 +156,40 @@ export default function CreateQueryPopup({
       formData.append("folder", "claims");
 
       try {
-        const res = await uploadFiles(formData);
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: {
-            fileName: res?.data?.key,
-            type: name,
-            file:value[0],
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-      } catch (error) {
-        console.error("Single upload failed:", error);
-      }
+  const res = await uploadFiles(formData);
+  setQueryInputs((prev) => {
+    const updatedQueryInputs = { ...prev };
+    if (updatedQueryInputs[name]) {
+      // If the type exists, update the fileName and leave the other properties intact
+      updatedQueryInputs[name] = {
+        ...updatedQueryInputs[name],
+        fileName: res?.data?.key,    
+      };
+    } else {
+      // Otherwise, add a new entry
+      updatedQueryInputs[name] = {
+        fileName: res?.data?.key,
+        type: name,
+        file: value[0],
+        ...(name === "OTHER" && { remark: "custom remark" }),
+      };
+    }
+
+    return updatedQueryInputs;
+  });
+} catch (error) {
+  console.error("Single upload failed:", error);
+}
     }
   };
-
+  const removeKeys = (obj) => {
+    if (!obj) {
+      return;
+    }
+    delete obj.url;
+    delete obj.file;
+    return obj;
+  };
   const handleCreateQuery = async () => {
     if (selectedQuery?.id) {
       try {
@@ -186,14 +204,7 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
-       const removeKeys = (obj) => {
-          if(!obj){
-            return;
-          }
-          delete obj.url;
-          delete obj.file;
-          return obj;
-        };
+
         removeKeys(EXCEL_REPORT);
         removeKeys(CURRENT_INVESTIGATION);
         removeKeys(OTHER);
@@ -238,6 +249,11 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
+        removeKeys(EXCEL_REPORT);
+        removeKeys(CURRENT_INVESTIGATION);
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
         const payload = {
           ...others,
           insuranceRequestId: claimId,
@@ -347,7 +363,7 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-               claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
+                claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
               />
 
               {/* Action Buttons */}

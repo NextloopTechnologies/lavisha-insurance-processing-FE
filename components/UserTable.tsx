@@ -112,6 +112,7 @@ export function UserTable({
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
+      setPage(1);
       getSearchData(searchTerm, "debouncedSearchTerm");
     }, 500); // 500ms debounce
 
@@ -196,63 +197,63 @@ export function UserTable({
             <TableBody className="bg-white">
               {data?.length
                 ? data?.map((row, index) => (
-                    <TableRow key={index + "_" + row?.name} className="">
-                      {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
+                  <TableRow key={index + "_" + row?.name} className="">
+                    {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
-                      <TableCell className=" border p-5">{row?.name}</TableCell>
-                      <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                        {row?.email}
-                      </TableCell>
-                      {roles.includes(UserRole.HOSPITAL) && (
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <TableCell className="border p-5 md:w-48 min-w-[200px] cursor-pointer">
-                                <span className="truncate block max-w-[190px] ">
-                                  {row?.address?.length > 30
-                                    ? row?.address.slice(0, 30) + "..."
-                                    : row?.address}
-                                </span>
-                              </TableCell>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-xs break-words">
-                              {row?.address}
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      )}
+                    <TableCell className=" border p-5">{row?.name}</TableCell>
+                    <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                      {row?.email}
+                    </TableCell>
+                    {roles.includes(UserRole.HOSPITAL) && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <TableCell className="border p-5 md:w-48 min-w-[200px] cursor-pointer">
+                              <span className="truncate block max-w-[190px] ">
+                                {row?.address?.length > 30
+                                  ? row?.address.slice(0, 30) + "..."
+                                  : row?.address}
+                              </span>
+                            </TableCell>
+                          </TooltipTrigger>
+                          <TooltipContent className="max-w-xs break-words">
+                            {row?.address}
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
 
-                      {roles.includes(UserRole.HOSPITAL_MANAGER) && (
-                        <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                          {row?.hospital?.name}
-                        </TableCell>
-                      )}
-
+                    {roles.includes(UserRole.HOSPITAL_MANAGER) && (
                       <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
-                        {Role[row?.role]}
+                        {row?.hospital?.name}
                       </TableCell>
+                    )}
 
-                      <TableCell className=" border p-5">
-                        <div className="flex gap-2 justify-start text-muted-foreground">
-                          {/* <Eye
+                    <TableCell className=" border p-5 md:w-48 min-w-[250px] ">
+                      {Role[row?.role]}
+                    </TableCell>
+
+                    <TableCell className=" border p-5">
+                      <div className="flex gap-2 justify-start text-muted-foreground">
+                        {/* <Eye
                             className="w-4 h-4 hover:text-blue-600 cursor-pointer"
                           /> */}
-                          {/* <Link href={`/user/${row?.id}`}> */}
-                          <Pencil
-                            onClick={() => handlegetUser(row?.id)}
-                            className="w-4 h-4 hover:text-green-600 cursor-pointer"
+                        {/* <Link href={`/user/${row?.id}`}> */}
+                        <Pencil
+                          onClick={() => handlegetUser(row?.id)}
+                          className="w-4 h-4 hover:text-green-600 cursor-pointer"
+                        />
+                        {/* </Link> */}
+                        {Role[row?.role] !== "Super Admin" && (
+                          <Trash2
+                            onClick={() => handleDeleteClaim(row.id)}
+                            className="w-4 h-4 hover:text-red-600 cursor-pointer"
                           />
-                          {/* </Link> */}
-                          {Role[row?.role] !== "Super Admin" && (
-                            <Trash2
-                              onClick={() => handleDeleteClaim(row.id)}
-                              className="w-4 h-4 hover:text-red-600 cursor-pointer"
-                            />
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
                 : ""}
             </TableBody>
           </Table>
