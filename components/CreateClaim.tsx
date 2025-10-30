@@ -129,20 +129,27 @@ export default function CreateClaim({
       formData.append("file", value[0]);
       formData.append("folder", "claims");
 
-      try {
+        try {
         setLoading(true);
         const res = await uploadFiles(formData);
         setLoading(false);
+
+        const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
+        const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
-            fileName: res?.data?.key,
+            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+            fileName: res?.data?.key, // The new file key (filename)
             type: name,
             file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
-      } catch (error) {
+
+      }  catch (error) {
         setLoading(false);
         console.error("Single upload failed:", error);
       }
