@@ -42,7 +42,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-
+import { markCommentsAsRead } from "@/services/comments";
 type User = {
   id: number;
   patientName: string;
@@ -69,7 +69,21 @@ type DATA = {
   patient: {
     id?: string;
     name?: string;
+    hospital?: {
+      id: string;
+      name: string;
+    };
   };
+  commentsCountMap: { [key: string]: number };
+};
+export const eyeTap = async (roles: string[], refNumber: Number) => {
+    try {
+      const response = await markCommentsAsRead(refNumber,roles[0]);
+      return response.data;
+    } catch (error) {
+      console.error("Failed to mark comments as read:", error);
+    }
+ 
 };
 
 export function DataTable({
@@ -84,6 +98,7 @@ export function DataTable({
   roles,
   setClaims,
   users,
+  commentsCountMap
 }: {
   roles?: string[];
   data: DATA[];
@@ -96,6 +111,7 @@ export function DataTable({
   initialSearchTerm?: string;
   setClaims?: any;
   users?: { id?: string; name?: string; role?: string }[];
+  commentsCountMap: { [key: string]: number };
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
@@ -195,19 +211,19 @@ export function DataTable({
         </div>
         {/* {(roles.includes(UserRole.HOSPITAL) ||
           roles.includes(UserRole.HOSPITAL_MANAGER)) && ( */}
-          <>
-            <Button
-              onClick={() => router.push("/newClaim")}
-              className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
-            >
-              <Plus className="mr-2 h-4 w-4" /> New Claim
-            </Button>
+        <>
+          <Button
+            onClick={() => router.push("/newClaim")}
+            className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
+          >
+            <Plus className="mr-2 h-4 w-4" /> New Claim
+          </Button>
 
-            <Plus
-              onClick={() => router.push("/newClaim")}
-              className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
-            />
-          </>
+          <Plus
+            onClick={() => router.push("/newClaim")}
+            className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
+          />
+        </>
         {/* )} */}
       </div>
 
@@ -222,6 +238,12 @@ export function DataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Patient Name
                 </TableHead>
+                {(roles?.includes(UserRole.ADMIN) ||
+                  roles?.includes(UserRole.SUPER_ADMIN)) && (
+                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                      Hospital Name
+                    </TableHead>
+                  )}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Claim ID
                 </TableHead>
@@ -230,10 +252,10 @@ export function DataTable({
                 </TableHead>
                 {(!roles?.includes(UserRole.ADMIN) ||
                   !roles?.includes(UserRole.SUPER_ADMIN)) && (
-                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                    Status
-                  </TableHead>
-                )}
+                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                      Status
+                    </TableHead>
+                  )}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Created Date
                 </TableHead>
@@ -245,10 +267,10 @@ export function DataTable({
                 </TableHead>
                 {(roles?.includes(UserRole.ADMIN) ||
                   roles?.includes(UserRole.SUPER_ADMIN)) && (
-                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                    Assingee
-                  </TableHead>
-                )}
+                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                      Assingee
+                    </TableHead>
+                  )}
                 <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
                   Action
                 </TableHead>
@@ -260,48 +282,54 @@ export function DataTable({
             <TableBody className="bg-white">
               {data?.length
                 ? data?.map((row, index) => (
-                    <TableRow key={index} className="">
-                      {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
+                  <TableRow key={index} className="">
+                    {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
 
-                      <TableCell className=" border p-5">
-                        {row?.patient.name}
-                      </TableCell>
-                      <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                        {row?.refNumber}
-                      </TableCell>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
-                              <span className="truncate block max-w-[200px] ">
-                                {row?.description?.length > 30
-                                  ? row?.description.slice(0, 30) + "..."
-                                  : row?.description}
-                              </span>
-                            </TableCell>
-                          </TooltipTrigger>
-                          <TooltipContent className="max-w-xs break-words">
-                            {row?.description}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                      {/* {(!roles?.includes(UserRole.ADMIN) ||
-                        !roles?.includes(UserRole.SUPER_ADMIN)) && ( */}
-                        <TableCell className=" border p-5 ">
-                          {STATUS_LABELS[row.status]}
+                    <TableCell className=" border p-5">
+                      {row?.patient.name}
+                    </TableCell>
+                    {(roles?.includes(UserRole.ADMIN) ||
+                      roles?.includes(UserRole.SUPER_ADMIN)) && (
+                        <TableCell className="border p-5">
+                          {row?.patient?.hospital?.name || "---"}
                         </TableCell>
-                      {/* )} */}
-                      <TableCell className=" border p-5 ">
-                        {format(new Date(row.createdAt), "yyyy/MM/dd")}
-                      </TableCell>
-                      <TableCell className=" border p-5 ">
-                        {row?.doctorName}
-                      </TableCell>
-                      <TableCell className=" border p-5 ">
-                        {row?.isPreAuth ? "True" : "False"}
-                      </TableCell>
-                      {(roles?.includes(UserRole.ADMIN) ||
-                        roles?.includes(UserRole.SUPER_ADMIN)) && (
+                      )}
+                    <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                      {row?.refNumber}
+                    </TableCell>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
+                            <span className="truncate block max-w-[200px] ">
+                              {row?.description?.length > 30
+                                ? row?.description.slice(0, 30) + "..."
+                                : row?.description}
+                            </span>
+                          </TableCell>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-xs break-words">
+                          {row?.description}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    {/* {(!roles?.includes(UserRole.ADMIN) ||
+                        !roles?.includes(UserRole.SUPER_ADMIN)) && ( */}
+                    <TableCell className=" border p-5 ">
+                      {STATUS_LABELS[row.status]}
+                    </TableCell>
+                    {/* )} */}
+                    <TableCell className=" border p-5 ">
+                      {format(new Date(row.createdAt), "yyyy/MM/dd")}
+                    </TableCell>
+                    <TableCell className=" border p-5 ">
+                      {row?.doctorName}
+                    </TableCell>
+                    <TableCell className=" border p-5 ">
+                      {row?.isPreAuth ? "True" : "False"}
+                    </TableCell>
+                    {(roles?.includes(UserRole.ADMIN) ||
+                      roles?.includes(UserRole.SUPER_ADMIN)) && (
                         <TableCell className=" border p-5 ">
                           {/* {row?.assignee || "---"} */}
                           <AssigneeDropdown
@@ -325,22 +353,22 @@ export function DataTable({
                           />
                         </TableCell>
                       )}
-                      <TableCell className=" border p-5">
-                        <div className="flex gap-2 justify-start text-muted-foreground">
-                          {/* {!roles?.includes("ADMIN") && ( */}
-                          <Link href={`/newClaim/${row?.refNumber}`}>
-                            <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
-                          </Link>
-                          {/* )} */}
-                          {row?.status == StatusType.DRAFT && (
-                            <Trash2
-                              onClick={() => handleDeleteClaim(row.refNumber)}
-                              className="w-4 h-4 hover:text-red-600 cursor-pointer"
-                            />
-                          )}
-                          {row?.status !== StatusType.DRAFT && (
-                            <>
-                              {/* {roles?.includes("ADMIN") ? (
+                    <TableCell className=" border p-5">
+                      <div className="flex gap-2  text-muted-foreground  items-center">
+                        {/* {!roles?.includes("ADMIN") && ( */}
+                        <Link href={`/newClaim/${row?.refNumber}`}>
+                          <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
+                        </Link>
+                        {/* )} */}
+                        {row?.status == StatusType.DRAFT && (
+                          <Trash2
+                            onClick={() => handleDeleteClaim(row.refNumber)}
+                            className="w-4 h-4 hover:text-red-600 cursor-pointer"
+                          />
+                        )}
+                        {row?.status !== StatusType.DRAFT && (
+                          <>
+                            {/* {roles?.includes("ADMIN") ? (
                                 <Link
                                   href={`/claims/${row?.refNumber}?showStatus=true&tab=5`}
                                 >
@@ -350,27 +378,37 @@ export function DataTable({
                                   />
                                 </Link>
                               ) : ( */}
-                              {(row.assignee !== null ||
-                                (isClaimAssigned &&
-                                  assignedClaimRefNumber ===
-                                    row.refNumber)) && (
-                                <Link href={`/claims/${row?.refNumber}`}>
-                                  <Eye
-                                    // onClick={() => row.patient.id}
-                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                  />
-                                </Link>
+                            {(row.assignee !== null ||
+                              (isClaimAssigned &&
+                                assignedClaimRefNumber ===
+                                row.refNumber)) && (
+                            
+                                <Button variant="ghost" size="icon" className="relative" onClick={async () => {
+                                  await eyeTap(roles, row?.id);
+                                  window.location.assign(`/claims/${row?.refNumber}`);
+                                }}>
+                                  <Eye size={20} className="text-[#3E79D6]" />
+
+                                  {commentsCountMap[row?.id] > 0 && (
+                                    <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                                      {commentsCountMap[row?.id]} {/* The unread count */}
+                                    </span>
+                                  )}
+                                </Button>
+
                               )}
-                              {/* )} */}
-                              {/* {!roles?.includes("ADMIN") && ( */}
-                              {/* <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" /> */}
-                              {/* )} */}
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))
+
+
+                            {/* )} */}
+                            {/* {!roles?.includes("ADMIN") && ( */}
+                            {/* <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" /> */}
+                            {/* )} */}
+                          </>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
                 : ""}
             </TableBody>
           </Table>

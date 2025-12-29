@@ -35,7 +35,7 @@ export function ProfileEditModal({
     profileUrl: "",
   });
 
-  const isAdminOrSuperAdmin = ['ADMIN', 'SUPERADMIN'].some(role => Cookies.get("user_role")?.includes(role));
+  const isAdminOrSuperAdmin = ['ADMIN', 'SUPER_ADMIN'].some(role => Cookies.get("user_role")?.includes(role));
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -139,7 +139,8 @@ export function ProfileEditModal({
   const handleUpdateProfile = async () => {
     if (loggedInUserId) {
       try {
-        const payload = { ...profileInput };
+        console.log('profileInput before update', profileInput);
+        const payload = { ...profileInput };  
         setLoading(true);
         const res = await updateProfile(payload, loggedInUserId);
         if (res?.status === 200) {
@@ -157,7 +158,7 @@ export function ProfileEditModal({
   const handleClose = (isOpen: boolean) => {
     setOpenEditProfile(isOpen);
   };
-
+ console.log('profileInput', profileInput);
   return (
     <Dialog open={openEditProfile} onOpenChange={handleClose}>
       <DialogContent className={`sm:max-w-md ${isAdminOrSuperAdmin ? 'max-w-[500px]' : 'h-[calc(100vh-100px)]'} rounded-2xl px-6 py-8`} >
@@ -203,8 +204,8 @@ export function ProfileEditModal({
               <InputComponent
                 placeHolder={"Hospital Name"}
                 Icon={UserIcon}
-                value={profileInput.hospitalName}
-                onChange={(e) => handleInputChange(e.target.value, "hospitalName")}
+                value={profileInput.name}
+                onChange={(e) => handleInputChange(e.target.value, "name")}
               />
             ) : (
               <InputComponent

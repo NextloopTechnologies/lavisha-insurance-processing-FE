@@ -44,3 +44,10 @@ export const createManagerChat = (data: {
 }) => {
   return api.post(`/comments`, data);
 };
+
+export const markCommentsAsRead = (
+  insuranceRequestId: Number | string,
+  role: string
+) => {
+  return api.patch(`/comments/mark_read`, { insuranceRequestId, role });
+};
