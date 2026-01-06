@@ -38,7 +38,7 @@ export default function PatientFormDialog({
   //  const isAdmin = Cookies.get("user_role")?.includes("ADMIN");
     const [errors, setErrors] = useState<{ name?: string; age?: string; hospitalId?: string }>({});
 
-  const isAdmin = ['ADMIN', 'SUPERADMIN'].some(role => Cookies.get("user_role")?.includes(role));
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].some(role => Cookies.get("user_role")?.includes(role));
 
   useEffect(() => {
     if (open) {

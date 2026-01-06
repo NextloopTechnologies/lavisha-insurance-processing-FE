@@ -62,7 +62,7 @@ const modalDependentStatus = [
   StatusType.SETTLED,
 ];
 
-export default function PatientClaimDetails() { 
+export default function PatientClaimDetails() {
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [openParentLevelModal, setOpenParentLevelModal] = useState(false);
   const [commentLevelStatusUpdate, setCommentLevelStatusUpdate] = useState(false);
@@ -219,7 +219,7 @@ export default function PatientClaimDetails() {
       setQueryId(claims?.queries?.[0]?.raisedAt ?? null);
     }
   }, [claims]);
-  
+
   const handleEditEnhancement = () => {
     setOpenPatientDialog(true);
     setSelectedEnhancement(filteredEnhancement);
@@ -364,7 +364,7 @@ export default function PatientClaimDetails() {
               setModalProcessingStatus={setModalProcessingStatus}
             />
           )}
-          
+
 
         {modalProcessingStatus === StatusType.SETTLED &&
           openParentLevelModal && (
@@ -398,12 +398,12 @@ export default function PatientClaimDetails() {
                 }}
               />
               <DocumentDetails data={claims?.documents} type={[
-                    "ICP",
-                    "OTHER",
-                    "CLINIC_PAPER",
-                    "CURRENT_INVESTIGATION",
-                    "PAST_INVESTIGATION",
-                    "EXCEL_REPORT",
+                "ICP",
+                "OTHER",
+                "CLINIC_PAPER",
+                "CURRENT_INVESTIGATION",
+                "PAST_INVESTIGATION",
+                "EXCEL_REPORT",
                   ]}/>
             </>
           )}
@@ -437,25 +437,23 @@ export default function PatientClaimDetails() {
                       <button
                         disabled={Boolean(statusFromQuery)}
                         onClick={() => handleEditEnhancement()}
-                        // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                       >
                         <Pencil
-                          className={`w-6 h-6 ${
-                            Boolean(statusFromQuery)
+                          className={`w-6 h-6 ${Boolean(statusFromQuery)
                               ? "text-gray-300 cursor-not-allowed"
                               : "text-[#3E79D6] cursor-pointer"
-                          }   mr-2`}
+                            }   mr-2`}
                         />
                       </button>
                     )}
                     <button
                       disabled={Boolean(statusFromQuery)}
                       onClick={() => setOpenPatientDialog(true)}
-                      className={`rounded-sm bg-[#3E79D6]  px-3 py-2 text-white ${
-                        Boolean(statusFromQuery)
+                      className={`rounded-sm bg-[#3E79D6]  px-3 py-2 text-white ${Boolean(statusFromQuery)
                           ? " cursor-not-allowed"
                           : " cursor-pointer"
-                      }`}
+                        }`}
                     >
                       Create Another Enhancement
                       {/* <Pencil className="w-4 h-4 hover:text-blue-600 cursor-pointer" /> */}
@@ -501,25 +499,23 @@ export default function PatientClaimDetails() {
                       <button
                         disabled={Boolean(statusFromQuery)}
                         onClick={() => handleEditQuery()}
-                        // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                      // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                       >
                         <Pencil
-                          className={`w-6 h-6 ${
-                            Boolean(statusFromQuery)
+                          className={`w-6 h-6 ${Boolean(statusFromQuery)
                               ? "text-gray-300 cursor-not-allowed"
                               : "text-[#3E79D6] cursor-pointer"
-                          }   mr-2`}
+                            }   mr-2`}
                         />
                       </button>
                     )}
                     <button
                       disabled={Boolean(statusFromQuery)}
                       onClick={() => setOpenPatientDialog(true)}
-                      className={`rounded-sm bg-[#3E79D6]  px-3 py-2 text-white ${
-                        Boolean(statusFromQuery)
+                      className={`rounded-sm bg-[#3E79D6]  px-3 py-2 text-white ${Boolean(statusFromQuery)
                           ? " cursor-not-allowed"
                           : " cursor-pointer"
-                      }`}
+                        }`}
                     >
                       Create Query
                     </button>
@@ -558,14 +554,13 @@ export default function PatientClaimDetails() {
                   <button
                     disabled={Boolean(statusFromQuery)}
                     onClick={() => setOpenPatientDialog(true)}
-                    // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                  // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
                     <Pencil
-                      className={`w-6 h-6 ${
-                        Boolean(statusFromQuery)
+                      className={`w-6 h-6 ${Boolean(statusFromQuery)
                           ? "text-gray-300 cursor-not-allowed"
                           : "text-[#3E79D6] cursor-pointer"
-                      }   mr-2`}
+                        }   mr-2`}
                     />
                   </button>
                 </div>
@@ -586,7 +581,7 @@ export default function PatientClaimDetails() {
                   data={claims?.documents}
                   type={["DISCHARGE_OTHER"]}
                 />
-              </> 
+              </>
             </div>
           )}
           {visibleTabLabels[activeTab] === "Settlement" && (
@@ -596,14 +591,13 @@ export default function PatientClaimDetails() {
                   <button
                     disabled={Boolean(statusFromQuery)}
                     onClick={() => setOpenPatientDialog(true)}
-                    // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
+                  // className="rounded-sm bg-[#3E79D6] px-3 py-2 text-white"
                   >
                     <Pencil
-                      className={`w-6 h-6 ${
-                        Boolean(statusFromQuery)
+                      className={`w-6 h-6 ${Boolean(statusFromQuery)
                           ? "text-gray-300 cursor-not-allowed"
                           : "text-[#3E79D6] cursor-pointer"
-                      }   mr-2`}
+                        }   mr-2`}
                     />
                   </button>
                 </div>
@@ -619,12 +613,16 @@ export default function PatientClaimDetails() {
                     description: false,
                     settlementSummary: true,
                     settlementAmount: true,
-                    actualQuotedAmount: true,
+                    actualQuotedAmount: false,
+                    totalBill: true,
+                    totalApproval: true,
+                    tds: true,
+                    deduction: true
                   }}
                 />
                 <DocumentDetails
                   data={claims?.documents}
-                  type={[ "SETTLEMENT_LETTER", "SETTLEMENT_OTHER"]}
+                  type={["SETTLEMENT_LETTER", "SETTLEMENT_OTHER"]}
                 />
               </>
             </div>

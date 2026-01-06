@@ -120,7 +120,7 @@ export default function Patients() {
 };
 
   const roles = Cookies.get("user_role")?.split(",") || []; 
-    const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPERADMIN");
+  const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN");
 
 
   const fetchHospitalsDropdown = async () => {
