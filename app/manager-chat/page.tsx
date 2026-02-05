@@ -93,57 +93,6 @@ export default function ManagerChat() {
           });
 
 
-        // const modifyData = res?.data
-        //   ?.filter((item) => item?.type === CommentType.HOSPITAL_NOTE)
-        //   ?.map((item) => ({
-        //     ...item,
-        //     message: item.text,
-        //     sender: item?.creator?.name || "You",
-        //     date: formatDateTime(item?.createdAt).date,
-        //     time: formatDateTime(item?.createdAt).time,
-        //     position:
-        //       String(item?.createdBy) === String(loggedInUserId)
-        //         ? "self"
-        //         : "other",
-        //     type: item?.type,
-        //       creator: {
-        //         ...item.creator,
-        //       }
-        //   }))
-        //   .sort(
-        //     (a, b) =>
-        //       new Date(a.createdAt).getTime() -
-        //       new Date(b.createdAt).getTime()
-        //   );
-
-        // const modifyData = res?.data
-        //   ?.filter((item) => item?.type === CommentType.HOSPITAL_NOTE)
-        //   ?.map((item, index) => {
-        //     const position =
-        //       String(item?.createdBy) === String(loggedInUserId)
-        //         ? "self"
-        //         : "other";
-
-        //     console.log(`Index ${index} | position:`, position,  String(item?.createdBy) === String(loggedInUserId) , item?.createdBy ,loggedInUserId);
-
-        //     return {
-        //       ...item,
-        //       message: item.text,
-        //       sender: item?.creator?.name || "You",
-        //       date: formatDateTime(item?.createdAt).date,
-        //       time: formatDateTime(item?.createdAt).time,
-        //       position,
-        //       type: item?.type,
-        //       creator: {
-        //         ...item.creator,
-        //       },
-        //     };
-        //   })
-        //   .sort(
-        //     (a, b) =>
-        //       new Date(a.createdAt).getTime() -
-        //       new Date(b.createdAt).getTime()
-        //   );
 
         setManagerComments(modifyData);
       }
@@ -151,10 +100,7 @@ export default function ManagerChat() {
       console.error("Filed to fetch:", error);
     }
   };
-  // useEffect(() => {
-  //   fetchManagerComments(hispotalId);
-  //   if (hispotalId) setIsWelcomeScreenEnabled(false);
-  // }, [hispotalId]);
+
 
   useEffect(() => {
   if (!loggedInUserId) return;

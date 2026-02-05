@@ -106,7 +106,6 @@ export default function PatientFormDialog({
   };
 
   const handleSubmit = () => {
-    console.log("clickedddd" , hospitalId)
     if (!validateForm()) {
       return;
     }

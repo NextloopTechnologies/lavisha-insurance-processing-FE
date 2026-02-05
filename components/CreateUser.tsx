@@ -75,7 +75,6 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
       });
     }
   }, [userData]);
-    console.log("-----------------------------------",userData)
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
     formData.append("file", value[0]);
