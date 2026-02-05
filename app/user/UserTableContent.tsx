@@ -110,12 +110,13 @@ export default function UserTableContent() {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setUser(null);
+    setSelectedId(null);
   };
   return (
     <SidebarLayout>
       {loading && <LoadingOverlay />}
       <div className="h-[calc(100vh-80px)] bg-gray-100  overflow-y-auto">
-       
+
         <UserTable
           data={users}
           page={page}
@@ -135,7 +136,7 @@ export default function UserTableContent() {
           isEditMode={user ? true : false}
         >
           <CreateUser userData={user} setUserData={setUser} setOpenDialog={setOpenDialog}
-          
+
           />
         </CreateEditUser>
         <DeletePopup
