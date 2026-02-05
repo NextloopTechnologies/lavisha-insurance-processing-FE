@@ -93,11 +93,12 @@ const AdminDashboard: React.FC<Props> = ({
                 <SelectContent className=" w-full">
                   <SelectGroup>
                     <SelectItem value={" "}>All Hospital</SelectItem>
-                    {users?.map((item, index) => (
-                      <SelectItem key={index} value={item?.id}>
-                        {item?.name}
+                    {users?.map((item) => (
+                      <SelectItem key={item.id} value={item.id}>
+                        {item.name}
                       </SelectItem>
                     ))}
+
                   </SelectGroup>
                 </SelectContent>
               </Select>
@@ -122,13 +123,15 @@ const AdminDashboard: React.FC<Props> = ({
         <Card className="md:col-span-4 grid grid-cols-3 md:gap-10 md:px-10 px-2">
           {statCardData?.map((item) => (
             <DasboardStatCard
+              key={item.label}
               icon={
                 <ChartNoAxesColumnIncreasing className="text-[#3E79D6] bg-white rounded-[4px]" />
               }
-              value={item?.value}
-              label={item?.label}
+              value={item.value}
+              label={item.label}
             />
           ))}
+
         </Card>
       </div>
 
@@ -150,12 +153,12 @@ const AdminDashboard: React.FC<Props> = ({
           )}
           {(roles?.includes("HOSPITAL") ||
             roles?.includes("HOSPITAL_MANAGER")) && (
-            <BarCharts
-              data={dashboardData}
-              showDropdown
-              dropdownLabel="Claims By"
-            />
-          )}
+              <BarCharts
+                data={dashboardData}
+                showDropdown
+                dropdownLabel="Claims By"
+              />
+            )}
         </Card>
       </div>
     </>
