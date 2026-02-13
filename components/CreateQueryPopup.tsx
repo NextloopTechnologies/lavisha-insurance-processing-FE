@@ -87,12 +87,14 @@ export default function CreateQueryPopup({
             fileName: doc.fileName,
             type: doc.type,
             remark: doc.remark,
+            url: doc.url
           });
         } else {
           acc[doc.type] = {
             id: doc.id,
             fileName: doc.fileName,
             type: doc.type,
+            url: doc.url
           };
         }
         return acc;
@@ -154,21 +156,40 @@ export default function CreateQueryPopup({
       formData.append("folder", "claims");
 
       try {
-        const res = await uploadFiles(formData);
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: {
-            fileName: res?.data?.key,
-            type: name,
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-      } catch (error) {
-        console.error("Single upload failed:", error);
-      }
+  const res = await uploadFiles(formData);
+  setQueryInputs((prev) => {
+    const updatedQueryInputs = { ...prev };
+    if (updatedQueryInputs[name]) {
+      // If the type exists, update the fileName and leave the other properties intact
+      updatedQueryInputs[name] = {
+        ...updatedQueryInputs[name],
+        fileName: res?.data?.key,    
+      };
+    } else {
+      // Otherwise, add a new entry
+      updatedQueryInputs[name] = {
+        fileName: res?.data?.key,
+        type: name,
+        file: value[0],
+        ...(name === "OTHER" && { remark: "custom remark" }),
+      };
+    }
+
+    return updatedQueryInputs;
+  });
+} catch (error) {
+  console.error("Single upload failed:", error);
+}
     }
   };
-
+  const removeKeys = (obj) => {
+    if (!obj) {
+      return;
+    }
+    delete obj.url;
+    delete obj.file;
+    return obj;
+  };
   const handleCreateQuery = async () => {
     if (selectedQuery?.id) {
       try {
@@ -183,6 +204,15 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
+
+        removeKeys(EXCEL_REPORT);
+        removeKeys(CURRENT_INVESTIGATION);
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
+        if (Array.isArray(OTHER)) {
+          OTHER.forEach(removeKeys);
+        }
         const payload = {
           ...others,
           insuranceRequestId: claimId,
@@ -219,6 +249,11 @@ export default function CreateQueryPopup({
           doctorName,
           ...others
         } = queryInputs;
+        removeKeys(EXCEL_REPORT);
+        removeKeys(CURRENT_INVESTIGATION);
+        removeKeys(OTHER);
+        removeKeys(ICP);
+        removeKeys(status);
         const payload = {
           ...others,
           insuranceRequestId: claimId,
@@ -305,7 +340,7 @@ export default function CreateQueryPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"EXCEL_REPORT"}
-                claimInputs={queryInputs?.EXCEL_REPORT}
+                claimInputs={queryInputs?.EXCEL_REPORT ? [queryInputs?.EXCEL_REPORT] : []}
               />
 
               <FileDrag
@@ -313,14 +348,14 @@ export default function CreateQueryPopup({
                 multiple={false}
                 onChange={handleFileChange}
                 name={"ICP"}
-                claimInputs={queryInputs?.ICP}
+                claimInputs={queryInputs?.ICP ? [queryInputs?.ICP] : []}
               />
               <FileDrag
                 title={"Investigation"}
                 multiple={false}
                 onChange={handleFileChange}
                 name={"CURRENT_INVESTIGATION"}
-                claimInputs={queryInputs?.CURRENT_INVESTIGATION}
+                claimInputs={queryInputs?.CURRENT_INVESTIGATION ? [queryInputs?.CURRENT_INVESTIGATION] : []}
               />
 
               <FileDrag
@@ -328,7 +363,7 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-                claimInputs={queryInputs?.OTHER}
+                claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
               />
 
               {/* Action Buttons */}

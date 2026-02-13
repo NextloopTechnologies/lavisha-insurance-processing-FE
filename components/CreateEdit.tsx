@@ -8,13 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { uploadFiles } from "@/services/files";
+import Cookies from "js-cookie";
 
 interface PatientFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (data: { name: string; age: number; image?: string }) => void;
-  defaultData?: { name: string; age: number; image?: string; url?: string };
+  // onSubmit: (data: { name: string; age: number; image?: string }) => void;
+    onSubmit: (data: { name: string; age: number; image?: string; hospitalId?: string }) => void;
+  defaultData?: { name: string; age: number; image?: string; url?: string;  hospitalUserId?: string };
   isEditMode?: boolean;
+  hospitals?: { id: string; name: string }[];
 }
 
 export default function PatientFormDialog({
@@ -23,22 +26,34 @@ export default function PatientFormDialog({
   onSubmit,
   defaultData,
   isEditMode = false,
+  hospitals = [],
 }: PatientFormDialogProps) {
   const [name, setName] = useState("");
   const [age, setAge] = useState<number | undefined>();
   const [image, setImage] = useState<string | undefined>();
   const [loading, setLoading] = useState(false);
   const [fileUpload, setFileUpload] = useState({});
+  const [hospitalId, setHospitalId] = useState<string | undefined>("");
+
+  //  const isAdmin = Cookies.get("user_role")?.includes("ADMIN");
+    const [errors, setErrors] = useState<{ name?: string; age?: string; hospitalId?: string }>({});
+
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN'].some(role => Cookies.get("user_role")?.includes(role));
 
   useEffect(() => {
-    if (defaultData) {
-      setName(defaultData.name);
-      setAge(defaultData.age);
-      setImage(defaultData.url);
-    } else {
-      setName("");
-      setAge(undefined);
-      setImage(undefined);
+    if (open) {
+      if (defaultData) {
+        setName(defaultData.name);
+        setAge(defaultData.age);
+        setImage(defaultData.url);
+        setHospitalId(defaultData.hospitalUserId);
+      } else {
+        setName("");
+        setAge(undefined);
+        setImage(undefined);
+        setHospitalId("");
+      }
+      setErrors({});
     }
   }, [defaultData, open]);
 
@@ -66,18 +81,64 @@ export default function PatientFormDialog({
     }
   };
 
+   // Form Validation
+  const validateForm = () => {
+    let formIsValid = true;
+    const validationErrors: any = {};
+
+    if (!name.trim()) {
+      validationErrors.name = "Name is required.";
+      formIsValid = false;
+    }
+
+  if (!age || age < 1 || age > 100) {
+  validationErrors.age = "Age must be a number between 1 and 100.";
+  formIsValid = false;
+}
+
+    if (isAdmin && !hospitalId) {
+      validationErrors.hospitalId = "Hospital is required for admin users.";
+      formIsValid = false;
+    }
+
+    setErrors(validationErrors);
+    return formIsValid;
+  };
+
   const handleSubmit = () => {
-    onSubmit({ name, age, ...fileUpload });
+    if (!validateForm()) {
+      return;
+    }
+    onSubmit({ name, age, ...fileUpload, hospitalId });
     onOpenChange(false);
   };
 
-  return (
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setName(e.target.value);
+    if (e.target.value.trim()) {
+      setErrors(prevErrors => ({ ...prevErrors, name: undefined }));
+    }
+  };
+
+  const handleAgeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setAge(value);
+    if (value > 0) {
+      setErrors(prevErrors => ({ ...prevErrors, age: undefined }));
+    }
+  };
+
+  const handleHospitalChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setHospitalId(e.target.value);
+    if (isAdmin && e.target.value) {
+      setErrors(prevErrors => ({ ...prevErrors, hospitalId: undefined }));
+    }
+  };
+return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-sm text-center p-6 rounded-lg">
         <DialogHeader>
-          <DialogTitle>
-            {isEditMode ? "Edit Patient" : "Create Patient"}
-          </DialogTitle>
+          <DialogTitle>{isEditMode ? "Edit Patient" : "Create Patient"}</DialogTitle>
         </DialogHeader>
 
         {/* Photo Upload */}
@@ -85,11 +146,7 @@ export default function PatientFormDialog({
           <label htmlFor="file-upload" className="cursor-pointer">
             <div className="rounded-full w-20 h-20 bg-gray-200 flex items-center justify-center overflow-hidden">
               {image ? (
-                <img
-                  src={image}
-                  alt="Uploaded"
-                  className="object-cover w-full h-full"
-                />
+                <img src={image} alt="Uploaded" className="object-cover w-full h-full" />
               ) : (
                 <div className="text-gray-400">+</div>
               )}
@@ -106,14 +163,36 @@ export default function PatientFormDialog({
         <p className="text-sm text-muted-foreground mb-4">Photo Upload</p>
 
         {/* Form */}
-        <div className="space-y-3 text-left">
-          <div>
+                  <div className="space-y-3 text-left">
+          {/* Hospital Dropdown (only visible to admins) */}
+          {isAdmin && hospitals.length > 0 && (
+            <div>
+              <select
+                id="hospital"
+                className={`w-full mt-3 p-2 border rounded-md disabled:cursor-not-allowed ${errors.hospitalId ? 'border-red-500' : ''}`}
+                value={hospitalId}
+                onChange={handleHospitalChange}
+                 disabled={isEditMode} 
+              >
+                <option value="">Select Hospital</option>
+                {hospitals.map((hospital) => (
+                  <option key={hospital.id} value={hospital.id}>
+                    {hospital.name}
+                  </option>
+                ))}
+              </select>
+              {errors.hospitalId && <p className="text-red-500 text-sm">{errors.hospitalId}</p>}
+            </div>
+          )}
+            <div>
             <Input
               id="name"
               placeholder="Name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={handleNameChange}
+              className={errors.name ? "border-red-500" : ""}
             />
+            {errors.name && <p className="text-red-500 text-sm">{errors.name}</p>}
           </div>
           <div>
             <Input
@@ -121,8 +200,10 @@ export default function PatientFormDialog({
               id="age"
               placeholder="Age"
               value={age}
-              onChange={(e) => setAge(Number(e.target.value))}
+              onChange={handleAgeChange}
+              className={errors.age ? "border-red-500" : ""}
             />
+            {errors.age && <p className="text-red-500 text-sm">{errors.age}</p>}
           </div>
         </div>
 
@@ -136,4 +217,5 @@ export default function PatientFormDialog({
       </DialogContent>
     </Dialog>
   );
+  
 }

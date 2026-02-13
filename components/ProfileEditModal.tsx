@@ -7,15 +7,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Eye, UserIcon } from "lucide-react";
+import { UserIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import InputComponent from "./InputComponent";
 import FileDrag from "./FileDrag";
 import { uploadFiles } from "@/services/files";
-import { getProfileById, updateProfile } from "@/services/profile";
-import Image from "next/image";
+import { updateProfile } from "@/services/profile";
+import Cookies from "js-cookie";
 
 export function ProfileEditModal({
   openEditProfile,
@@ -24,7 +23,6 @@ export function ProfileEditModal({
 }) {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  // const [profileData, setProfileData] = useState([]);
   const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
 
@@ -36,47 +34,15 @@ export function ProfileEditModal({
     profileFileName: "",
     profileUrl: "",
   });
+
+  const isAdminOrSuperAdmin = ['ADMIN', 'SUPER_ADMIN'].some(role => Cookies.get("user_role")?.includes(role));
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserName(localStorage.getItem("userName"));
       setLoggedInUserId(localStorage.getItem("userId"));
     }
   }, []);
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setLoading(true);
-    setImagePreview(URL.createObjectURL(file));
-
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("folder", "profiles"); // static folder key
-
-    try {
-      const res = await uploadFiles(formData);
-      setProfileInput((prev) => {
-        return {
-          ...prev,
-          profileFileName: res?.data?.key,
-          profileUrl: res.data?.url,
-        };
-      });
-    } catch (error) {
-      console.error("Upload error:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleInputChange = (value: string | boolean, name: string) => {
-    setProfileInput((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
-  };
 
   useEffect(() => {
     if (!profileData?.length) {
@@ -108,7 +74,6 @@ export function ProfileEditModal({
         }
         return acc;
       }, {});
-
       setProfileInput({
         name: profileData?.[0]?.name || loggedInUserName,
         address: profileData?.[0]?.address,
@@ -119,6 +84,38 @@ export function ProfileEditModal({
       });
     }
   }, [profileData]);
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setLoading(true);
+    setImagePreview(URL.createObjectURL(file));
+
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("folder", "profiles");
+
+    try {
+      const res = await uploadFiles(formData);
+      setProfileInput((prev) => ({
+        ...prev,
+        profileFileName: res?.data?.key,
+        profileUrl: res.data?.url,
+      }));
+    } catch (error) {
+      console.error("Upload error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleInputChange = (value: string | boolean, name: string) => {
+    setProfileInput((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
@@ -142,12 +139,11 @@ export function ProfileEditModal({
   const handleUpdateProfile = async () => {
     if (loggedInUserId) {
       try {
-        const payload = {
-          ...profileInput,
-        };
+        console.log('profileInput before update', profileInput);
+        const payload = { ...profileInput };  
         setLoading(true);
         const res = await updateProfile(payload, loggedInUserId);
-        if (res?.status == 200) {
+        if (res?.status === 200) {
           setLoading(false);
           setOpenEditProfile(false);
         }
@@ -158,95 +154,104 @@ export function ProfileEditModal({
       }
     }
   };
+
   const handleClose = (isOpen: boolean) => {
-    if (!isOpen) {
-    }
     setOpenEditProfile(isOpen);
   };
+ console.log('profileInput', profileInput);
   return (
     <Dialog open={openEditProfile} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md rounded-2xl px-6 py-8">
+      <DialogContent className={`sm:max-w-md ${isAdminOrSuperAdmin ? 'max-w-[500px]' : 'h-[calc(100vh-100px)]'} rounded-2xl px-6 py-8`} >
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">
-            Profile edit
+            Profile Edit
           </DialogTitle>
         </DialogHeader>
+        <div className="overflow-y-scroll">
+          <div className="flex flex-col items-center justify-center gap-3 my-4">
+            <label htmlFor="profile-photo" className="cursor-pointer">
+              {profileInput?.profileUrl != null ? (
+                <div className="w-full flex justify-center items-center">
+                  <img
+                    src={profileInput?.profileUrl}
+                    alt="Preview"
+                    className="w-24 h-24 object-cover rounded-full border"
+                  />
+                </div>
+              ) : (
+                <div className="w-24 h-24 flex items-center justify-center rounded-full border">
+                  <span className="text-[50px] font-semibold text-[#3E79D6]">
+                    {profileInput?.name?.[0]}
+                  </span>
+                </div>
+              )}
+              <input
+                id="profile-photo"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+              <p className="text-sm text-center mt-2 text-gray-600 w-full">
+                Change Profile Photo
+              </p>
+            </label>
+          </div>
 
-        <div className="flex flex-col items-center justify-center gap-3 my-4">
-          <label htmlFor="profile-photo" className="cursor-pointer">
-            {profileInput?.profileUrl != null ? (
-              <div className="w-full flex justify-center items-center">
-                <img
-                  src={profileInput?.profileUrl}
-                  alt="Preview"
-                  className="w-24 h-24 object-cover rounded-full border"
-                />
-              </div>
+          {/* Adjust input based on role */}
+          <div className="w-full">
+            {!isAdminOrSuperAdmin ? (
+              <InputComponent
+                placeHolder={"Hospital Name"}
+                Icon={UserIcon}
+                value={profileInput.name}
+                onChange={(e) => handleInputChange(e.target.value, "name")}
+              />
             ) : (
-              <div className="w-24 h-24 flex items-center justify-center rounded-full border ">
-                {/* <Eye className="w-8 h-8 text-gray-400" /> */}
-                <span className="text-[50px] font-semibold text-[#3E79D6] ">
-                  {profileInput?.name?.[0]}
-                </span>
-              </div>
+              <InputComponent
+                placeHolder={"Admin Name"}
+                Icon={UserIcon}
+                value={profileInput.name}
+                onChange={(e) => handleInputChange(e.target.value, "name")}
+              />
             )}
-            <input
-              id="profile-photo"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleImageUpload}
+          </div>
+
+          <div className="my-4">
+            {!isAdminOrSuperAdmin && (
+              <textarea
+                value={profileInput.address}
+                onChange={(e) => handleInputChange(e.target.value, "address")}
+                placeholder="Address"
+                className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
+              />
+            )}
+          </div>
+
+          {!isAdminOrSuperAdmin && (
+            <FileDrag
+              title={"RateList FileName"}
+              multiple={false}
+              onChange={handleFileChange}
+              name={"rateListFileName"}
+              claimInputs={[profileInput?.rateListFileName]}
             />
-            <p className="text-sm text-center mt-2 text-gray-600 w-full">
-              Change Profile Photo
-            </p>
-          </label>
-        </div>
+          )}
 
-        <InputComponent
-          placeHolder={"Hospital Name"}
-          Icon={UserIcon}
-          value={profileInput.hospitalName}
-          onChange={(e) => handleInputChange(e.target.value, "hospitalName")}
-        />
-
-        {/* <InputComponent
-          placeHolder={"Address"}
-          Icon={UserIcon}
-          value={profileInput.address}
-          onChange={(e) => handleInputChange(e.target.value, "address")}
-        /> */}
-
-        <div className="my-4">
-          <textarea
-            value={profileInput.address}
-            onChange={(e) => handleInputChange(e.target.value, "address")}
-            placeholder="Address"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
-          />
-        </div>
-
-        <FileDrag
-          title={"RateList FileName"}
-          multiple={false}
-          onChange={handleFileChange}
-          name={"rateListFileName"}
-          claimInputs={[profileInput?.rateListFileName]}
-        />
-
-        <div className="flex justify-center gap-4 w-full">
-          <DialogClose asChild>
+          <div className="flex justify-center gap-4 w-full mt-6">
+            <DialogClose asChild>
+              <Button variant="outline" className="text-[#3E79D6]">
+                Cancel
+              </Button>
+            </DialogClose>
             <Button
-              // onClick={handleClose}
-              className="text-[#3E79D6]"
-              variant="outline"
+              onClick={handleUpdateProfile}
+              className="bg-[#3E79D6] text-white"
+              disabled={loading}
             >
-              Cancel
+              Save
             </Button>
-          </DialogClose>
-          <Button onClick={handleUpdateProfile} className=" bg-[#3E79D6]">
-            Save
-          </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

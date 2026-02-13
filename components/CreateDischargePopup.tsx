@@ -66,12 +66,32 @@ export default function CreateDischargePopup({
     CLINIC_PAPER: "",
     ICP: "",
     SETTLEMENT_LETTER: "",
+    DISCHARGE_OTHER: "",
     dischargeSummary: "",
   });
   useEffect(() => {
     if (!data) return;
 
+
     // Map documents by their type
+    // const documentMap = data.documents.reduce((acc, doc) => {
+    //   if (doc.type === "OTHER") {
+    //     acc[doc.type] = acc[doc.type] || [];
+    //     acc[doc.type].push({
+    //       id: doc.id,
+    //       fileName: doc.fileName,
+    //       type: doc.type,
+    //       remark: doc.remark,
+    //     });
+    //   } else {
+    //     acc[doc.type] = {
+    //       id: doc.id,
+    //       fileName: doc.fileName,
+    //       type: doc.type,
+    //     };
+    //   }
+    //   return acc;
+    // }, {});
     const documentMap = data.documents.reduce((acc, doc) => {
       if (doc.type === "OTHER") {
         acc[doc.type] = acc[doc.type] || [];
@@ -80,12 +100,14 @@ export default function CreateDischargePopup({
           fileName: doc.fileName,
           type: doc.type,
           remark: doc.remark,
+          url: doc.url
         });
       } else {
         acc[doc.type] = {
           id: doc.id,
           fileName: doc.fileName,
           type: doc.type,
+          url: doc.url
         };
       }
       return acc;
@@ -107,6 +129,7 @@ export default function CreateDischargePopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      DISCHARGE_OTHER: documentMap.DISCHARGE_OTHER || "",
       dischargeSummary: data?.dischargeSummary,
     });
   }, [data]);
@@ -131,7 +154,9 @@ export default function CreateDischargePopup({
       formData.append("folder", "claims");
 
       try {
+        setLoading(true);
         const res = await bulkUploadFiles(formData); // Single API call
+        setLoading(false);
 
         const uploadedFiles = res?.data?.map((file) => ({
           fileName: file?.key,
@@ -152,16 +177,35 @@ export default function CreateDischargePopup({
       formData.append("folder", "claims");
 
       try {
+        setLoading(true);
         const res = await uploadFiles(formData);
+        setLoading(false);
+        // setClaimInputs((prev) => ({
+        //   ...prev,
+        //   [name]: {
+        //     fileName: res?.data?.key,
+        //     type: name,
+        //     file: value[0],
+        //     ...(name === "OTHER" && { remark: "custom remark" }),
+        //   },
+        // }));
+        const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
+        const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
-            fileName: res?.data?.key,
+            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+            fileName: res?.data?.key, // The new file key (filename)
             type: name,
+            file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
+
       } catch (error) {
+        setLoading(false);
         console.error("Single upload failed:", error);
       }
     }
@@ -180,8 +224,26 @@ export default function CreateDischargePopup({
         description,
         dischargeSummary,
         SETTLEMENT_LETTER,
+        DISCHARGE_OTHER,
         ...others
       } = claimInputs;
+      const removeKeys = (obj) => {
+        delete obj.url;
+        delete obj.file;
+        return obj;
+      };
+
+      removeKeys(CLINIC_PAPER);
+      removeKeys(PAST_INVESTIGATION);
+      removeKeys(CURRENT_INVESTIGATION);
+      removeKeys(DISCHARGE_OTHER);
+      removeKeys(OTHER);
+      removeKeys(ICP);
+      removeKeys(preAuth);
+      removeKeys(status);
+      if (Array.isArray(OTHER)) {
+        OTHER.forEach(removeKeys);
+      }
       const payload = {
         ...others,
         dischargeSummary,
@@ -192,6 +254,7 @@ export default function CreateDischargePopup({
           //   PAST_INVESTIGATION,
           //   CURRENT_INVESTIGATION,
           //   SETTLEMENT_LETTER,
+          DISCHARGE_OTHER,
           ...(OTHER || []), // if OTHER is an array, ensure it's not null
         ].filter(Boolean),
       };
@@ -215,6 +278,8 @@ export default function CreateDischargePopup({
     setModalProcessingStatus?.("")
     onOpenChange(!open);
   };
+
+
   return (
     <>
       {loading && <LoadingOverlay />}
@@ -261,14 +326,15 @@ export default function CreateDischargePopup({
                 //   claimInputs={claimInputs.SETTLEMENT_LETTER}
               /> */}
 
+
               <FileDrag
                 title={
-                  "Miscellaneous Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"
+                  "Discharge Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"
                 }
-                multiple={true}
+                multiple={false}
                 onChange={handleFileChange}
-                name={"OTHER"}
-                claimInputs={claimInputs.OTHER}
+                name={"DISCHARGE_OTHER"}
+                claimInputs={claimInputs?.DISCHARGE_OTHER ? [claimInputs?.DISCHARGE_OTHER] : []}
               />
 
               {/* Action Buttons */}

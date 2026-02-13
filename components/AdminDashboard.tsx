@@ -119,7 +119,7 @@ const AdminDashboard: React.FC<Props> = ({
           />
         </Card>
 
-        <Card className="md:col-span-4 grid grid-cols-3 md:gap-10 md:px-10 px-2">
+        <Card className="md:col-span-4 grid md:grid-cols-3 grid-cols-1 md:gap-10 md:px-10 px-2">
           {statCardData?.map((item) => (
             <DasboardStatCard
               icon={

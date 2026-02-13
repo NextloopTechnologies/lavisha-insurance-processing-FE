@@ -50,12 +50,7 @@ export function MultiSelect({
     if (isMulti) {
       toggleStatus(value);
     } else {
-      // set status for multi mode
       if (!isClaimDetailsSelect) setSelectedStatuses(value);
-      // for claim details select to update local state value without refresh
-      // if (["SENT_TO_TPA", "DENIED", "APPROVED"].includes(value)) {
-      //   setSelectedStatuses(value);
-      // }
       if (updateClaimStatus) updateClaimStatus(value);
     }
   };
@@ -66,13 +61,10 @@ export function MultiSelect({
         <Button
           disabled={disable}
           variant="outline"
-          className={`md:w-[220px] justify-start bg-white rounded-md font-normal ${
-            Boolean(disable) ? " cursor-not-allowed" : " cursor-pointer"
+          className={`w-fit max-w-[620px] justify-start bg-white rounded-md font-normal ${
+            disable ? "cursor-not-allowed" : "cursor-pointer"
           }`}
         >
-          {/* {selectedArray.length > 0
-            ? selectedArray.join(", ")
-            : "Select Status"} */}
           {selectedArray.length > 0
             ? status
                 .filter((s) => selectedArray.includes(s.key))
