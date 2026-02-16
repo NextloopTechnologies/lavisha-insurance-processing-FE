@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import Cookies from "js-cookie";
 import {
   Select,
   SelectContent,
@@ -36,6 +37,7 @@ import LoadingOverlay from "@/components/LoadingOverlay";
 import InputComponent from "./InputComponent";
 import SelectComponent from "./SelectComponent";
 import Link from "next/link";
+import { getUsersDropdown } from "@/services/users";
 
 export default function CreateClaim({
   handleCreateClaim,
@@ -52,6 +54,7 @@ export default function CreateClaim({
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+      const [hospitals, setHospitals] = useState([]);
   // const [claimInputs, setClaimInputs] = useState({
   //   isPreAuth: false,
   //   patientId: "",
@@ -71,6 +74,8 @@ export default function CreateClaim({
   const router = useRouter();
   const params = useParams();
   const id = params.id;
+    const roles = Cookies.get("user_role")?.split(",") || []; 
+    const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN");
   const handleSelectChange = (value: string | boolean, name: string) => {
     setClaimInputs((prev) => {
       return {
@@ -155,6 +160,23 @@ export default function CreateClaim({
       }
     }
   };
+  const fetchHospitalsDropdown = async () => {
+    setLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL");
+      if (res?.status === 200) {
+        setHospitals(res?.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch hospitals:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHospitalsDropdown();
+  }, []);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -235,10 +257,14 @@ export default function CreateClaim({
   // };
 
   const handleCreatePatient = async (payload) => {
-    const { name, age, fileName, url } = payload;
+    // Create new patient
+    const { name, age, fileName, url, hospitalId } = payload;
+    const dataToSend = isUserAdminOrSuperAdmin
+      ? { name, age, fileName, url, hospitalId }
+      : { name, age, fileName, url };
     try {
       setLoading(true);
-      const response = await createPatient({ name, age, fileName, url });
+      const response = await createPatient(dataToSend);
       if (response.status == 201) {
         setLoading(false);
         fetchPatients();
@@ -366,6 +392,7 @@ export default function CreateClaim({
           onSubmit={handleCreatePatient}
           defaultData={selectedPatient}
           isEditMode={!!selectedPatient}
+          hospitals={hospitals} 
         />
 
         {/* Upload Fields */}

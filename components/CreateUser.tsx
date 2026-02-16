@@ -71,11 +71,10 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
         address: userData?.address,
         hospitalName: userData?.hospital?.id,
         rateListFileName: userData?.rateListFileName,
-        hospitalId: userData?.hospitalId,
+        hospitalId: userData?.hospitalId ?? userData?.hospital?.id ?? null,
       });
     }
   }, [userData]);
-
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
     formData.append("file", value[0]);

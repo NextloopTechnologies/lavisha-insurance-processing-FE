@@ -71,6 +71,10 @@ type DATA = {
   patient: {
     id?: string;
     name?: string;
+     hospital: {
+    id?: string;
+    name?: string;
+  };
   };
   totalBill?: string;
   totalApproval?: string;
@@ -216,6 +220,9 @@ export function SettledDataTable({
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Claim ID
                 </TableHead>
+                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Hospital Name
+                </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Description
                 </TableHead>
@@ -271,6 +278,9 @@ export function SettledDataTable({
                     </TableCell>
                     <TableCell className=" border p-5 md:w-32 min-w-[120px]">
                       {row?.refNumber}
+                    </TableCell>
+                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                      {row?.patient?.hospital?.name}
                     </TableCell>
                     <TooltipProvider>
                       <Tooltip>

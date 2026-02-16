@@ -55,18 +55,18 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
     <Popover open={openProfile} onOpenChange={setOpenProfile}>
       <PopoverTrigger asChild>
         <Button variant="ghost" className=" items-center gap-2 px-2">
-          <span className="w-10 h-10 flex justify-center items-center mb-2">
+          <span className="w-10 h-10 flex justify-center items-center  ">
             {profileData?.[0]?.profileUrl ? (
               <img
                 src={profileData?.[0]?.profileUrl}
                 alt="profile"
-                className="mx-auto w-7 h-7"
+                className="m-auto w-7 h-7 rounded-full"
               />
             ) : (
               <Image
                 src={userImage}
                 alt="profile"
-                className="mx-auto w-7 h-7"
+                className="mx-auto w-7 h-7 "
               />
             )}
           </span>
