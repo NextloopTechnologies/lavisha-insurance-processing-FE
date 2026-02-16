@@ -139,7 +139,6 @@ export function ProfileEditModal({
   const handleUpdateProfile = async () => {
     if (loggedInUserId) {
       try {
-        console.log('profileInput before update', profileInput);
         const payload = { ...profileInput };  
         setLoading(true);
         const res = await updateProfile(payload, loggedInUserId);
@@ -158,7 +157,6 @@ export function ProfileEditModal({
   const handleClose = (isOpen: boolean) => {
     setOpenEditProfile(isOpen);
   };
- console.log('profileInput', profileInput);
   return (
     <Dialog open={openEditProfile} onOpenChange={handleClose}>
       <DialogContent className={`sm:max-w-md ${isAdminOrSuperAdmin ? 'max-w-[500px]' : 'h-[calc(100vh-100px)]'} rounded-2xl px-6 py-8`} >

@@ -109,7 +109,7 @@ export default function UserTableContent() {
   };
   const handleCloseDialog = () => {
     setOpenDialog(false);
-    setUser(null);
+    // setUser(null);
   };
   return (
     <SidebarLayout>
