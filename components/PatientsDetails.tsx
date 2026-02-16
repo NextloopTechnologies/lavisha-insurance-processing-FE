@@ -5,46 +5,46 @@ export default function PatientDetails({ data, show }) {
   const userData = [
     ...(show?.name
       ? [
-        {
-          key: "Name",
-          value: data?.patient?.name,
-        },
-      ]
+          {
+            key: "Name",
+            value: data?.patient?.name,
+          },
+        ]
       : []),
 
     ...(show?.drName
       ? [
-        {
-          key: "Dr. Name",
-          value: data?.doctorName,
-        },
-      ]
+          {
+            key: "Dr. Name",
+            value: data?.doctorName,
+          },
+        ]
       : []),
 
     ...(show?.tpaName
       ? [
-        {
-          key: "TPA Name",
-          value: data?.tpaName,
-        },
-      ]
+          {
+            key: "TPA Name",
+            value: data?.tpaName,
+          },
+        ]
       : []),
 
     ...(show?.tpaName
       ? [
-        {
-          key: "Insurance company",
-          value: data?.insuranceCompany,
-        },
-      ]
+          {
+            key: "Insurance company",
+            value: data?.insuranceCompany,
+          },
+        ]
       : []),
     ...(show?.noOfDays
       ? [
-        {
-          key: "Number of Days",
-          value: data?.numberOfDays,
-        },
-      ]
+          {
+            key: "Number of Days",
+            value: data?.numberOfDays,
+          },
+        ]
       : []),
   ];
   return (
@@ -97,52 +97,12 @@ export default function PatientDetails({ data, show }) {
           </p>
         </div>
       )}
-      {/* {show?.settlementAmount && (
+      {show?.settlementAmount && (
         <div className="col-span-2 p-4 border rounded-md bg-white">
           <label className="text-xs text-gray-500">Settlement Amount</label>
           <p className="text-sm mt-1 text-gray-700">{data?.settlementAmount}</p>
         </div>
-      )} */}
-      {show?.settlementAmount && (
-        <div className="col-span-2 p-4 border rounded-md bg-white">
-          <label className="text-xs text-gray-500">Total Settlement Amount</label>
-          <p className="text-sm mt-1 text-gray-700">{data?.settlementAmount}</p>
-        </div>
       )}
-      {show?.totalBill && (
-        <div className="col-span-2 p-4 border rounded-md bg-white">
-          <label className="text-xs text-gray-500">Total Bill</label>
-          <p className="text-sm mt-1 text-gray-700">{data?.totalBill}</p>
-        </div>
-      )}
-
-      {show?.totalApproval && (
-        <div className="col-span-2 p-4 border rounded-md bg-white">
-          <label className="text-xs text-gray-500">Total Approval</label>
-          <p className="text-sm mt-1 text-gray-700">
-            {data?.totalApproval}
-          </p>
-        </div>
-      )}
-
-      {show?.tds && (
-        <div className="col-span-2 p-4 border rounded-md bg-white">
-          <label className="text-xs text-gray-500">TDS</label>
-          <p className="text-sm mt-1 text-gray-700">
-            {data?.tds}
-          </p>
-        </div>
-      )}
-
-      {show?.deduction && (
-        <div className="col-span-2 p-4 border rounded-md bg-white">
-          <label className="text-xs text-gray-500">Deduction</label>
-          <p className="text-sm mt-1 text-gray-700">
-            {data?.deduction}
-          </p>
-        </div>
-      )}
-
 
       {show?.additionalNotes && (
         <div className="col-span-2 p-4 border rounded-md bg-white">

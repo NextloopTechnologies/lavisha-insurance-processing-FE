@@ -4,9 +4,8 @@ import Image from "next/image";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import DeletePopup from "@/components/DeletePopup";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import PatientFormDialog from "@/components/CreateEdit";
-import {  getUsersDropdown } from "@/services/users";
 import {
   createPatient,
   deletePatient,
@@ -29,28 +28,34 @@ export default function Patients() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
-    const [hospitals, setHospitals] = useState([]);
 
   const router = useRouter();
   const [patients, setPatients] = useState([]);
-
-  const [page, setPage] = useState(1);
-  const [pageSize] = useState(10); // number of patients per request
-  const [hasMore, setHasMore] = useState(true);
-  const loaderRef = useRef<HTMLDivElement | null>(null);
+  // const fetchPatients = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const res = await getPatients();
+  //     setPatients(res.data.data);
+  //     setLoading(false);
+  //   } catch (err) {
+  //     setLoading(false);
+  //     console.error("Failed to fetch patients:", err);
+  //   }
+  // };
+  // useEffect(() => {
+  //   fetchPatients();
+  // }, []);
   const handleDelete = (id: string) => {
     setSelectedId(id);
     setOpenDeleteDialog(true);
   };
 
   const confirmDelete = async () => {
+    // perform deletion logic here
     setOpenDeleteDialog(false);
     const res = await deletePatient(selectedId);
     if (res?.status == 200) {
-      if (res?.status === 200) {
-    // Remove the deleted patient from state
-    setPatients((prevPatients) => prevPatients.filter((p) => p.id !== selectedId));
-  }
+      fetchPatients();
     }
   };
 
@@ -65,146 +70,106 @@ export default function Patients() {
   };
 
   const handleSubmitPatient = async (payload) => {
-  if (selectedPatient) {
-    // Update existing patient
-    const { name, age, fileName, url } = payload;
-    
-    try {
-      setLoading(true);
-      const response = await updatePatient(
-        { name, age, fileName, url },
-        selectedPatient.id
-      );
-
-      if (response?.status === 200) {
-        const updatedPatient = response.data;
-
-        // Update local state for just that patient
-        setPatients((prevPatients) =>
-          prevPatients.map((patient) =>
-            patient.id === updatedPatient.id ? { ...patient, ...updatedPatient } : patient
-          )
+    if (selectedPatient) {
+      const { name, age, fileName, url } = payload;
+      try {
+        setLoading(true);
+        const response = await updatePatient(
+          { name, age, fileName, url },
+          selectedPatient.id
+        );
+        fetchPatients();
+      } catch (error: any) {
+        setLoading(false);
+        console.error(
+          "Error creating patient:",
+          error.response?.data || error.message
         );
       }
-    } catch (error: any) {
-      console.error(
-        "Error updating patient:",
-        error.response?.data || error.message
-      );
-    } finally {
-      setLoading(false); // Ensure the loader stops regardless of success or failure
-    }
-  } else {
-    // Create new patient
-    const { name, age, fileName, url, hospitalId } = payload;
-    const dataToSend = isUserAdminOrSuperAdmin
-      ? { name, age, fileName, url, hospitalId }
-      : { name, age, fileName, url };
-
-    try {
-      setLoading(true);
-      const response = await createPatient(dataToSend);
- 
-        setPage(1);
-        fetchPatients(1, true);
-    } catch (error: any) {
-      console.error(
-        "Error creating patient:",
-        error.response?.data || error.message
-      );
-    } finally {
-      setLoading(false); 
-    }
-  }
-  
-};
-
-  const roles = Cookies.get("user_role")?.split(",") || []; 
-  const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN");
-
-
-  const fetchHospitalsDropdown = async () => {
-    setLoading(true);
-    try {
-      const res = await getUsersDropdown("HOSPITAL");
-      if (res?.status === 200) {
-        setHospitals(res?.data);
+    } else {
+      const { name, age, fileName, url } = payload;
+      try {
+        setLoading(true);
+        const response = await createPatient({ name, age, fileName, url });
+        // setPatients(response.data);
+        fetchPatients();
+      } catch (error: any) {
+        setLoading(false);
+        console.error(
+          "Error creating patient:",
+          error.response?.data || error.message
+        );
       }
-    } catch (err) {
-      console.error("Failed to fetch hospitals:", err);
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchHospitalsDropdown();
-  }, []);
+  // const filteredPatientData = useMemo(() => {
+  //   return patients.filter((row) => {
+  //     const matchesSearch = Object.values(row).some((val) =>
+  //       val?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+  //     );
+
+  //     // const matchesStatus =
+  //     //   statusFilter === "All" || row.status === statusFilter;
+  //     // const matchesStatus =
+  //     //   selectedStatuses.length === 0 ||
+  //     //   selectedStatuses
+  //     //     ?.toString()
+  //     //     .toLowerCase()
+  //     //     .includes(row.status?.toLowerCase());
+
+  //     return matchesSearch;
+  //   });
+  // }, [searchTerm, patients]);
+
+  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500); 
+    }, 500); // 500ms debounce
 
     return () => {
-      clearTimeout(handler); 
+      clearTimeout(handler); // Cleanup if user keeps typing
     };
-  }, [searchTerm])
+  }, [searchTerm]);
 
-  const fetchPatients = async (pageNum = 1, reset = false) => {
+  const fetchPatients = async () => {
     setLoading(true);
     try {
       const query: any = {
-        skip: (pageNum - 1) * pageSize,
-        take: pageSize,
+        // skip: (page - 1) * pageSize,
+        // take: pageSize,
+        // sortBy: "createdAt",
         sortOrder: "desc",
       };
 
       if (debouncedSearchTerm) query.name = debouncedSearchTerm;
 
       const res = await getPatientsByParams(query);
-      if (res?.status === 200) {
-        const newData = res.data.data;
-        setPatients((prev) => (reset ? newData : [...prev, ...newData]));
-        setHasMore(newData.length === pageSize); 
+      if (res?.status == 200) {
+        setPatients(res.data.data);
+        setLoading(false);
       }
+
+      // const totalPages = Math.ceil(res?.data?.total / pageSize);
+      // setTotal(totalPages);
     } catch (err) {
-      console.error("Failed to fetch patients:", err);
+      console.error("Failed to fetch claims:", err);
     } finally {
       setLoading(false);
     }
   };
-
   useEffect(() => {
-    setPage(1);
-    fetchPatients(1, true);
-  }, [debouncedSearchTerm]);
+    fetchPatients();
+  }, [
+    // page, pageSize,
+    debouncedSearchTerm,
+  ]);
 
   const handleClaimView = (id: string) => {
     router.push(`/claims?name=${encodeURIComponent(id)}`);
   };
-
-  useEffect(() => {
-    if (!loaderRef.current || !hasMore) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !loading) {
-          setPage((prev) => prev + 1);
-        }
-      },
-      { threshold: 1 }
-    );
-
-    observer.observe(loaderRef.current);
-
-    return () => observer.disconnect();
-  }, [loaderRef.current, hasMore, loading]);
-
-  // fetch when page changes
-  useEffect(() => {
-    if (page > 1) fetchPatients(page);
-  }, [page]);
 
   return (
     <SidebarLayout>
@@ -238,8 +203,8 @@ export default function Patients() {
             onClick={handleCreatePatient}
             className="bg-[#3E79D6] text-white px-4 py-2 rounded-md hover:bg-[#3E79D6] flex items-center gap-2 cursor-pointer"
           >
-            <Plus className="w-4 h-4 " />
-            <span className="hidden sm:block">New Patients</span>
+            <Plus className="w-4 h-4" />
+            New Patients
           </button>
         </div>
 
@@ -333,18 +298,12 @@ export default function Patients() {
         ) : (
           ""
         )}
-        {hasMore && (
-          <div ref={loaderRef} className="flex justify-center py-6">
-            <span className="text-gray-500">Loading more...</span>
-          </div>
-        )}
         <PatientFormDialog
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
           onSubmit={handleSubmitPatient}
           defaultData={selectedPatient}
           isEditMode={!!selectedPatient}
-           hospitals={hospitals} 
         />
         <DeletePopup
           open={openDeleteDialog}

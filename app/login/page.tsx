@@ -64,17 +64,17 @@ export default function LoginPage() {
       </div>
 
       {/* Right Login Panel */}
-      <div className="relative w-full lg:w-1/3 flex items-center justify-center   overflow-hidden  lg:-translate-x-10 z-30   bg-white rounded-l-[2.5rem]">
+      <div className="relative w-full lg:w-1/3 flex items-center justify-center   overflow-hidden  -translate-x-10 z-30   bg-white rounded-l-[2.5rem]">
         {/* <div className="absolute top-0 left-0 w-full  h-full md:w-[100%] bg-red-300 rounded-l-[2rem]  translate-x-0 translate-y-0 -z-20 hidden md:block" /> */}
 
-        <div className="w-full max-w-md space-y-6 px-6">
+        <div className="w-full max-w-md space-y-6">
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-6">
-            {/* <img
+            <img
               src="assets/larisha-logo.png"
               alt="Logo"
               className="mx-auto w-20"
-            /> */}
+            />
             <h2 className="font-bold text-primary mt-2">
               LARISHA HEALTH CARE PVT LTD
             </h2>

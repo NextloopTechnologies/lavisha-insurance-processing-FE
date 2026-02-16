@@ -52,6 +52,8 @@ export default function CreateClaim({
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
   // const [claimInputs, setClaimInputs] = useState({
   //   isPreAuth: false,
   //   patientId: "",
@@ -71,31 +73,59 @@ export default function CreateClaim({
   const router = useRouter();
   const params = useParams();
   const id = params.id;
+
   const handleSelectChange = (value: string | boolean, name: string) => {
-    setClaimInputs((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
+    setClaimInputs((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    setErrors((prev) => {
+      const updated = { ...prev };
+      delete updated[name];
+      return updated;
     });
   };
 
-  const handleFileChange = async (value, name, multiple) => {
+  const validateFields = () => {
+    const newErrors: Record<string, string> = {};
 
-    if (name == "remove") {
-      if (value.type == "OTHER") {
+    // Required always
+    if (!claimInputs.patientId) newErrors.patientId = "Patient is required";
+    if (!claimInputs.doctorName) newErrors.doctorName = "Doctor name is required";
+    if (!claimInputs.tpaName) newErrors.tpaName = "TPA name is required";
+    if (!claimInputs.insuranceCompany)
+      newErrors.insuranceCompany = "Insurance company is required";
 
-      } else {
-        setClaimInputs((prev) => {
-          const updatedInputs = { ...prev };
-          updatedInputs[value.type] = ""; // Removes the entry for this `name` from state
-          return updatedInputs;
-        });
-      }
-
+    // Conditional: PreAuth
+    if (claimInputs.isPreAuth && !claimInputs.preAuth) {
+      newErrors.preAuth = "Pre-Auth document is required";
     }
 
-    else if (multiple) {
+    // Collect documents (Swagger expects at least one for non-draft)
+    const documents = [
+      claimInputs.ICP,
+      claimInputs.CLINIC_PAPER,
+      claimInputs.PAST_INVESTIGATION,
+      claimInputs.CURRENT_INVESTIGATION,
+      ...(claimInputs.OTHER || []),
+    ].filter(Boolean);
+
+    if (
+      claimInputs.status !== "DRAFT" &&
+      documents.length === 0
+    ) {
+      newErrors.documents = "At least one document is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+
+
+  const handleFileChange = async (value, name, multiple) => {
+    if (multiple) {
       const formData = new FormData();
 
       // Append all files as 'files[]'
@@ -114,7 +144,7 @@ export default function CreateClaim({
           fileName: file?.key,
           type: name,
           ...(name === "OTHER" && { remark: "custom remark" }),
-        }));     
+        }));
 
         setClaimInputs((prev) => ({
           ...prev,
@@ -129,27 +159,19 @@ export default function CreateClaim({
       formData.append("file", value[0]);
       formData.append("folder", "claims");
 
-        try {
+      try {
         setLoading(true);
         const res = await uploadFiles(formData);
         setLoading(false);
-
-        const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-
-        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key, // The new file key (filename)
+            fileName: res?.data?.key,
             type: name,
-            file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
-
-      }  catch (error) {
+      } catch (error) {
         setLoading(false);
         console.error("Single upload failed:", error);
       }
@@ -195,36 +217,7 @@ export default function CreateClaim({
     // page, pageSize,
     debouncedSearchTerm,
   ]);
-  const fetchPatientsById = async () => {
-    setSearchLoading(true);
-    try {
-      if (claimInputs.patientId && !patients.some(patient => patient.id === claimInputs.patientId)) {
-        const res = await getPatientById(claimInputs.patientId);
-        if (res?.status == 200) {
-          setPatients((prevPatients) => {
-            const patientExists = prevPatients.some(patient => patient.id === res.data.id);
-            if (!patientExists) {
-              return [...prevPatients, res.data];
-            }
-            return prevPatients;
-          });
-          setLoading(false);
-        }
 
-      }
-
-    } catch (err) {
-      setLoading(false);
-      console.error("Failed to fetch patients:", err);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-  useEffect(() => {
-    fetchPatientsById();
-  }, [
-    claimInputs,
-  ]);
   // const filteredPatients = patients.filter((patient) =>
   //   patient.name.toLowerCase().includes(searchTerm.toLowerCase())
   // );
@@ -258,6 +251,8 @@ export default function CreateClaim({
     }
   };
 
+
+
   return (
     <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
       <div className="flex justify-start gap-x-10 items-center mt-2 pl-16">
@@ -267,99 +262,132 @@ export default function CreateClaim({
         <div className="flex items-center space-x-2 bg-white p-2 rounded-sm shadow-sm">
           <Checkbox
             id="isPreAuth"
-            className=""
             onCheckedChange={(e) => handleSelectChange(e, "isPreAuth")}
             checked={claimInputs.isPreAuth}
           />
-          <Label htmlFor="proauth" className="text-sm">
-            Is Pre-Auth Done?
-          </Label>
+          <Label className="text-sm">Is Pre-Auth Done?</Label>
         </div>
       </div>
+
       <div className="bg-white rounded-xl shadow-md p-4 w-full max-w-6xl mx-auto mt-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Select
-            value={claimInputs.patientId}
-            onValueChange={(value) => handleSelectChange(value, "patientId")}
-          // disabled={!!claimInputs.patientId}
-          >
-            <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black ">
-              <SelectValue placeholder="Patient Name" />
-            </SelectTrigger>
-            <SelectContent>
-              <div className="flex items-center px-2 pb-2 border-b">
-                <Search size={16} className="mr-2 text-[#3E79D6]" />
-                <Input
-                  placeholder="Search here..."
-                  className="h-8 border-none focus-visible:ring-0"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              <button
-                onClick={() => setOpenPatientDialog(true)}
-                className="flex items-center w-full hover:bg-gray-100 rounded p-2"
-              >
-                <Plus size={16} className="mr-2 text-[#3E79D6]" />
-                Add New Patient
-              </button>
-              {searchLoading
-                ? "Loading..."
-                : patients?.length
-                  ? patients.map((item) => (
-                    <SelectItem
-                      key={item.id}
-                      value={item.id}
-                      className="flex items-center"
-                    >
-                      <Image
-                        src={userRound}
-                        alt="User Icon"
-                        width={20}
-                        height={20}
-                      />
-                      {item.name}
-                    </SelectItem>
-                  ))
-                  : "No Patients"}
-              {/* <SelectItem value="Jane Smith">Jane Smith</SelectItem> */}
-            </SelectContent>
-          </Select>
 
-          <InputComponent
-            placeHolder={"Dr. Name"}
-            Icon={UserIcon}
-            value={claimInputs.doctorName}
-            onChange={(e) => handleSelectChange(e.target.value, "doctorName")}
-          />
+          {/* Patient */}
+          <div className="flex flex-col">
+            <Select
+              value={claimInputs.patientId}
+              onValueChange={(value) => handleSelectChange(value, "patientId")}
+            >
+              <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black">
+                <SelectValue placeholder="Patient Name" />
+              </SelectTrigger>
+              <SelectContent>
+                <div className="flex items-center px-2 pb-2 border-b">
+                  <Search size={16} className="mr-2 text-[#3E79D6]" />
+                  <Input
+                    placeholder="Search here..."
+                    className="h-8 border-none focus-visible:ring-0"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+                </div>
+                <button
+                  onClick={() => setOpenPatientDialog(true)}
+                  className="flex items-center w-full hover:bg-gray-100 rounded p-2"
+                >
+                  <Plus size={16} className="mr-2 text-[#3E79D6]" />
+                  Add New Patient
+                </button>
+                {searchLoading
+                  ? "Loading..."
+                  : patients?.length
+                    ? patients.map((item) => (
+                      <SelectItem
+                        key={item.id}
+                        value={item.id}
+                      >
+                        <Image
+                          src={userRound}
+                          alt="User Icon"
+                          width={20}
+                          height={20}
+                        />
+                        {item.name}
+                      </SelectItem>
+                    ))
+                    : "No Patients"}
+              </SelectContent>
+            </Select>
+            {errors.patientId && (
+              <p className="text-red-500 text-xs mt-1">{errors.patientId}</p>
+            )}
+          </div>
 
-          <SelectComponent
-            value={claimInputs.tpaName}
-            onValueChange={(value) => handleSelectChange(value, "tpaName")}
-            selectOption={TPA_OPTIONS}
-            Icon={UserIcon}
-            label={"TPA Name"}
-          />
+          {/* Doctor */}
+          <div className="flex flex-col">
+            <InputComponent
+              placeHolder="Dr. Name"
+              Icon={UserIcon}
+              value={claimInputs.doctorName}
+              onChange={(e) =>
+                handleSelectChange(e.target.value, "doctorName")
+              }
+            />
+            {errors.doctorName && (
+              <p className="text-red-500 text-xs mt-1">{errors.doctorName}</p>
+            )}
+          </div>
 
-          <SelectComponent
-            value={claimInputs.insuranceCompany}
-            onValueChange={(value) =>
-              handleSelectChange(value, "insuranceCompany")
-            }
-            selectOption={INSURANCE_COMPANIES}
-            Icon={UserIcon}
-            label={"Insurance Company"}
-          />
+          {/* TPA */}
+          <div className="flex flex-col">
+            <SelectComponent
+              value={claimInputs.tpaName}
+              onValueChange={(value) => handleSelectChange(value, "tpaName")}
+              selectOption={TPA_OPTIONS}
+              Icon={UserIcon}
+              label="TPA Name"
+            />
+            {errors.tpaName && (
+              <p className="text-red-500 text-xs mt-1">{errors.tpaName}</p>
+            )}
+          </div>
+
+          {/* Insurance */}
+          <div className="flex flex-col">
+            <SelectComponent
+              value={claimInputs.insuranceCompany}
+              onValueChange={(value) =>
+                handleSelectChange(value, "insuranceCompany")
+              }
+              selectOption={INSURANCE_COMPANIES}
+              Icon={UserIcon}
+              label="Insurance Company"
+            />
+            {errors.insuranceCompany && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.insuranceCompany}
+              </p>
+            )}
+          </div>
         </div>
 
+        {/* Description */}
         <div className="my-4">
           <textarea
             value={claimInputs.description}
-            onChange={(e) => handleSelectChange(e.target.value, "description")}
+            onChange={(e) =>
+              handleSelectChange(e.target.value, "description")
+            }
             placeholder="Description"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] w-full"
           />
+          {errors.description && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.description}
+            </p>
+          )}
         </div>
+
         <PatientFormDialog
           open={openPatientDialog}
           onOpenChange={setOpenPatientDialog}
@@ -368,13 +396,13 @@ export default function CreateClaim({
           isEditMode={!!selectedPatient}
         />
 
-        {/* Upload Fields */}
+        {/* Uploads */}
         {claimInputs?.isPreAuth && (
           <FileDrag
-            title={"Pre Auth"}
+            title="Pre Auth"
             multiple={false}
             onChange={handleFileChange}
-            name={"preAuth"}
+            name="preAuth"
           />
         )}
         <FileDrag
@@ -382,28 +410,26 @@ export default function CreateClaim({
           multiple={false}
           onChange={handleFileChange}
           name={"ICP"}
-          claimInputs={claimInputs?.ICP ? [claimInputs?.ICP] : []}
+          claimInputs={claimInputs?.ICP}
         />
         <FileDrag
           title={"Clinic Paper"}
           multiple={false}
           onChange={handleFileChange}
           name={"CLINIC_PAPER"}
-          claimInputs={claimInputs?.CLINIC_PAPER ? [claimInputs?.CLINIC_PAPER] : []}
         />
         <FileDrag
           title={"Past Investigation"}
           multiple={false}
           onChange={handleFileChange}
           name={"PAST_INVESTIGATION"}
-          claimInputs={claimInputs?.PAST_INVESTIGATION ? [claimInputs?.PAST_INVESTIGATION] : []}
+          claimInputs={claimInputs?.PAST_INVESTIGATION}
         />
         <FileDrag
           title={"Current Investigation"}
           multiple={false}
           onChange={handleFileChange}
           name={"CURRENT_INVESTIGATION"}
-          claimInputs={claimInputs?.CURRENT_INVESTIGATION ? [claimInputs?.CURRENT_INVESTIGATION] : []}
         />
         <FileDrag
           title={"Misc Documents "}
@@ -412,7 +438,16 @@ export default function CreateClaim({
           name={"OTHER"}
           claimInputs={claimInputs?.OTHER}
         />
+        {errors.preAuth && (
+          <p className="text-red-500 text-xs mt-1">{errors.preAuth}</p>
+        )}
 
+        {errors.documents && (
+          <p className="text-red-500 text-xs mt-1">{errors.documents}</p>
+        )}
+
+
+        {/* Notes */}
         <div className="mt-4">
           <textarea
             value={claimInputs.additionalNotes}
@@ -420,18 +455,20 @@ export default function CreateClaim({
               handleSelectChange(e.target.value, "additionalNotes")
             }
             placeholder="Additional Notes"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] w-full"
           />
         </div>
 
-        {/* Action Buttons */}
-        <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 sm:right-20 right-5">
+        {/* ACTION BUTTONS — FULLY RESTORED */}
+        <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 right-20">
           <Link href="/claims">
-            <Button className="text-[#3E79D6]" variant="outline">
+            <Button variant="outline" className="text-[#3E79D6]">
               Cancel
             </Button>
           </Link>
-          {claimInputs.status == "" && (
+
+          {/* Save as Draft */}
+          {(!claimInputs.status || claimInputs.status === "") && (
             <Button
               disabled={loading}
               onClick={() => handleCreateClaim("DRAFT")}
@@ -441,34 +478,46 @@ export default function CreateClaim({
               Save as Draft
             </Button>
           )}
+
+          {/* Draft → Create */}
           {claimInputs.status === "DRAFT" ? (
             <>
               <Button
                 disabled={loading}
-                onClick={() => handleCreateClaim("PENDING")}
+                onClick={() => {
+                  if (!validateFields()) return;
+                  handleCreateClaim("SENT_TO_TPA");
+                }}
                 className="bg-[#3E79D6] px-4"
               >
                 Create Claim
               </Button>
+
               <Button
                 disabled={loading}
-                onClick={() => handleCreateClaim()}
+                onClick={() => handleCreateClaim("DRAFT")}
                 className="bg-[#3E79D6] px-4"
               >
                 Update Draft
               </Button>
             </>
           ) : (
+            /* New Claim */
             <Button
               disabled={loading}
-              onClick={() => handleCreateClaim(claimInputs.status)}
+              onClick={() => {
+                if (!validateFields()) return;
+                handleCreateClaim("SENT_TO_TPA");
+              }}
               className="bg-[#3E79D6] px-4"
             >
               {isEditMode ? "Update Claim" : "Create Claim"}
             </Button>
           )}
         </div>
+
       </div>
     </div>
   );
+
 }

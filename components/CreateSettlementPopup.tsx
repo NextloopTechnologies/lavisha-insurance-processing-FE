@@ -22,7 +22,6 @@ import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { StatusType } from "@/types/claims";
 import { toast } from "sonner";
-
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -59,7 +58,7 @@ export default function CreateSettlementPopup({
     insuranceCompany: "",
     status: StatusType.SETTLED,
     description: "",
-        preAuth: "",
+    preAuth: "",
     OTHER: "",
     additionalNotes: "",
     PAST_INVESTIGATION: "",
@@ -68,19 +67,14 @@ export default function CreateSettlementPopup({
     ICP: "",
     SETTLEMENT_LETTER: "",
     settlementSummary: "",
-    settlementAmount: "",
+    settlementAmount: "5000",
     actualQuotedAmount: "",
-    totalBill: "",
-    totalApproval: "",
-    transactionId: "",
-    tds: "",
-    deduction: "",
   });
 
   useEffect(() => {
     if (!data) return;
 
-     // Map documents by their type
+    // Map documents by their type
     const documentMap = data.documents.reduce((acc, doc) => {
       if (doc.type === "OTHER") {
         acc[doc.type] = acc[doc.type] || [];
@@ -89,20 +83,18 @@ export default function CreateSettlementPopup({
           fileName: doc.fileName,
           type: doc.type,
           remark: doc.remark,
-          url: doc.url
         });
       } else {
         acc[doc.type] = {
           id: doc.id,
           fileName: doc.fileName,
           type: doc.type,
-          url: doc.url
         };
       }
       return acc;
     }, {});
 
-  setClaimInputs({
+    setClaimInputs({
       isPreAuth: data.isPreAuth,
       patientId: data.patientId,
       doctorName: data.doctorName,
@@ -110,10 +102,10 @@ export default function CreateSettlementPopup({
       insuranceCompany: data.insuranceCompany,
       status: data.status,
       description: data.description,
-      settlementSummary: data?.settlementSummary || "",
-      settlementAmount: data?.settlementAmount || "",
-      actualQuotedAmount: data?.actualQuotedAmount || "",
-      preAuth: "",
+      settlementSummary: data?.settlementSummary,
+      settlementAmount: data?.settlementAmount,
+      actualQuotedAmount: data?.actualQuotedAmount,
+      preAuth: "", // You can derive if needed
       additionalNotes: data.additionalNotes || "",
       OTHER: documentMap.OTHER || [],
       CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
@@ -121,16 +113,9 @@ export default function CreateSettlementPopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-      SETTLEMENT_OTHER: documentMap.SETTLEMENT_OTHER || "",
-      totalBill: data?.totalBill || "",
-      totalApproval: data?.totalApproval || "",
-      transactionId: data?.transactionId || "",
-      tds: data?.tds || "",
-      deduction: data?.deduction || ""
     });
   }, [data]);
-
- const handleSelectChange = (value: string | boolean, name: string) => {
+  const handleSelectChange = (value: string | boolean, name: string) => {
     setClaimInputs((prev) => {
       return {
         ...prev,
@@ -173,16 +158,11 @@ export default function CreateSettlementPopup({
 
       try {
         const res = await uploadFiles(formData);
-        const existingDocument = claimInputs?.[name];
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key, // The new file key (filename)
+            fileName: res?.data?.key,
             type: name,
-            file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
@@ -190,12 +170,12 @@ export default function CreateSettlementPopup({
         console.error("Single upload failed:", error);
       }
     }
-    };
+  };
 
   const handleCreateSettlement = async () => {
     try {
       const {
-          CLINIC_PAPER,
+        CLINIC_PAPER,
         PAST_INVESTIGATION,
         CURRENT_INVESTIGATION,
         OTHER,
@@ -207,58 +187,38 @@ export default function CreateSettlementPopup({
         settlementSummary,
         settlementAmount,
         actualQuotedAmount,
-        DISCHARGE_OTHER,
-        SETTLEMENT_OTHER,
-          totalBill,
-        totalApproval,
-        transactionId,
-        tds,
-        deduction,
         ...others
       } = claimInputs;
-
-   
-      const removeKeys = (obj) => {
-        delete obj.url;
-        delete obj.file;
-        return obj;
-      };
-         removeKeys(SETTLEMENT_OTHER),
-        removeKeys(SETTLEMENT_LETTER)
-      if (Array.isArray(OTHER)) {
-        OTHER.forEach(removeKeys);
-      }
-    
-      const payload = {
-        ...others,
-        settlementSummary,
-        settlementAmount,
-        actualQuotedAmount,
-        totalBill,
-        totalApproval,
-        transactionId,
-        tds,
-        deduction,
-        status: StatusType.SETTLED,
-           documents: [
+      if( !actualQuotedAmount || 
+        !settlementAmount 
+      ) {
+        toast.error("Amount fields are required!")
+      } else {
+        const payload = {
+          ...others,
+          settlementSummary,
+          settlementAmount,
+          actualQuotedAmount,
+          status: StatusType.SETTLED,
+          documents: [
             //   CLINIC_PAPER,
             //   ICP,
             //   PAST_INVESTIGATION,
             //   CURRENT_INVESTIGATION,
             SETTLEMENT_LETTER,
-            SETTLEMENT_OTHER,
             ...(OTHER || []), // if OTHER is an array, ensure it's not null
           ].filter(Boolean),
-      };
-
-      setLoading(true);
-      const res = await updateClaims(payload, claimId);
-      if (res?.status === 200) {
-        fetchClaimsById();
-        await updateClaimStatusAfterModalSuccess?.(StatusType.SETTLED);
-        setModalProcessingStatus?.("");
-         onOpenChange(!open);
-        toast.success("Updated Claim with Settlement!");
+        };
+        setLoading(true);
+        const res = await updateClaims(payload, claimId);
+        if (res?.status == 200) {
+          fetchClaimsById();
+          await updateClaimStatusAfterModalSuccess(StatusType.SETTLED);
+          setModalProcessingStatus?.("");
+          // setLoading(false);
+          onOpenChange(!open);
+          toast.success("Updated Claim with Settlement!")
+        }
       }
     } catch (error) {
       toast.error("Failed to update claim with settlement!")
@@ -271,12 +231,11 @@ export default function CreateSettlementPopup({
     setModalProcessingStatus?.("");
     onOpenChange(!open);
   };
-
   return (
     <>
       {loading && <LoadingOverlay />}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="min-w-5xl max-w-lg text-center p-8 rounded-lg">
+        <DialogContent className="min-w-5xl max-w-md text-center p-8 rounded-lg">
           <DialogHeader>
             <DialogTitle>
               {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
@@ -296,98 +255,51 @@ export default function CreateSettlementPopup({
               </div> */}
 
               <div className="my-4">
-            <textarea
-              value={claimInputs.settlementSummary}
-              onChange={(e) =>
-                handleSelectChange(e.target.value, "settlementSummary")
-              }
-              placeholder="Settlement Summary"
+                <textarea
+                  value={claimInputs.settlementSummary}
+                  onChange={(e) =>
+                    handleSelectChange(e.target.value, "settlementSummary")
+                  }
+                  placeholder="Settlement Summary"
                   className="bg-[#F2F7FC] pl-2 text-sm font-semibold text-black  min-h-[100px] outline-blue-300  focus:outline-border w-full"
-            />
+                />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 mb-4 gap-4">
-               
-            </div>
+                <Input
+                  placeholder="Actual Quoted Amount"
+                  className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
+                  value={claimInputs.actualQuotedAmount}
+                  onChange={(e) =>
+                    handleSelectChange(e.target.value, "actualQuotedAmount")
+                  }
+                />
+                <Input
+                  placeholder="Settlement Amount"
+                  className="pl-2 w-full bg-[#F2F7FC] text-sm font-semibold text-black "
+                  value={claimInputs.settlementAmount}
+                  onChange={(e) =>
+                    handleSelectChange(e.target.value, "settlementAmount")
+                  }
+                />
+              </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                placeholder="Total Bill"
-                value={claimInputs.totalBill}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "totalBill")
-                }
-              />
-              <Input
-                placeholder="Total Approval"
-                value={claimInputs.totalApproval}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "totalApproval")
-                }
-              />
-              <Input
-                placeholder="Total Settled Amount"
-                value={claimInputs.settlementAmount}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "settlementAmount")
-                }
-              />
-              <Input
-                placeholder="Transaction ID"
-                value={claimInputs.transactionId}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "transactionId")
-                }
-              />
-              <Input
-                placeholder="TDS"
-                value={claimInputs.tds}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "tds")
-                }
-              />
-              <Input
-                placeholder="Deduction"
-                value={claimInputs.deduction}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "deduction")
-                }
-              />
-              {/* <Input
-                type="date"
-                placeholder="Settlement Date"
-                title="Settlement Date"
-                aria-placeholder="Settlement Date"
-                value={claimInputs.settlementDate}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "settlementDate")
-                }
-              />
-              <Input
-                type="date"
-                placeholder="Updated Date"
-                value={claimInputs.updatedDate}
-                onChange={(e) =>
-                  handleSelectChange(e.target.value, "updatedDate")
-                }
-              /> */}
-            </div>
+              {/* Upload Fields */}
 
-            {/*  Upload Section */}
-            <FileDrag
+              <FileDrag
                 title={"Settlement"}
-              multiple={false}
+                multiple={false}
                 onChange={handleFileChange}
                 name={"SETTLEMENT_LETTER"}
-              claimInputs={claimInputs?.SETTLEMENT_LETTER ? [claimInputs?.SETTLEMENT_LETTER] : []}
-            />
+                //   claimInputs={claimInputs.SETTLEMENT_LETTER}
+              />
 
-            <FileDrag
+              <FileDrag
                 title={"Miscellaneous Documents"}
-              multiple={false}
+                multiple={true}
                 onChange={handleFileChange}
-                name={"SETTLEMENT_OTHER"}
-              claimInputs={claimInputs?.SETTLEMENT_OTHER ? [claimInputs?.SETTLEMENT_OTHER] : []}
-            />
+                name={"OTHER"}
+                claimInputs={claimInputs.OTHER}
+              />
 
               {/* Action Buttons */}
               <div className="mt-6 flex justify-end space-x-4 absolute bottom-2 right-5">
@@ -396,15 +308,15 @@ export default function CreateSettlementPopup({
                   className="text-[#3E79D6]"
                   variant="outline"
                 >
-                Cancel
-              </Button>
+                  Cancel
+                </Button>
 
-              <Button
-                onClick={handleCreateSettlement}
-                className="bg-[#3E79D6] px-4"
-              >
+                <Button
+                  onClick={handleCreateSettlement}
+                  className="bg-[#3E79D6] px-4"
+                >
                   {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
-              </Button>
+                </Button>
               </div>
             </div>
           </div>

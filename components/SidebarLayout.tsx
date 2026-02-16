@@ -305,7 +305,7 @@ export default function SidebarLayout({ children }: Props) {
                 ))}
                 <div
                   onClick={() => logout()}
-                  className=" text-gray-800 font-medium pl-6 md:pt-6 w-full"
+                  className=" text-gray-800 font-medium pl-6 pt-6 w-full"
                 >
                   <div
                     className={`flex items-center  justify-start cursor-pointer  p-2 
@@ -319,7 +319,7 @@ export default function SidebarLayout({ children }: Props) {
                         alt="Logout"
                         className="mx-auto w-3"
                       /> */}
-                      <LogOut className="w-4 h-4 sm:w-4 sm:h-4 mr-2" />
+                      <LogOut />
                     </span>
                     <span>Logout</span>
                   </div>
