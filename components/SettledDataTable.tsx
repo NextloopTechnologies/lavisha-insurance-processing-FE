@@ -71,6 +71,10 @@ type DATA = {
   patient: {
     id?: string;
     name?: string;
+     hospital: {
+    id?: string;
+    name?: string;
+  };
   };
 };
 
@@ -207,6 +211,9 @@ export function SettledDataTable({
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Claim ID
+                </TableHead>
+                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                  Hospital Name
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Description

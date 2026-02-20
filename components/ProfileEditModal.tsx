@@ -142,9 +142,7 @@ export function ProfileEditModal({
   const handleUpdateProfile = async () => {
     if (loggedInUserId) {
       try {
-        const payload = {
-          ...profileInput,
-        };
+        const payload = { ...profileInput };  
         setLoading(true);
         const res = await updateProfile(payload, loggedInUserId);
         if (res?.status == 200) {

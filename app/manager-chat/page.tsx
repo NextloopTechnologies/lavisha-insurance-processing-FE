@@ -9,7 +9,7 @@ import {
 } from "@/services/comments";
 import { CommentType, UserRole } from "@/types/comments";
 import React, { useEffect, useState } from "react";
-
+import { useRef } from "react";
 type Message = {
   id: number;
   sender: string;
@@ -27,7 +27,7 @@ export default function ManagerChat() {
   const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
   const [isWelcomeScreenEnabled, setIsWelcomeScreenEnabled] = useState<boolean>(false);
-
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserId(localStorage.getItem("userId"));
@@ -35,6 +35,10 @@ export default function ManagerChat() {
       setLoggedInUserRole(localStorage.getItem("userRole"));
     }
   }, []);
+
+  const scrollToBottom = () => {
+  messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+};
 
   const fetchAdminManagerComments = async () => {
     try {
@@ -48,12 +52,19 @@ export default function ManagerChat() {
     }
   };
   useEffect(() => {
-    if(([UserRole.ADMIN,UserRole.SUPER_ADMIN] as string[]).includes(loggedInUserRole)) {
+    if (([UserRole.ADMIN, UserRole.SUPER_ADMIN] as string[]).includes(loggedInUserRole)) {
       fetchAdminManagerComments()
       // set welcome screen enabled flag on first render
       setIsWelcomeScreenEnabled(true)
     };
   }, [loggedInUserRole]);
+
+
+  useEffect(() => {
+  if (managerComments?.length) {
+    scrollToBottom();
+  }
+}, [managerComments]);
 
   const fetchManagerComments = async (hospitalId?: string) => {
     try {
@@ -80,16 +91,23 @@ export default function ManagerChat() {
               new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
             );
           });
+
+
+
         setManagerComments(modifyData);
       }
     } catch (error) {
       console.error("Filed to fetch:", error);
     }
   };
+
+
   useEffect(() => {
-    fetchManagerComments(hispotalId);
-    if(hispotalId) setIsWelcomeScreenEnabled(false);
-  }, [hispotalId]);
+  if (!loggedInUserId) return;
+
+  fetchManagerComments(hispotalId);
+      if (hispotalId) setIsWelcomeScreenEnabled(false);
+}, [hispotalId, loggedInUserId]);
 
   const handleCommentRead = async (hospitalId, id) => {
     try {
@@ -132,12 +150,12 @@ export default function ManagerChat() {
   return (
     <SidebarLayout>
       <div className="p-4 bg-white">
-        {(loggedInUserRole===UserRole.ADMIN || loggedInUserRole===UserRole.SUPER_ADMIN) && (
+        {(loggedInUserRole === UserRole.ADMIN || loggedInUserRole === UserRole.SUPER_ADMIN) && (
           <h1 className="bg-white font-semibold">Manager Chat</h1>
         )}
         <div className="flex h-[calc(100vh-110px)] bg-white overflow-y-auto">
           {/* Sidebar */}
-          {(loggedInUserRole===UserRole.ADMIN || loggedInUserRole===UserRole.SUPER_ADMIN) && (
+          {(loggedInUserRole === UserRole.ADMIN || loggedInUserRole === UserRole.SUPER_ADMIN) && (
             <>
               <div className="w-1/4 border-r border-gray-200 py-4 pr-4">
                 <input
@@ -148,50 +166,48 @@ export default function ManagerChat() {
                 <div className="space-y-3">
                   {adminManagerComments?.length
                     ? adminManagerComments?.map((hospital, idx) => (
-                        <div
-                          key={idx}
-                          className={`${
-                            hospital?.hospitalId == hispotalId
-                              ? "bg-[#3E79D6] text-white"
-                              : "text-black"
+                      <div
+                        key={idx}
+                        className={`${hospital?.hospitalId == hispotalId
+                          ? "bg-[#3E79D6] text-white"
+                          : "text-black"
                           } group flex items-center justify-start cursor-pointer hover:bg-[#3E79D6] hover:text-white`}
-                          onClick={() =>
-                            handleCommentRead(hospital?.hospitalId, hospital?.id)
-                          }
-                        >
-                          <div className="pl-1">
-                            <div className="w-10 h-10  mx-auto rounded-full bg-gray-200 text-center flex justify-center items-center overflow-hidden">
-                              <span className="text-[28px]  font-semibold text-[#3E79D6]">
-                                {hospital?.hospitalName.charAt(0)}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="w-full flex items-center justify-between p-2 ">
-                            <div>
-                              <p className="font-semibold text-sm">
-                                {hospital?.hospitalName}
-                              </p>
-                              <p className="text-xs ">{hospital?.text}</p>
-                            </div>
-                            <div className="text-xs text-end">
-                              <span>
-                                {formatDateTime(hospital?.createdAt)?.time}
-                              </span>
-                              {hospital?.unreadCount > 0 && (
-                                <h1
-                                  className={`font-bold my-1 w-5 h-5 rounded-full ${
-                                    hospital?.unreadCount > 0
-                                      ? "bg-[#3E79D6] text-white"
-                                      : "bg-white text-[#3E79D6]"
-                                  }  text-center flex justify-center items-center  group-hover:bg-white group-hover:text-[#3E79D6]`}
-                                >
-                                  {hospital?.unreadCount}
-                                </h1>
-                              )}
-                            </div>
+                        onClick={() =>
+                          handleCommentRead(hospital?.hospitalId, hospital?.id)
+                        }
+                      >
+                        <div className="pl-1">
+                          <div className="w-10 h-10  mx-auto rounded-full bg-gray-200 text-center flex justify-center items-center overflow-hidden">
+                            <span className="text-[28px]  font-semibold text-[#3E79D6]">
+                              {hospital?.hospitalName.charAt(0)}
+                            </span>
                           </div>
                         </div>
-                      ))
+                        <div className="w-full flex items-center justify-between p-2 ">
+                          <div>
+                            <p className="font-semibold text-sm">
+                              {hospital?.hospitalName}
+                            </p>
+                            <p className="text-xs ">{hospital?.text}</p>
+                          </div>
+                          <div className="text-xs text-end">
+                            <span>
+                              {formatDateTime(hospital?.createdAt)?.time}
+                            </span>
+                            {hospital?.unreadCount > 0 && (
+                              <h1
+                                className={`font-bold my-1 w-5 h-5 rounded-full ${hospital?.unreadCount > 0
+                                  ? "bg-[#3E79D6] text-white"
+                                  : "bg-white text-[#3E79D6]"
+                                  }  text-center flex justify-center items-center  group-hover:bg-white group-hover:text-[#3E79D6]`}
+                              >
+                                {hospital?.unreadCount}
+                              </h1>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
                     : ""}
                 </div>
               </div>
@@ -207,16 +223,15 @@ export default function ManagerChat() {
                 <div className="flex justify-center items-center h-full">{`Welcome ${loggedInUserName} to Manager Chat Screen`}</div>
               ) : (
                 <>
-                  { managerComments?.length>0 && managerComments?.map((msg) => (
+                  {managerComments?.length > 0 && managerComments?.map((msg) => (
                     <div key={msg.id}>
                       {msg.type == CommentType.HOSPITAL_NOTE && (
                         <div
                           key={msg.id}
-                          className={`flex ${
-                            msg.position === "self"
-                              ? "justify-end"
-                              : "justify-start"
-                          }`}
+                          className={`flex ${msg.position === "self"
+                            ? "justify-end"
+                            : "justify-start"
+                            }`}
                         >
                           <div className="flex justify-start items-start gap-x-2">
                             {msg.position === "other" && (
@@ -248,6 +263,8 @@ export default function ManagerChat() {
                   ))}
                 </>
               )}
+
+                <div ref={messagesEndRef} />
             </div>
 
             {/* Input Box */}
@@ -265,9 +282,8 @@ export default function ManagerChat() {
                     }
                   }}
                   // disabled={disable}
-                  className={`${
-                    Boolean(false) ? " cursor-not-allowed" : ""
-                  } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
+                  className={`${Boolean(false) ? " cursor-not-allowed" : ""
+                    } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
                 />
                 <button
                   // disabled={disable}
