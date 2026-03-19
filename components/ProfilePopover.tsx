@@ -58,7 +58,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
               <img
                 src={profileData?.[0]?.profileUrl}
                 alt="profile"
-                className="m-auto w-7 h-7 rounded-full"
+                className="mx-auto w-7 h-7 rounded-full"
               />
             ) : (
               <Image
