@@ -10,7 +10,7 @@ type StatCardProps = {
 export default function DasboardStatCard({ icon, value, label }: StatCardProps) {
   return (
     <Card className="bg-[#E2EDFF] shadow-none border-none">
-      <CardContent className="flex flex-col md:justify-start justify-center md:items-start items-center gap-4">
+      <CardContent className="flex flex-col justify-start gap-4">
         <span className="w-12 h-12 rounded-full bg-[#3E79D6] flex justify-center items-center">
           {icon}
         </span>

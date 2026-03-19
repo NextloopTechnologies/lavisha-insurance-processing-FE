@@ -65,21 +65,6 @@ export default function EditClaimForm() {
           status,
           ...others
         } = claimInputs;
-        const removeKeys = (obj) => {
-          delete obj.url;
-          delete obj.file;
-          return obj;
-        };
-        removeKeys(CLINIC_PAPER);
-        removeKeys(PAST_INVESTIGATION);
-        removeKeys(CURRENT_INVESTIGATION);
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(preAuth);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
         const payload = {
           ...others,
           status: value ? value : undefined,
@@ -88,7 +73,7 @@ export default function EditClaimForm() {
             ICP,
             PAST_INVESTIGATION,
             CURRENT_INVESTIGATION,
-            ...(OTHER || []), 
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
           ].filter(Boolean),
           isBasicClaimUpdate: isClaimAssigned
         };
@@ -116,26 +101,6 @@ export default function EditClaimForm() {
           status,
           ...others
         } = claimInputs;
-        const removeKeys = (obj) => {
-          if(!obj){
-            return;
-          }
-          delete obj.url;
-          delete obj.file;
-          return obj;
-        };
-
-        // Removing 'url' and 'file' from individual objects
-        removeKeys(CLINIC_PAPER);
-        removeKeys(PAST_INVESTIGATION);
-        removeKeys(CURRENT_INVESTIGATION);
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(preAuth);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
         const payload = {
           ...others,
           documents: [
@@ -143,7 +108,7 @@ export default function EditClaimForm() {
             ICP,
             PAST_INVESTIGATION,
             CURRENT_INVESTIGATION,
-            ...(OTHER || []), 
+            ...(OTHER || []), // if OTHER is an array, ensure it's not null
           ].filter(Boolean),
         };
         setLoading(true);
@@ -165,7 +130,9 @@ export default function EditClaimForm() {
     try {
       const res = await getClaimsById(id);
       setClaims(res.data);
-      setIsClaimAssigned(res.data.assignee === null)
+      // conditional notification to assignee on updates
+      // only from edit icon from actions
+      setIsClaimAssigned(res.data.assignee===null)
     } catch (err) {
       console.error("Failed to fetch claims:", err);
     }
@@ -187,14 +154,12 @@ export default function EditClaimForm() {
           fileName: doc.fileName,
           type: doc.type,
           remark: doc.remark,
-          url: doc.url
         });
       } else {
         acc[doc.type] = {
           id: doc.id,
           fileName: doc.fileName,
           type: doc.type,
-          url: doc.url
         };
       }
       return acc;
@@ -208,7 +173,7 @@ export default function EditClaimForm() {
       insuranceCompany: claims.insuranceCompany,
       status: claims.status,
       description: claims.description,
-      preAuth: "", 
+      preAuth: "", // You can derive if needed
       additionalNotes: claims.additionalNotes || "",
       OTHER: documentMap.OTHER || [],
       CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
@@ -219,7 +184,7 @@ export default function EditClaimForm() {
     });
     // conditional notification to assignee on updates
     // only from edit icon from actions
-    setIsClaimAssigned(claims.assignee === null)
+    setIsClaimAssigned(claims.assignee===null)
   }, [claims]);
 
   return (
