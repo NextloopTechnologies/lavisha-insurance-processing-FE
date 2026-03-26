@@ -108,12 +108,12 @@ if (Array.isArray(OTHER)) {
         if (res?.status == 201) {
           setLoading(false);
           router.push("/claims");
-           toast.success("Claim updated successfully!");
+           toast.success("Claim updated successfully!");                                 
         }
       }
     } catch (error) {
       console.error("Upload error:", error);
-      toast.error("Failed to create claim. Please try again.",error); 
+      toast.error("Failed to create claim. Please try again."); 
     } finally {
       setLoading(false);
     }
