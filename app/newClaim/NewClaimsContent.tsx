@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+
+import { toast } from "sonner"; 
 import {
   Select,
   SelectContent,
@@ -95,7 +97,9 @@ if (Array.isArray(OTHER)) {
       setLoading(true);
       if (value) {
         const res = await createClaims({ ...payload, status: value });
+        
         if (res?.status == 201) {
+           toast.success("Claim created successfully!");
           setLoading(false);
           router.push("/claims");
         }
@@ -104,12 +108,14 @@ if (Array.isArray(OTHER)) {
         if (res?.status == 201) {
           setLoading(false);
           router.push("/claims");
+           toast.success("Claim updated successfully!");                                 
         }
       }
     } catch (error) {
       console.error("Upload error:", error);
+      toast.error("Failed to create claim. Please try again."); 
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 

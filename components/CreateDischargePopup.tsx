@@ -271,7 +271,7 @@ export default function CreateDischargePopup({
       toast.error("Failed to update claim with discharge!")
       console.error("Upload error:", error);
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
   const handleClose = () => {
