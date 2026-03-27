@@ -28,7 +28,7 @@ import { userRound } from "@/assets";
 import PatientFormDialog from "@/components/CreateEdit";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import CreateClaim from "@/components/CreateClaim";
-
+import { toast } from "sonner"; 
 export default function EditClaimForm() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState<any>(null);
@@ -95,14 +95,16 @@ export default function EditClaimForm() {
         setLoading(true);
         const res = await updateClaims(payload, id);
         if (res?.status == 200) {
+           toast.success("Claim created successfully!");
           setLoading(false);
           router.push("/claims");
         }
       } catch (error) {
         setLoading(false);
         console.error("Upload error:", error);
+         toast.error("Failed to create claim. Please try again."); 
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     } else {
       try {
@@ -156,7 +158,7 @@ export default function EditClaimForm() {
         setLoading(false);
         console.error("Upload error:", error);
       } finally {
-        // setLoading(false);
+         setLoading(false);
       }
     }
   };

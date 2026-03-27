@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Cookies from "js-cookie";
+import { toast } from "sonner";
 import {
   Select,
   SelectContent,
@@ -87,79 +88,90 @@ export default function CreateClaim({
 
   const handleFileChange = async (value, name, multiple) => {
 
-    if (name == "remove") {
-      if (value.type == "OTHER") {
-
-      } else {
-        setClaimInputs((prev) => {
-          const updatedInputs = { ...prev };
-          updatedInputs[value.type] = ""; // Removes the entry for this `name` from state
-          return updatedInputs;
-        });
-      }
-
-    }
-
-    else if (multiple) {
-      const formData = new FormData();
-
-      // Append all files as 'files[]'
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
-
-      formData.append("folder", "claims");
-
-      try {
-        setLoading(true);
-        const res = await bulkUploadFiles(formData); // Single API call
-        setLoading(false);
-
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));     
-
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: uploadedFiles,
-        }));
-      } catch (error) {
-        setLoading(false);
-        console.error("Bulk upload failed:", error);
-      }
+  if (name == "remove") {
+    if (value.type == "OTHER") {
+    
     } else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
-
-        try {
-        setLoading(true);
-        const res = await uploadFiles(formData);
-        setLoading(false);
-
-        const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-
-        // If there's an existing document, include the existing ID and update the file name
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key, // The new file key (filename)
-            type: name,
-            file: value[0],
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-
-      }  catch (error) {
-        setLoading(false);
-        console.error("Single upload failed:", error);
-      }
+      setClaimInputs((prev) => {
+        const updatedInputs = { ...prev };
+        updatedInputs[value.type] = "";
+        return updatedInputs;
+      });
+      toast.success("File removed successfully");
     }
-  };
+  } 
+  
+  else if (multiple) {
+    const formData = new FormData();
+
+    Array.from(value).forEach((file: any) => {
+      formData.append("files", file);
+    });
+
+    formData.append("folder", "claims");
+
+    try {
+      setLoading(true);
+
+      const res = await bulkUploadFiles(formData);
+
+      const uploadedFiles = res?.data?.map((file) => ({
+        fileName: file?.key,
+        type: name,
+        ...(name === "OTHER" && { remark: "custom remark" }),
+      }));
+
+      setClaimInputs((prev) => ({
+        ...prev,
+        [name]: uploadedFiles,
+      }));
+
+      toast.success("Files uploaded successfully"); 
+    } catch (error) {
+      console.error("Bulk upload failed:", error);
+      toast.error("Failed to upload files");
+    } finally {
+      setLoading(false); 
+    }
+  } 
+  
+  else {
+    const formData = new FormData();
+    formData.append("file", value[0]);
+    formData.append("folder", "claims");
+
+    try {
+      setLoading(true);
+
+      const res = await uploadFiles(formData);
+
+      const existingDocument = claimInputs?.[name];
+      const existingDocumentId = existingDocument
+        ? existingDocument.id
+        : null;
+
+      setClaimInputs((prev) => ({
+        ...prev,
+        [name]: {
+          ...(isEditMode && existingDocumentId
+            ? { id: existingDocumentId }
+            : {}),
+          fileName: res?.data?.key,
+          type: name,
+          file: value[0],
+          ...(name === "OTHER" && { remark: "custom remark" }),
+        },
+      }));
+
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      console.error("Single upload failed:", error);
+      toast.error("Failed to upload file"); 
+    } finally {
+      setLoading(false); 
+    }
+  }
+};
   const fetchHospitalsDropdown = async () => {
     setLoading(true);
     try {
