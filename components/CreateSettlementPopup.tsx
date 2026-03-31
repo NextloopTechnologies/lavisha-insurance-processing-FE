@@ -75,33 +75,35 @@ export default function CreateSettlementPopup({
     transactionId: "",
     tds: "",
     deduction: "",
+    SETTLEMENT_OTHER: [], 
   });
 
   useEffect(() => {
     if (!data) return;
 
      // Map documents by their type
+   
     const documentMap = data.documents.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
-        acc[doc.type] = acc[doc.type] || [];
-        acc[doc.type].push({
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          remark: doc.remark,
-          url: doc.url
-        });
-      } else {
-        acc[doc.type] = {
-          id: doc.id,
-          fileName: doc.fileName,
-          type: doc.type,
-          url: doc.url
-        };
-      }
-      return acc;
-    }, {});
-
+  // Both OTHER and SETTLEMENT_OTHER are arrays
+  if (doc.type === "OTHER" || doc.type === "SETTLEMENT_OTHER") {
+    acc[doc.type] = acc[doc.type] || [];
+    acc[doc.type].push({
+      id: doc.id,
+      fileName: doc.fileName,
+      type: doc.type,
+      remark: doc.remark,
+      url: doc.url,
+    });
+  } else {
+    acc[doc.type] = {
+      id: doc.id,
+      fileName: doc.fileName,
+      type: doc.type,
+      url: doc.url,
+    };
+  }
+  return acc;
+}, {});
   setClaimInputs({
       isPreAuth: data.isPreAuth,
       patientId: data.patientId,
@@ -121,7 +123,7 @@ export default function CreateSettlementPopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-      SETTLEMENT_OTHER: documentMap.SETTLEMENT_OTHER || "",
+      SETTLEMENT_OTHER: documentMap.SETTLEMENT_OTHER || [], 
       totalBill: data?.totalBill || "",
       totalApproval: data?.totalApproval || "",
       transactionId: data?.transactionId || "",
@@ -140,133 +142,149 @@ export default function CreateSettlementPopup({
   };
 
   const handleFileChange = async (value, name, multiple) => {
-    if (multiple) {
-      const formData = new FormData();
-
-      // Append all files as 'files[]'
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
-
-      formData.append("folder", "claims");
-
-      try {
-        const res = await bulkUploadFiles(formData); // Single API call
-
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: uploadedFiles,
-        }));
-      } catch (error) {
-        console.error("Bulk upload failed:", error);
-      }
+  //  Remove handler
+  if (name === "remove") {
+    if (value.type === "OTHER" || value.type === "SETTLEMENT_OTHER") {
+      setClaimInputs((prev) => ({
+        ...prev,
+        [value.type]: Array.isArray(prev[value.type])
+          ? prev[value.type].filter((file) => {
+              if (value.id && file.id) return file.id !== value.id;
+              return file.fileName !== value.fileName;
+            })
+          : [],
+      }));
+      toast.success("File removed successfully");
     } else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
-
-      try {
-        const res = await uploadFiles(formData);
-        const existingDocument = claimInputs?.[name];
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-        // If there's an existing document, include the existing ID and update the file name
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key, // The new file key (filename)
-            type: name,
-            file: value[0],
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-      } catch (error) {
-        console.error("Single upload failed:", error);
-      }
+      setClaimInputs((prev) => ({
+        ...prev,
+        [value.type]: "",
+      }));
+      toast.success("File removed successfully");
     }
-    };
+    return;
+  }
 
-  const handleCreateSettlement = async () => {
+  else if (multiple) {
+    const formData = new FormData();
+    Array.from(value).forEach((file: any) => {
+      formData.append("files", file);
+    });
+    formData.append("folder", "claims");
+
     try {
-      const {
-          CLINIC_PAPER,
-        PAST_INVESTIGATION,
-        CURRENT_INVESTIGATION,
-        OTHER,
-        ICP,
-        preAuth,
-        status,
-        SETTLEMENT_LETTER,
-        description,
-        settlementSummary,
-        settlementAmount,
-        actualQuotedAmount,
-        DISCHARGE_OTHER,
-        SETTLEMENT_OTHER,
-          totalBill,
-        totalApproval,
-        transactionId,
-        tds,
-        deduction,
-        ...others
-      } = claimInputs;
-
-   
-      const removeKeys = (obj) => {
-        delete obj.url;
-        delete obj.file;
-        return obj;
-      };
-         removeKeys(SETTLEMENT_OTHER),
-        removeKeys(SETTLEMENT_LETTER)
-      if (Array.isArray(OTHER)) {
-        OTHER.forEach(removeKeys);
-      }
-    
-      const payload = {
-        ...others,
-        settlementSummary,
-        settlementAmount,
-        actualQuotedAmount,
-        totalBill,
-        totalApproval,
-        transactionId,
-        tds,
-        deduction,
-        status: StatusType.SETTLED,
-           documents: [
-            //   CLINIC_PAPER,
-            //   ICP,
-            //   PAST_INVESTIGATION,
-            //   CURRENT_INVESTIGATION,
-            SETTLEMENT_LETTER,
-            SETTLEMENT_OTHER,
-            ...(OTHER || []), // if OTHER is an array, ensure it's not null
-          ].filter(Boolean),
-      };
-
       setLoading(true);
-      const res = await updateClaims(payload, claimId);
-      if (res?.status === 200) {
-        fetchClaimsById();
-        await updateClaimStatusAfterModalSuccess?.(StatusType.SETTLED);
-        setModalProcessingStatus?.("");
-         onOpenChange(!open);
-        toast.success("Updated Claim with Settlement!");
-      }
+      const res = await bulkUploadFiles(formData);
+      const uploadedFiles = res?.data?.map((file) => ({
+        fileName: file?.key,
+        type: name,
+        ...(name === "OTHER" && { remark: "custom remark" }),
+      }));
+
+      //  Append to existing array
+      setClaimInputs((prev) => ({
+        ...prev,
+        [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
+      }));
+      toast.success("Files uploaded successfully");
     } catch (error) {
-      toast.error("Failed to update claim with settlement!")
-      console.error("Upload error:", error);
+      setClaimInputs((prev) => ({
+        ...prev,
+        [name]: Array.isArray(prev[name]) ? prev[name] : [],
+      }));
+      console.error("Bulk upload failed:", error);
+      toast.error("Failed to upload files");
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  else {
+    const formData = new FormData();
+    formData.append("file", value[0]);
+    formData.append("folder", "claims");
+
+    try {
+      setLoading(true);
+      const res = await uploadFiles(formData);
+
+      const existingDocument = claimInputs?.[name];
+      const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+      setClaimInputs((prev) => ({
+        ...prev,
+        [name]: {
+          ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+          fileName: res?.data?.key,
+          type: name,
+          file: value[0],
+          ...(name === "OTHER" && { remark: "custom remark" }),
+        },
+      }));
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      //  Use name not value.type
+      setClaimInputs((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+      console.error("Single upload failed:", error);
+      toast.error("Failed to upload file");
+    } finally {
+      setLoading(false);
+    }
+  }
+};
+
+  const handleCreateSettlement = async () => {
+  try {
+    const {
+      CLINIC_PAPER, PAST_INVESTIGATION, CURRENT_INVESTIGATION,
+      OTHER, ICP, preAuth, status, SETTLEMENT_LETTER, description,
+      settlementSummary, settlementAmount, actualQuotedAmount,
+      DISCHARGE_OTHER, SETTLEMENT_OTHER, totalBill, totalApproval,
+      transactionId, tds, deduction, ...others
+    } = claimInputs;
+
+    //  Pure function — never mutates state
+    const cleanDoc = ({ url, file, ...rest }: any) => rest;
+
+    const documents = [
+      SETTLEMENT_LETTER ? cleanDoc(SETTLEMENT_LETTER) : null,
+      ...(Array.isArray(SETTLEMENT_OTHER) ? SETTLEMENT_OTHER.map(cleanDoc) : []),
+      ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+    ].filter(Boolean);
+
+    const payload = {
+      ...others,
+      settlementSummary,
+      settlementAmount,
+      actualQuotedAmount,
+      totalBill,
+      totalApproval,
+      transactionId,
+      tds,
+      deduction,
+      status: StatusType.SETTLED,
+      documents,
+    };
+
+    setLoading(true);
+    const res = await updateClaims(payload, claimId);
+    if (res?.status === 200) {
+      fetchClaimsById();
+      await updateClaimStatusAfterModalSuccess?.(StatusType.SETTLED);
+      setModalProcessingStatus?.("");
+      onOpenChange(!open);
+      toast.success("Updated Claim with Settlement!");
+    }
+  } catch (error) {
+    toast.error("Failed to update claim with settlement!");
+    console.error("Upload error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
   const handleClose = () => {
     setModalProcessingStatus?.("");
     onOpenChange(!open);
@@ -383,10 +401,11 @@ export default function CreateSettlementPopup({
 
             <FileDrag
                 title={"Miscellaneous Documents"}
-              multiple={false}
+              multiple={true}
                 onChange={handleFileChange}
                 name={"SETTLEMENT_OTHER"}
-              claimInputs={claimInputs?.SETTLEMENT_OTHER ? [claimInputs?.SETTLEMENT_OTHER] : []}
+              // claimInputs={claimInputs?.SETTLEMENT_OTHER ? [claimInputs?.SETTLEMENT_OTHER] : []}
+               claimInputs={Array.isArray(claimInputs?.SETTLEMENT_OTHER) ? claimInputs?.SETTLEMENT_OTHER : []}
             />
 
               {/* Action Buttons */}
