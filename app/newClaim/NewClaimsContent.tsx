@@ -56,68 +56,57 @@ export default function NewClaimsContent() {
   const router = useRouter();
   const params = useParams();
   const id = params.id;
-  const handleCreateClaim = async (value = null) => {
-    try {
-      const {
-        CLINIC_PAPER,
-        PAST_INVESTIGATION,
-        CURRENT_INVESTIGATION,
-        OTHER,
-        ICP,
-        preAuth,
-        status,
-        ...others
-      } = claimInputs;
-      const removeKeys = (obj) => {
-  delete obj.url;
-  delete obj.file;
-  return obj;
-};
+const handleCreateClaim = async (value = null) => {
+  try {
+    const {
+      CLINIC_PAPER,
+      PAST_INVESTIGATION,
+      CURRENT_INVESTIGATION,
+      OTHER,
+      ICP,
+      preAuth,
+      status,
+      ...others
+    } = claimInputs;
 
-removeKeys(CLINIC_PAPER);
-removeKeys(PAST_INVESTIGATION);
-removeKeys(CURRENT_INVESTIGATION);
-removeKeys(OTHER);
-removeKeys(ICP);
-removeKeys(preAuth);
-removeKeys(status);
-if (Array.isArray(OTHER)) {
-  OTHER.forEach(removeKeys); 
-}
-      const payload = {
-        ...others,
-        documents: [
-          CLINIC_PAPER,
-          ICP,
-          PAST_INVESTIGATION,
-          CURRENT_INVESTIGATION,
-          ...(OTHER || []), // if OTHER is an array, ensure it's not null
-        ].filter(Boolean),
-      };
-      setLoading(true);
-      if (value) {
-        const res = await createClaims({ ...payload, status: value });
-        
-        if (res?.status == 201) {
-           toast.success("Claim created successfully!");
-          setLoading(false);
-          router.push("/claims");
-        }
-      } else {
-        const res = await createClaims(payload);
-        if (res?.status == 201) {
-          setLoading(false);
-          router.push("/claims");
-           toast.success("Claim updated successfully!");                                 
-        }
+    //  Pure function — never mutates state
+    const cleanDoc = ({ url, file, ...rest }: any) => rest;
+
+    const documents = [
+      CLINIC_PAPER ? cleanDoc(CLINIC_PAPER) : null,
+      ICP ? cleanDoc(ICP) : null,
+      PAST_INVESTIGATION ? cleanDoc(PAST_INVESTIGATION) : null,
+      CURRENT_INVESTIGATION ? cleanDoc(CURRENT_INVESTIGATION) : null,
+      //  OTHER is an array — map each file through cleanDoc
+      ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+    ].filter(Boolean);
+
+    const payload = { ...others, documents };
+
+    setLoading(true);
+    if (value) {
+      const res = await createClaims({ ...payload, status: value });
+
+      if (res?.status == 201) {
+        toast.success("Claim updated successfully!");
+        setLoading(false);
+        router.push("/claims");
       }
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast.error("Failed to create claim. Please try again."); 
-    } finally {
-      setLoading(false);
+    } else {
+      const res = await createClaims(payload);
+      if (res?.status == 201) {
+        setLoading(false);
+        toast.success("Claim created  successfully!");
+        router.push("/claims");
+      }
     }
-  };
+  } catch (error) {
+    console.error("Upload error:", error);
+    toast.error("Failed to create claim. Please try again.");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchClaims = async () => {
     try {
