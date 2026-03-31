@@ -95,7 +95,7 @@ export default function EditClaimForm() {
         setLoading(true);
         const res = await updateClaims(payload, id);
         if (res?.status == 200) {
-           toast.success("Claim created successfully!");
+           toast.success("Claim updated successfully!");
           setLoading(false);
           router.push("/claims");
         }

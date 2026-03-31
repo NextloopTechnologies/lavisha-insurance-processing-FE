@@ -26,18 +26,38 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     file: string;
   }>({ fileURL: null, file: "" });
   const [modalOpen, setModalOpen] = useState(false);
+  // const handleFiles = (newFiles: FileList | File[]) => {
+  //   const fileArray = Array.from(newFiles);
+  //   const updatedFiles = multiple ? [...files, ...fileArray] : [fileArray[0]];
+  //   setFiles(updatedFiles);
+  //   onChange?.(updatedFiles, name, multiple);
+  // };
   const handleFiles = (newFiles: FileList | File[]) => {
-    const fileArray = Array.from(newFiles);
-    const updatedFiles = multiple ? [...files, ...fileArray] : [fileArray[0]];
-    setFiles(updatedFiles);
-    onChange?.(updatedFiles, name, multiple);
-  };
+  const fileArray = Array.from(newFiles);
+  
+  if (multiple) {
+    //  Don't update local state — parent will update claimInputs after upload succeeds
+    onChange?.(fileArray, name, multiple);
+  } else {
+    // single file — same behavior
+    setFiles([fileArray[0]]);
+    onChange?.(fileArray, name, multiple);
+  }
+};
+  // useEffect(() => {
+  //   if (!claimInputs?.length) {
+  //     return;
+  //   }
+  //   setFiles(claimInputs);
+  // }, [claimInputs]);
+
   useEffect(() => {
-    if (!claimInputs?.length) {
-      return;
-    }
-    setFiles(claimInputs);
-  }, [claimInputs]);
+  //  Always sync — even when parent clears to [] after failed upload
+  if (claimInputs !== undefined) {
+    setFiles(Array.isArray(claimInputs) ? claimInputs : claimInputs ? [claimInputs] : []);
+  }
+}, [claimInputs]);
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     setIsDragging(false);
@@ -174,6 +194,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
               </div>
               <div className="text-xs mt-1 truncate max-w-[80px]">
                 {file?.name}
+                 {/* {file?.name || file?.fileName || ""} */}
               </div>
               <span
                 onClick={() => removeFile(index, file)}
