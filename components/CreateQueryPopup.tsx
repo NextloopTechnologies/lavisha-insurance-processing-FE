@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { bulkUploadFiles, uploadFiles } from "@/services/files";
+import { bulkDeleteFiles, bulkUploadFiles, uploadFiles } from "@/services/files";
 import {
   Select,
   SelectContent,
@@ -123,100 +123,108 @@ export default function CreateQueryPopup({
     });
   };
 
-const handleFileChange = async (value, name, multiple) => {
-  //  Add remove handler
-  if (name === "remove") {
-    if (value.type === "OTHER") {
-      setQueryInputs((prev) => ({
-        ...prev,
-        OTHER: Array.isArray(prev.OTHER)
-          ? prev.OTHER.filter((file) => {
-              if (value.id && file.id) return file.id !== value.id;
-              return file.fileName !== value.fileName;
-            })
-          : [],
-      }));
-      toast.success("File removed successfully");
-    } else {
-      setQueryInputs((prev) => ({
-        ...prev,
-        [value.type]: "",
-      }));
-      toast.success("File removed successfully");
+  const handleFileChange = async (value, name, multiple) => {
+    //  Add remove handler
+    if (name === "remove") {
+      try {
+        setLoading(true);
+        await bulkDeleteFiles([value.fileName]);
+        if (value.type === "OTHER") {
+          setQueryInputs((prev) => ({
+            ...prev,
+            OTHER: Array.isArray(prev.OTHER)
+              ? prev.OTHER.filter((file) => {
+                if (value.id && file.id) return file.id !== value.id;
+                return file.fileName !== value.fileName;
+              })
+              : [],
+          }));
+        } else {
+          setQueryInputs((prev) => ({
+            ...prev,
+            [value.type]: "",
+          }));
+        }
+        toast.success("File removed successfully");
+      } catch (error) {
+        console.error("Bulk delete failed:", error);
+        toast.error("Failed to remove file");
+      } finally {
+        setLoading(false);
+      }
+      return;
     }
-    return;
-  }
 
-  else if (multiple) {
-    const formData = new FormData();
-    Array.from(value).forEach((file: any) => {
-      formData.append("files", file);
-    });
-    formData.append("folder", "claims");
+    else if (multiple) {
+      const formData = new FormData();
+      Array.from(value).forEach((file: any) => {
+        formData.append("files", file);
+      });
+      formData.append("folder", "claims");
 
-    try {
-      setLoading(true);
-      const res = await bulkUploadFiles(formData);
-      const uploadedFiles = res?.data?.map((file) => ({
-        fileName: file?.key,
-        type: name,
-        ...(name === "OTHER" && { remark: "custom remark" }),
-      }));
-
-      //  Append to existing array
-      setQueryInputs((prev) => ({
-        ...prev,
-        [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
-      }));
-      toast.success("Files uploaded successfully");
-    } catch (error) {
-      setQueryInputs((prev) => ({
-        ...prev,
-        [name]: Array.isArray(prev[name]) ? prev[name] : [],
-      }));
-      console.error("Bulk upload failed:", error);
-      toast.error("Failed to upload files");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  else {
-    const formData = new FormData();
-    formData.append("file", value[0]);
-    formData.append("folder", "claims");
-
-    try {
-      setLoading(true);
-      const res = await uploadFiles(formData);
-
-      const existingDocument = queryInputs?.[name];
-      const existingDocumentId = existingDocument ? existingDocument.id : null;
-
-      setQueryInputs((prev) => ({
-        ...prev,
-        [name]: {
-          ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-          fileName: res?.data?.key,
+      try {
+        setLoading(true);
+        const res = await bulkUploadFiles(formData);
+        const uploadedFiles = res?.data?.map((file) => ({
+          fileName: file?.key,
           type: name,
-          file: value[0],
           ...(name === "OTHER" && { remark: "custom remark" }),
-        },
-      }));
-      toast.success("File uploaded successfully");
-    } catch (error) {
-      //  Use name not value.type
-      setQueryInputs((prev) => ({
-        ...prev,
-        [name]: "",
-      }));
-      console.error("Single upload failed:", error);
-      toast.error("Failed to upload file");
-    } finally {
-      setLoading(false);
+        }));
+
+        //  Append to existing array
+        setQueryInputs((prev) => ({
+          ...prev,
+          [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
+        }));
+        toast.success("Files uploaded successfully");
+      } catch (error) {
+        setQueryInputs((prev) => ({
+          ...prev,
+          [name]: Array.isArray(prev[name]) ? prev[name] : [],
+        }));
+        console.error("Bulk upload failed:", error);
+        toast.error("Failed to upload files");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
-};
+
+    else {
+      const formData = new FormData();
+      formData.append("file", value[0]);
+      formData.append("folder", "claims");
+
+      try {
+        setLoading(true);
+        const res = await uploadFiles(formData);
+
+        const existingDocument = queryInputs?.[name];
+        const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+        setQueryInputs((prev) => ({
+          ...prev,
+          [name]: {
+            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+            fileName: res?.data?.key,
+            type: name,
+            file: value[0],
+            ...(name === "OTHER" && { remark: "custom remark" }),
+          },
+        }));
+        toast.success("File uploaded successfully");
+      } catch (error) {
+        //  Use name not value.type
+        setQueryInputs((prev) => ({
+          ...prev,
+          [name]: "",
+        }));
+        console.error("Single upload failed:", error);
+        toast.error("Failed to upload file");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
   const removeKeys = (obj) => {
     if (!obj) {
       return;
@@ -226,61 +234,61 @@ const handleFileChange = async (value, name, multiple) => {
     return obj;
   };
   const handleCreateQuery = async () => {
-  try {
-    const {
-      OTHER,
-      ICP,
-      insuranceRequestId,
-      status,
-      numberOfDays,
-      CURRENT_INVESTIGATION,
-      EXCEL_REPORT,
-      doctorName,
-      ...others
-    } = queryInputs;
+    try {
+      const {
+        OTHER,
+        ICP,
+        insuranceRequestId,
+        status,
+        numberOfDays,
+        CURRENT_INVESTIGATION,
+        EXCEL_REPORT,
+        doctorName,
+        ...others
+      } = queryInputs;
 
-    //  Pure function — never mutates state
-    const cleanDoc = ({ url, file, ...rest }: any) => rest;
+      //  Pure function — never mutates state
+      const cleanDoc = ({ url, file, ...rest }: any) => rest;
 
-    const documents = [
-      ICP ? cleanDoc(ICP) : null,
-      CURRENT_INVESTIGATION ? cleanDoc(CURRENT_INVESTIGATION) : null,
-      EXCEL_REPORT ? cleanDoc(EXCEL_REPORT) : null,
-      ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
-    ].filter(Boolean);
+      const documents = [
+        ICP ? cleanDoc(ICP) : null,
+        CURRENT_INVESTIGATION ? cleanDoc(CURRENT_INVESTIGATION) : null,
+        EXCEL_REPORT ? cleanDoc(EXCEL_REPORT) : null,
+        ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+      ].filter(Boolean);
 
-    const payload = {
-      ...others,
-      insuranceRequestId: claimId,
-      documents,
-    };
-    setLoading(true);
+      const payload = {
+        ...others,
+        insuranceRequestId: claimId,
+        documents,
+      };
+      setLoading(true);
 
-    if (selectedQuery?.id) {
-      const res = await updateQuery(payload, selectedQuery?.id);
-      if (res?.status == 200) {
-        await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
-        onOpenChange(!open);
-        setSelectedQuery(null);
-        toast.success("Query updated!");
+      if (selectedQuery?.id) {
+        const res = await updateQuery(payload, selectedQuery?.id);
+        if (res?.status == 200) {
+          await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
+          onOpenChange(!open);
+          setSelectedQuery(null);
+          toast.success("Query updated!");
+        }
+      } else {
+        const res = await createQuery(payload);
+        if (res?.status == 201) {
+          await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
+          setModalProcessingStatus?.("");
+          onOpenChange(!open);
+          setSelectedQuery(null);
+          toast.success("Query created!");
+        }
       }
-    } else {
-      const res = await createQuery(payload);
-      if (res?.status == 201) {
-        await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
-        setModalProcessingStatus?.("");
-        onOpenChange(!open);
-        setSelectedQuery(null);
-        toast.success("Query created!");
-      }
+    } catch (error) {
+      toast.error("Failed to save query!");
+      console.error("Upload error:", error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    toast.error("Failed to save query!");
-    console.error("Upload error:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {

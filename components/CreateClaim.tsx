@@ -39,7 +39,7 @@ import InputComponent from "./InputComponent";
 import SelectComponent from "./SelectComponent";
 import Link from "next/link";
 import { getUsersDropdown } from "@/services/users";
-
+import { bulkDeleteFiles, } from "@/services/files";
 export default function CreateClaim({
   handleCreateClaim,
   loading,
@@ -55,7 +55,7 @@ export default function CreateClaim({
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
-      const [hospitals, setHospitals] = useState([]);
+  const [hospitals, setHospitals] = useState([]);
   // const [claimInputs, setClaimInputs] = useState({
   //   isPreAuth: false,
   //   patientId: "",
@@ -75,8 +75,8 @@ export default function CreateClaim({
   const router = useRouter();
   const params = useParams();
   const id = params.id;
-    const roles = Cookies.get("user_role")?.split(",") || []; 
-    const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN");
+  const roles = Cookies.get("user_role")?.split(",") || [];
+  const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN");
   const handleSelectChange = (value: string | boolean, name: string) => {
     setClaimInputs((prev) => {
       return {
@@ -88,127 +88,122 @@ export default function CreateClaim({
 
   const handleFileChange = async (value, name, multiple) => {
 
-  if (name == "remove") {
-  // if (value.type == "OTHER") {
-  //   //  Filter out the removed file by fileName
-  //   setClaimInputs((prev) => ({
-  //     ...prev,
-  //     OTHER: Array.isArray(prev.OTHER)
-  //       ? prev.OTHER.filter((file) => file.fileName !== value.fileName)
-  //       : [],
-  //   }));
-  if (value.type == "OTHER") {
-    setClaimInputs((prev) => ({
-      ...prev,
-      OTHER: Array.isArray(prev.OTHER)
-        ? prev.OTHER.filter((file) => {
-            //  Match by id if available (existing docs), else by fileName (new uploads)
-            if (value.id && file.id) {
-              return file.id !== value.id;
-            }
-            return file.fileName !== value.fileName;
-          })
-        : [],
-    }));
-    toast.success("File removed successfully");
-  } 
-  else {
-    setClaimInputs((prev) => {
-      const updatedInputs = { ...prev };
-      updatedInputs[value.type] = "";
-      return updatedInputs;
-    });
-    toast.success("File removed successfully");
-  }
-}
-
-else if (multiple) {
-  const formData = new FormData();
-
-  Array.from(value).forEach((file: any) => {
-    formData.append("files", file);
-  });
-
-  formData.append("folder", "claims");
-
-  try {
-    setLoading(true);
-
-    const res = await bulkUploadFiles(formData);
-
-    const uploadedFiles = res?.data?.map((file) => ({
-      fileName: file?.key,
-      type: name,
-      ...(name === "OTHER" && { remark: "custom remark" }),
-    }));
-
-    //  APPEND to existing array instead of replacing
-    setClaimInputs((prev) => ({
-      ...prev,
-      [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
-    }));
-
-    toast.success("Files uploaded successfully");
-  } catch (error) {
-    //  Use `name`, not `value.type` (value is a FileList!)
-    setClaimInputs((prev) => ({
-      ...prev,
-      [name]: Array.isArray(prev[name]) ? prev[name] : [],
-    }));
-    console.error("Bulk upload failed:", error);
-    toast.error("Failed to upload files");
-    
-  } finally {
-    setLoading(false);
-  }
-}
-
-  else {
-    const formData = new FormData();
-    formData.append("file", value[0]);
-    formData.append("folder", "claims");
-
-    try {
-      setLoading(true);
-
-      const res = await uploadFiles(formData);
-
-      const existingDocument = claimInputs?.[name];
-      const existingDocumentId = existingDocument
-        ? existingDocument.id
-        : null;
-
-      setClaimInputs((prev) => ({
-        ...prev,
-        [name]: {
-          ...(isEditMode && existingDocumentId
-            ? { id: existingDocumentId }
-            : {}),
-          fileName: res?.data?.key,
-          type: name,
-          file: value[0],
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        },
-      }));
-
-      toast.success("File uploaded successfully");
-    } catch (error) {
-      //  setClaimInputs((prev) => {
-      //   const updatedInputs = { ...prev };
-      //   updatedInputs[value.type] = "";
-      //   return updatedInputs;
-      // });
-        setClaimInputs((prev) => ({
-    ...prev,
-    [name]: "",  // `name` is always correct e.g. "ICP", "CLINIC_PAPER" etc
-  }));
-      console.error("Single upload failed:", error);
-      toast.error("Failed to upload file"); 
-    } finally {
-      setLoading(false); 
+    if (name == "remove") {
+      try {
+        setLoading(true);
+        await bulkDeleteFiles([value.fileName]);
+        if (value.type == "OTHER") {
+          setClaimInputs((prev) => ({
+            ...prev,
+            OTHER: Array.isArray(prev.OTHER)
+              ? prev.OTHER.filter((file) => {
+                if (value.id && file.id) return file.id !== value.id;
+                return file.fileName !== value.fileName;
+              })
+              : [],
+          }));
+        } else {
+          setClaimInputs((prev) => ({
+            ...prev,
+            [value.type]: "",
+          }));
+        }
+        toast.success("File removed successfully");
+      } catch (error) {
+        console.error("Bulk delete failed:", error);
+        toast.error("Failed to remove file");
+      } finally {
+        setLoading(false);
+      }
     }
-  }
-};
+
+    else if (multiple) {
+      const formData = new FormData();
+
+      Array.from(value).forEach((file: any) => {
+        formData.append("files", file);
+      });
+
+      formData.append("folder", "claims");
+
+      try {
+        setLoading(true);
+
+        const res = await bulkUploadFiles(formData);
+
+        const uploadedFiles = res?.data?.map((file) => ({
+          fileName: file?.key,
+          type: name,
+          ...(name === "OTHER" && { remark: "custom remark" }),
+        }));
+
+        //  APPEND to existing array instead of replacing
+        setClaimInputs((prev) => ({
+          ...prev,
+          [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
+        }));
+
+        toast.success("Files uploaded successfully");
+      } catch (error) {
+        //  Use `name`, not `value.type` (value is a FileList!)
+        setClaimInputs((prev) => ({
+          ...prev,
+          [name]: Array.isArray(prev[name]) ? prev[name] : [],
+        }));
+        console.error("Bulk upload failed:", error);
+        toast.error("Failed to upload files");
+
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    else {
+      const formData = new FormData();
+      formData.append("file", value[0]);
+      formData.append("folder", "claims");
+
+      try {
+        setLoading(true);
+
+        const res = await uploadFiles(formData);
+
+        const existingDocument = claimInputs?.[name];
+        const existingDocumentId = existingDocument
+          ? existingDocument.id
+          : null;
+
+        setClaimInputs((prev) => ({
+          ...prev,
+          [name]: {
+            ...(isEditMode && existingDocumentId
+              ? { id: existingDocumentId }
+              : {}),
+            fileName: res?.data?.key,
+            type: name,
+            file: value[0],
+            ...(name === "OTHER" && { remark: "custom remark" }),
+          },
+        }));
+
+        toast.success("File uploaded successfully");
+      } catch (error) {
+        //  setClaimInputs((prev) => {
+        //   const updatedInputs = { ...prev };
+        //   updatedInputs[value.type] = "";
+        //   return updatedInputs;
+        // });
+        setClaimInputs((prev) => ({
+          ...prev,
+          [name]: "",  // `name` is always correct e.g. "ICP", "CLINIC_PAPER" etc
+        }));
+        console.error("Single upload failed:", error);
+        toast.error("Failed to upload file");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
   const fetchHospitalsDropdown = async () => {
     setLoading(true);
     try {
@@ -441,7 +436,7 @@ else if (multiple) {
           onSubmit={handleCreatePatient}
           defaultData={selectedPatient}
           isEditMode={!!selectedPatient}
-          hospitals={hospitals} 
+          hospitals={hospitals}
         />
 
         {/* Upload Fields */}
