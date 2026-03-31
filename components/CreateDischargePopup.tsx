@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { bulkUploadFiles, uploadFiles } from "@/services/files";
+import { bulkDeleteFiles, bulkUploadFiles, uploadFiles } from "@/services/files";
 import {
   Select,
   SelectContent,
@@ -66,48 +66,29 @@ export default function CreateDischargePopup({
     CLINIC_PAPER: "",
     ICP: "",
     SETTLEMENT_LETTER: "",
-    DISCHARGE_OTHER: "",
+    DISCHARGE_OTHER: [],
     dischargeSummary: "",
   });
   useEffect(() => {
     if (!data) return;
 
-
-    // Map documents by their type
-    // const documentMap = data.documents.reduce((acc, doc) => {
-    //   if (doc.type === "OTHER") {
-    //     acc[doc.type] = acc[doc.type] || [];
-    //     acc[doc.type].push({
-    //       id: doc.id,
-    //       fileName: doc.fileName,
-    //       type: doc.type,
-    //       remark: doc.remark,
-    //     });
-    //   } else {
-    //     acc[doc.type] = {
-    //       id: doc.id,
-    //       fileName: doc.fileName,
-    //       type: doc.type,
-    //     };
-    //   }
-    //   return acc;
-    // }, {});
     const documentMap = data.documents.reduce((acc, doc) => {
-      if (doc.type === "OTHER") {
+      //  Handle both OTHER and DISCHARGE_OTHER as arrays
+      if (doc.type === "OTHER" || doc.type === "DISCHARGE_OTHER") {
         acc[doc.type] = acc[doc.type] || [];
         acc[doc.type].push({
           id: doc.id,
           fileName: doc.fileName,
           type: doc.type,
           remark: doc.remark,
-          url: doc.url
+          url: doc.url,
         });
       } else {
         acc[doc.type] = {
           id: doc.id,
           fileName: doc.fileName,
           type: doc.type,
-          url: doc.url
+          url: doc.url,
         };
       }
       return acc;
@@ -121,7 +102,7 @@ export default function CreateDischargePopup({
       insuranceCompany: data.insuranceCompany,
       status: data.status,
       description: data.description,
-      preAuth: "", // You can derive if needed
+      preAuth: "",
       additionalNotes: data.additionalNotes || "",
       OTHER: documentMap.OTHER || [],
       CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
@@ -129,7 +110,7 @@ export default function CreateDischargePopup({
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
-      DISCHARGE_OTHER: documentMap.DISCHARGE_OTHER || "",
+      DISCHARGE_OTHER: documentMap.DISCHARGE_OTHER || [],
       dischargeSummary: data?.dischargeSummary,
     });
   }, [data]);
@@ -143,35 +124,72 @@ export default function CreateDischargePopup({
   };
 
   const handleFileChange = async (value, name, multiple) => {
-    if (multiple) {
-      const formData = new FormData();
+    //  Add remove handler
+    if (name === "remove") {
+      try {
+        setLoading(true);
+        await bulkDeleteFiles([value.fileName]);
+        if (value.type === "OTHER" || value.type === "DISCHARGE_OTHER") {
+          setClaimInputs((prev) => ({
+            ...prev,
+            [value.type]: Array.isArray(prev[value.type])
+              ? prev[value.type].filter((file) => {
+                if (value.id && file.id) return file.id !== value.id;
+                return file.fileName !== value.fileName;
+              })
+              : [],
+          }));
+        } else {
+          setClaimInputs((prev) => ({
+            ...prev,
+            [value.type]: "",
+          }));
+        }
+        toast.success("File removed successfully");
+      } catch (error) {
+        console.error("Bulk delete failed:", error);
+        toast.error("Failed to remove file");
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
 
-      // Append all files as 'files[]'
+    else if (multiple) {
+      const formData = new FormData();
       Array.from(value).forEach((file: any) => {
         formData.append("files", file);
       });
-
       formData.append("folder", "claims");
 
       try {
         setLoading(true);
-        const res = await bulkUploadFiles(formData); // Single API call
-        setLoading(false);
-
+        const res = await bulkUploadFiles(formData);
         const uploadedFiles = res?.data?.map((file) => ({
           fileName: file?.key,
           type: name,
           ...(name === "OTHER" && { remark: "custom remark" }),
         }));
 
+        //  Append not replace
         setClaimInputs((prev) => ({
           ...prev,
-          [name]: uploadedFiles,
+          [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
         }));
+        toast.success("Files uploaded successfully");
       } catch (error) {
+        setClaimInputs((prev) => ({
+          ...prev,
+          [name]: Array.isArray(prev[name]) ? prev[name] : [],
+        }));
         console.error("Bulk upload failed:", error);
+        toast.error("Failed to upload files");
+      } finally {
+        setLoading(false);
       }
-    } else {
+    }
+
+    else {
       const formData = new FormData();
       formData.append("file", value[0]);
       formData.append("folder", "claims");
@@ -179,34 +197,31 @@ export default function CreateDischargePopup({
       try {
         setLoading(true);
         const res = await uploadFiles(formData);
-        setLoading(false);
-        // setClaimInputs((prev) => ({
-        //   ...prev,
-        //   [name]: {
-        //     fileName: res?.data?.key,
-        //     type: name,
-        //     file: value[0],
-        //     ...(name === "OTHER" && { remark: "custom remark" }),
-        //   },
-        // }));
-        const existingDocument = claimInputs?.[name];// Assuming it's an array with one item
+
+        const existingDocument = claimInputs?.[name];
         const existingDocumentId = existingDocument ? existingDocument.id : null;
 
-        // If there's an existing document, include the existing ID and update the file name
         setClaimInputs((prev) => ({
           ...prev,
           [name]: {
             ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key, // The new file key (filename)
+            fileName: res?.data?.key,
             type: name,
             file: value[0],
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));
-
+        toast.success("File uploaded successfully");
       } catch (error) {
-        setLoading(false);
+        //  Use name not value.type
+        setClaimInputs((prev) => ({
+          ...prev,
+          [name]: "",
+        }));
         console.error("Single upload failed:", error);
+        toast.error("Failed to upload file");
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -227,48 +242,32 @@ export default function CreateDischargePopup({
         DISCHARGE_OTHER,
         ...others
       } = claimInputs;
-      const removeKeys = (obj) => {
-        delete obj.url;
-        delete obj.file;
-        return obj;
-      };
 
-      removeKeys(CLINIC_PAPER);
-      removeKeys(PAST_INVESTIGATION);
-      removeKeys(CURRENT_INVESTIGATION);
-      removeKeys(DISCHARGE_OTHER);
-      removeKeys(OTHER);
-      removeKeys(ICP);
-      removeKeys(preAuth);
-      removeKeys(status);
-      if (Array.isArray(OTHER)) {
-        OTHER.forEach(removeKeys);
-      }
+      //  Pure function — never mutates state
+      const cleanDoc = ({ url, file, ...rest }: any) => rest;
+
+      const documents = [
+        ...(Array.isArray(DISCHARGE_OTHER) ? DISCHARGE_OTHER.map(cleanDoc) : []),
+        ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+      ].filter(Boolean);
+
       const payload = {
         ...others,
         dischargeSummary,
         status: StatusType.DISCHARGED,
-        documents: [
-          //   CLINIC_PAPER,
-          //   ICP,
-          //   PAST_INVESTIGATION,
-          //   CURRENT_INVESTIGATION,
-          //   SETTLEMENT_LETTER,
-          DISCHARGE_OTHER,
-          ...(OTHER || []), // if OTHER is an array, ensure it's not null
-        ].filter(Boolean),
+        documents,
       };
+
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res?.status == 200) {
         await updateClaimStatusAfterModalSuccess(StatusType.DISCHARGED);
-        setLoading(false);
         onOpenChange(!open);
         fetchClaimsById();
-        toast.success("Updated Claim with Discharge!")
+        toast.success("Updated Claim with Discharge!");
       }
     } catch (error) {
-      toast.error("Failed to update claim with discharge!")
+      toast.error("Failed to update claim with discharge!");
       console.error("Upload error:", error);
     } finally {
       setLoading(false);
@@ -331,10 +330,10 @@ export default function CreateDischargePopup({
                 title={
                   "Discharge Documents (Discharge Summary,Final Bill,OT notes in case of surgery)"
                 }
-                multiple={false}
+                multiple={true}
                 onChange={handleFileChange}
                 name={"DISCHARGE_OTHER"}
-                claimInputs={claimInputs?.DISCHARGE_OTHER ? [claimInputs?.DISCHARGE_OTHER] : []}
+                claimInputs={Array.isArray(claimInputs?.DISCHARGE_OTHER) ? claimInputs?.DISCHARGE_OTHER : []}
               />
 
               {/* Action Buttons */}
