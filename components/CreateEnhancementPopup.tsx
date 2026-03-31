@@ -115,65 +115,100 @@ export default function CreateEnhancementPopup({
   };
 
   const handleFileChange = async (value, name, multiple) => {
-    if (multiple) {
-      const formData = new FormData();
-
-      // Append all files as 'files[]'
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
-
-      formData.append("folder", "claims");
-
-      try {
-        const res = await bulkUploadFiles(formData); // Single API call
-
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-
-        setEnhancementInputs((prev) => ({
-          ...prev,
-          [name]: uploadedFiles,
-        }));
-      } catch (error) {
-        console.error("Bulk upload failed:", error);
-      }
+  if (name === "remove") {
+    if (value.type === "OTHER") {
+      setEnhancementInputs((prev) => ({
+        ...prev,
+        OTHER: Array.isArray(prev.OTHER)
+          ? prev.OTHER.filter((file) => {
+              if (value.id && file.id) return file.id !== value.id;
+              return file.fileName !== value.fileName;
+            })
+          : [],
+      }));
+      toast.success("File removed successfully");
     } else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
+      setEnhancementInputs((prev) => ({
+        ...prev,
+        [value.type]: "",
+      }));
+      toast.success("File removed successfully");
+    }
+    return;
+  }
 
-      try {
-        const res = await uploadFiles(formData);
+  else if (multiple) {
+    const formData = new FormData();
+    Array.from(value).forEach((file: any) => {
+      formData.append("files", file);
+    });
+    formData.append("folder", "claims");
 
-        setEnhancementInputs((prev) => {
-    const updatedQueryInputs = { ...prev };
-    if (updatedQueryInputs[name]) {
-      // If the type exists, update the fileName and leave the other properties intact
-      updatedQueryInputs[name] = {
-        ...updatedQueryInputs[name],
-        fileName: res?.data?.key,    
-      };
-    } else {
-      // Otherwise, add a new entry
-      updatedQueryInputs[name] = {
-        fileName: res?.data?.key,
+    try {
+      setLoading(true);
+      const res = await bulkUploadFiles(formData);
+      const uploadedFiles = res?.data?.map((file) => ({
+        fileName: file?.key,
         type: name,
-        file: value[0],
         ...(name === "OTHER" && { remark: "custom remark" }),
-      };
-    }
+      }));
 
-    return updatedQueryInputs;
-  });
-      } catch (error) {
-        console.error("Single upload failed:", error);
-      }
+      //  Append to existing array
+      setEnhancementInputs((prev) => ({
+        ...prev,
+        [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
+      }));
+      toast.success("Files uploaded successfully");
+    } catch (error) {
+      //  Clear using name
+      setEnhancementInputs((prev) => ({
+        ...prev,
+        [name]: Array.isArray(prev[name]) ? prev[name] : [],
+      }));
+      console.error("Bulk upload failed:", error);
+      toast.error("Failed to upload files");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  else {
+    const formData = new FormData();
+    formData.append("file", value[0]);
+    formData.append("folder", "claims");
+
+    try {
+      setLoading(true);
+      const res = await uploadFiles(formData);
+
+      const existingDocument = enhancementInputs?.[name];
+      const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+      setEnhancementInputs((prev) => ({
+        ...prev,
+        [name]: {
+          ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+          fileName: res?.data?.key,
+          type: name,
+          file: value[0],
+          ...(name === "OTHER" && { remark: "custom remark" }),
+        },
+      }));
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      //  Clear using name
+      setEnhancementInputs((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+      console.error("Single upload failed:", error);
+      toast.error("Failed to upload file");
+    } finally {
+      setLoading(false);
+    }
+  }
+};
+ 
     const removeKeys = (obj) => {
     if (!obj) {
       return;
@@ -183,92 +218,54 @@ export default function CreateEnhancementPopup({
     return obj;
   };
   const handleCreateEnhancement = async () => {
+  try {
+    const { OTHER, ICP, insuranceRequestId, status, numberOfDays, ...others } =
+      enhancementInputs;
+
+    //  Pure function — never mutates state
+    const cleanDoc = ({ url, file, ...rest }: any) => rest;
+
+    const documents = [
+      ICP ? cleanDoc(ICP) : null,
+      ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+    ].filter(Boolean);
+
+    const payload = {
+      ...others,
+      insuranceRequestId: claimId,
+      numberOfDays: Number(numberOfDays),
+      documents,
+    };
+
+    setLoading(true);
+
     if (selectedEnhancement?.id) {
-      try {
-        const {
-          OTHER,
-          ICP,
-          insuranceRequestId,
-          status,
-          numberOfDays,
-          ...others
-        } = enhancementInputs;
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
-        const payload = {
-          ...others,
-          // status: "ENHANCEMENT",  //once the status dropdown for enhancement is added this will work for 
-          insuranceRequestId: claimId,
-          numberOfDays: Number(numberOfDays),
-          documents: [
-            ICP,
-            ...(OTHER || []), // if OTHER is an array, ensure it's not null
-          ].filter(Boolean),
-        };
-        setLoading(true);
-        const res = await updateEnhancements(payload, selectedEnhancement?.id);
-        if (res.status == 200) {
-          await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
-          // setLoading(false);
-          onOpenChange(!open);
-          fetchClaimsById();
-          setSelectedEnhancement(null);
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
-      } finally {
-        setLoading(false);
+      const res = await updateEnhancements(payload, selectedEnhancement?.id);
+      if (res.status == 200) {
+        await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
+        onOpenChange(!open);
+        fetchClaimsById();
+        setSelectedEnhancement(null);
+        toast.success("Enhancement updated!");
       }
     } else {
-      try {
-        const {
-          OTHER,
-          ICP,
-          insuranceRequestId,
-          status,
-          numberOfDays,
-          ...others
-        } = enhancementInputs;
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
-        const payload = {
-          ...others,
-          // status: StatusType.ENHANCEMENT,  //this is for enhancement so default pending will be used
-          insuranceRequestId: claimId,
-          numberOfDays: Number(numberOfDays),
-          documents: [
-            ICP,
-            ...(OTHER || []), // if OTHER is an array, ensure it's not null
-          ].filter(Boolean),
-        };
-        setLoading(true);
-        const res = await createEnhancements(payload);
-        if (res?.status == 201) {
-          await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
-          setModalProcessingStatus?.("")
-          setSelectedEnhancement(null);
-          // setLoading(false);
-          onOpenChange(!open);
-          fetchClaimsById();
-          toast.success("Enhancement Created!")
-        }
-      } catch (error) {
-        toast.error("Failed to create enhancement!")
-        console.error("Upload error:", error);
-      } finally {
-        setLoading(false);
+      const res = await createEnhancements(payload);
+      if (res?.status == 201) {
+        await updateClaimStatusAfterModalSuccess(StatusType.ENHANCEMENT);
+        setModalProcessingStatus?.("");
+        setSelectedEnhancement(null);
+        onOpenChange(!open);
+        fetchClaimsById();
+        toast.success("Enhancement created!");
       }
     }
-  };
-
+  } catch (error) {
+    toast.error("Failed to save enhancement!");
+    console.error("Upload error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
       setSelectedEnhancement(null);

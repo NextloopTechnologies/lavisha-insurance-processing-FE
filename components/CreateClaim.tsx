@@ -89,52 +89,80 @@ export default function CreateClaim({
   const handleFileChange = async (value, name, multiple) => {
 
   if (name == "remove") {
-    if (value.type == "OTHER") {
-    
-    } else {
-      setClaimInputs((prev) => {
-        const updatedInputs = { ...prev };
-        updatedInputs[value.type] = "";
-        return updatedInputs;
-      });
-      toast.success("File removed successfully");
-    }
+  // if (value.type == "OTHER") {
+  //   //  Filter out the removed file by fileName
+  //   setClaimInputs((prev) => ({
+  //     ...prev,
+  //     OTHER: Array.isArray(prev.OTHER)
+  //       ? prev.OTHER.filter((file) => file.fileName !== value.fileName)
+  //       : [],
+  //   }));
+  if (value.type == "OTHER") {
+    setClaimInputs((prev) => ({
+      ...prev,
+      OTHER: Array.isArray(prev.OTHER)
+        ? prev.OTHER.filter((file) => {
+            //  Match by id if available (existing docs), else by fileName (new uploads)
+            if (value.id && file.id) {
+              return file.id !== value.id;
+            }
+            return file.fileName !== value.fileName;
+          })
+        : [],
+    }));
+    toast.success("File removed successfully");
   } 
-  
-  else if (multiple) {
-    const formData = new FormData();
-
-    Array.from(value).forEach((file: any) => {
-      formData.append("files", file);
+  else {
+    setClaimInputs((prev) => {
+      const updatedInputs = { ...prev };
+      updatedInputs[value.type] = "";
+      return updatedInputs;
     });
+    toast.success("File removed successfully");
+  }
+}
 
-    formData.append("folder", "claims");
+else if (multiple) {
+  const formData = new FormData();
 
-    try {
-      setLoading(true);
+  Array.from(value).forEach((file: any) => {
+    formData.append("files", file);
+  });
 
-      const res = await bulkUploadFiles(formData);
+  formData.append("folder", "claims");
 
-      const uploadedFiles = res?.data?.map((file) => ({
-        fileName: file?.key,
-        type: name,
-        ...(name === "OTHER" && { remark: "custom remark" }),
-      }));
+  try {
+    setLoading(true);
 
-      setClaimInputs((prev) => ({
-        ...prev,
-        [name]: uploadedFiles,
-      }));
+    const res = await bulkUploadFiles(formData);
 
-      toast.success("Files uploaded successfully"); 
-    } catch (error) {
-      console.error("Bulk upload failed:", error);
-      toast.error("Failed to upload files");
-    } finally {
-      setLoading(false); 
-    }
-  } 
-  
+    const uploadedFiles = res?.data?.map((file) => ({
+      fileName: file?.key,
+      type: name,
+      ...(name === "OTHER" && { remark: "custom remark" }),
+    }));
+
+    //  APPEND to existing array instead of replacing
+    setClaimInputs((prev) => ({
+      ...prev,
+      [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
+    }));
+
+    toast.success("Files uploaded successfully");
+  } catch (error) {
+    //  Use `name`, not `value.type` (value is a FileList!)
+    setClaimInputs((prev) => ({
+      ...prev,
+      [name]: Array.isArray(prev[name]) ? prev[name] : [],
+    }));
+    console.error("Bulk upload failed:", error);
+    toast.error("Failed to upload files");
+    
+  } finally {
+    setLoading(false);
+  }
+}
+
   else {
     const formData = new FormData();
     formData.append("file", value[0]);
@@ -165,6 +193,15 @@ export default function CreateClaim({
 
       toast.success("File uploaded successfully");
     } catch (error) {
+      //  setClaimInputs((prev) => {
+      //   const updatedInputs = { ...prev };
+      //   updatedInputs[value.type] = "";
+      //   return updatedInputs;
+      // });
+        setClaimInputs((prev) => ({
+    ...prev,
+    [name]: "",  // `name` is always correct e.g. "ICP", "CLINIC_PAPER" etc
+  }));
       console.error("Single upload failed:", error);
       toast.error("Failed to upload file"); 
     } finally {
