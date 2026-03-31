@@ -123,65 +123,100 @@ export default function CreateQueryPopup({
     });
   };
 
-  const handleFileChange = async (value, name, multiple) => {
-    if (multiple) {
-      const formData = new FormData();
-
-      // Append all files as 'files[]'
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
-
-      formData.append("folder", "claims");
-
-      try {
-        const res = await bulkUploadFiles(formData); // Single API call
-
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: uploadedFiles,
-        }));
-      } catch (error) {
-        console.error("Bulk upload failed:", error);
-      }
+const handleFileChange = async (value, name, multiple) => {
+  //  Add remove handler
+  if (name === "remove") {
+    if (value.type === "OTHER") {
+      setQueryInputs((prev) => ({
+        ...prev,
+        OTHER: Array.isArray(prev.OTHER)
+          ? prev.OTHER.filter((file) => {
+              if (value.id && file.id) return file.id !== value.id;
+              return file.fileName !== value.fileName;
+            })
+          : [],
+      }));
+      toast.success("File removed successfully");
     } else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
+      setQueryInputs((prev) => ({
+        ...prev,
+        [value.type]: "",
+      }));
+      toast.success("File removed successfully");
+    }
+    return;
+  }
 
-      try {
-  const res = await uploadFiles(formData);
-  setQueryInputs((prev) => {
-    const updatedQueryInputs = { ...prev };
-    if (updatedQueryInputs[name]) {
-      // If the type exists, update the fileName and leave the other properties intact
-      updatedQueryInputs[name] = {
-        ...updatedQueryInputs[name],
-        fileName: res?.data?.key,    
-      };
-    } else {
-      // Otherwise, add a new entry
-      updatedQueryInputs[name] = {
-        fileName: res?.data?.key,
+  else if (multiple) {
+    const formData = new FormData();
+    Array.from(value).forEach((file: any) => {
+      formData.append("files", file);
+    });
+    formData.append("folder", "claims");
+
+    try {
+      setLoading(true);
+      const res = await bulkUploadFiles(formData);
+      const uploadedFiles = res?.data?.map((file) => ({
+        fileName: file?.key,
         type: name,
-        file: value[0],
         ...(name === "OTHER" && { remark: "custom remark" }),
-      };
-    }
+      }));
 
-    return updatedQueryInputs;
-  });
-} catch (error) {
-  console.error("Single upload failed:", error);
-}
+      //  Append to existing array
+      setQueryInputs((prev) => ({
+        ...prev,
+        [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
+      }));
+      toast.success("Files uploaded successfully");
+    } catch (error) {
+      setQueryInputs((prev) => ({
+        ...prev,
+        [name]: Array.isArray(prev[name]) ? prev[name] : [],
+      }));
+      console.error("Bulk upload failed:", error);
+      toast.error("Failed to upload files");
+    } finally {
+      setLoading(false);
     }
-  };
+  }
+
+  else {
+    const formData = new FormData();
+    formData.append("file", value[0]);
+    formData.append("folder", "claims");
+
+    try {
+      setLoading(true);
+      const res = await uploadFiles(formData);
+
+      const existingDocument = queryInputs?.[name];
+      const existingDocumentId = existingDocument ? existingDocument.id : null;
+
+      setQueryInputs((prev) => ({
+        ...prev,
+        [name]: {
+          ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
+          fileName: res?.data?.key,
+          type: name,
+          file: value[0],
+          ...(name === "OTHER" && { remark: "custom remark" }),
+        },
+      }));
+      toast.success("File uploaded successfully");
+    } catch (error) {
+      //  Use name not value.type
+      setQueryInputs((prev) => ({
+        ...prev,
+        [name]: "",
+      }));
+      console.error("Single upload failed:", error);
+      toast.error("Failed to upload file");
+    } finally {
+      setLoading(false);
+    }
+  }
+};
   const removeKeys = (obj) => {
     if (!obj) {
       return;
@@ -191,98 +226,61 @@ export default function CreateQueryPopup({
     return obj;
   };
   const handleCreateQuery = async () => {
-    if (selectedQuery?.id) {
-      try {
-        const {
-          OTHER,
-          ICP,
-          insuranceRequestId,
-          status,
-          numberOfDays,
-          CURRENT_INVESTIGATION,
-          EXCEL_REPORT,
-          doctorName,
-          ...others
-        } = queryInputs;
+  try {
+    const {
+      OTHER,
+      ICP,
+      insuranceRequestId,
+      status,
+      numberOfDays,
+      CURRENT_INVESTIGATION,
+      EXCEL_REPORT,
+      doctorName,
+      ...others
+    } = queryInputs;
 
-        removeKeys(EXCEL_REPORT);
-        removeKeys(CURRENT_INVESTIGATION);
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
-        const payload = {
-          ...others,
-          insuranceRequestId: claimId,
-          documents: [
-            ICP,
-            CURRENT_INVESTIGATION,
-            EXCEL_REPORT,
-            ...(OTHER || []), // if OTHER is an array, ensure it's not null
-          ].filter(Boolean),
-        };
-        setLoading(true);
-        const res = await updateQuery(payload, selectedQuery?.id);
-        if (res?.status == 200) {
-          await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
-          setLoading(false);
-          onOpenChange(!open);
-          setSelectedQuery(null);
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
-      } finally {
-        // setLoading(false);
+    //  Pure function — never mutates state
+    const cleanDoc = ({ url, file, ...rest }: any) => rest;
+
+    const documents = [
+      ICP ? cleanDoc(ICP) : null,
+      CURRENT_INVESTIGATION ? cleanDoc(CURRENT_INVESTIGATION) : null,
+      EXCEL_REPORT ? cleanDoc(EXCEL_REPORT) : null,
+      ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+    ].filter(Boolean);
+
+    const payload = {
+      ...others,
+      insuranceRequestId: claimId,
+      documents,
+    };
+    setLoading(true);
+
+    if (selectedQuery?.id) {
+      const res = await updateQuery(payload, selectedQuery?.id);
+      if (res?.status == 200) {
+        await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
+        onOpenChange(!open);
+        setSelectedQuery(null);
+        toast.success("Query updated!");
       }
     } else {
-      try {
-        const {
-          OTHER,
-          ICP,
-          insuranceRequestId,
-          status,
-          numberOfDays,
-          CURRENT_INVESTIGATION,
-          EXCEL_REPORT,
-          doctorName,
-          ...others
-        } = queryInputs;
-        removeKeys(EXCEL_REPORT);
-        removeKeys(CURRENT_INVESTIGATION);
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(status);
-        const payload = {
-          ...others,
-          insuranceRequestId: claimId,
-          documents: [
-            ICP,
-            CURRENT_INVESTIGATION,
-            EXCEL_REPORT,
-            ...(OTHER || []), // if OTHER is an array, ensure it's not null
-          ].filter(Boolean),
-        };
-        setLoading(true);
-        const res = await createQuery(payload);
-        if (res?.status == 201) {
-          await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
-          setModalProcessingStatus?.("")
-          setLoading(false);
-          onOpenChange(!open);
-          setSelectedQuery(null);
-          setLoading(false);
-          toast.success("Query created!")
-        }
-      } catch (error) {
-        toast.error("Failed to create query!")
-        console.error("Upload error:", error);
-      } finally {
-        // setLoading(false);
+      const res = await createQuery(payload);
+      if (res?.status == 201) {
+        await updateClaimStatusAfterModalSuccess(StatusType.QUERIED);
+        setModalProcessingStatus?.("");
+        onOpenChange(!open);
+        setSelectedQuery(null);
+        toast.success("Query created!");
       }
     }
-  };
+  } catch (error) {
+    toast.error("Failed to save query!");
+    console.error("Upload error:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleClose = (isOpen: boolean) => {
     if (!isOpen) {
@@ -363,7 +361,8 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-                claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
+                // claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
+                claimInputs={Array.isArray(queryInputs?.OTHER) ? queryInputs?.OTHER : []}
               />
 
               {/* Action Buttons */}
