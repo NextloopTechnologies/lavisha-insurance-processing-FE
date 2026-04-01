@@ -28,6 +28,7 @@ export default function ManagerChat() {
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
   const [isWelcomeScreenEnabled, setIsWelcomeScreenEnabled] = useState<boolean>(false);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   useEffect(() => {
     if (typeof window !== "undefined") {
       setLoggedInUserId(localStorage.getItem("userId"));
@@ -61,10 +62,10 @@ export default function ManagerChat() {
 
 
   useEffect(() => {
-  if (managerComments?.length) {
-    scrollToBottom();
-  }
-}, [managerComments]);
+    if (managerComments?.length) {
+      scrollToBottom();
+    }
+  }, [managerComments]);
 
   const fetchManagerComments = async (hospitalId?: string) => {
     try {
@@ -161,11 +162,19 @@ export default function ManagerChat() {
                 <input
                   type="text"
                   placeholder="Search here..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full p-2 mb-4 border rounded-full text-sm"
                 />
                 <div className="space-y-3">
                   {adminManagerComments?.length
-                    ? adminManagerComments?.map((hospital, idx) => (
+                    ? adminManagerComments
+                      ?.filter((hospital) =>
+                        hospital?.hospitalName
+                          ?.toLowerCase()
+                          .includes(searchQuery.toLowerCase())
+                      )
+                      ?.map((hospital, idx) => (                        
                       <div
                         key={idx}
                         className={`${hospital?.hospitalId == hispotalId
@@ -281,14 +290,15 @@ export default function ManagerChat() {
                       handleCreateManagerChat();
                     }
                   }}
-                  // disabled={disable}
-                  className={`${Boolean(false) ? " cursor-not-allowed" : ""
-                    } flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none `}
+                  className={`flex-1 bg-[#F3F3F3] border rounded-xl px-4 py-3 text-sm focus:outline-none`}
                 />
                 <button
-                  // disabled={disable}
+                  disabled={!commentInput.trim()}
                   onClick={handleCreateManagerChat}
-                  className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-full px-5 py-3 text-sm cursor-pointer"
+                  className={`${!commentInput.trim()
+                      ? "bg-[#3E79D6]/50 cursor-not-allowed"
+                      : "bg-[#3E79D6] hover:bg-[#3E79D6] cursor-pointer"
+                    } text-white rounded-full px-5 py-3 text-sm`}
                 >
                   Send
                 </button>

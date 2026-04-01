@@ -150,12 +150,12 @@ const AdminDashboard: React.FC<Props> = ({
           )}
           {(roles?.includes("HOSPITAL") ||
             roles?.includes("HOSPITAL_MANAGER")) && (
-            <BarCharts
-              data={dashboardData}
-              showDropdown
-              dropdownLabel="Claims By"
-            />
-          )}
+              <BarCharts
+                data={dashboardData}
+                showDropdown
+                dropdownLabel="Claims By"
+              />
+            )}
         </Card>
       </div>
     </>
