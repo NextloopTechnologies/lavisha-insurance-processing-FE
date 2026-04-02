@@ -39,8 +39,18 @@ import { statusOptions } from "@/constants/menu";
 import DeletePopup from "./DeletePopup";
 import { StatusType } from "@/types/claims";
 import { format } from "date-fns";
-import { STATUS_LABELS } from "@/lib/utils";
+ import { STATUS_LABELS, filterTabsByData, statusMaxIndexMap } from "@/lib/utils"; // ✅ added imports
 import { UserRole } from "@/types/comments";
+
+//  Added allTabLabels constant
+const allTabLabels = [
+  "Details",
+  "Comments/History",
+  "Queried",
+  "Enhancement",
+  "Discharge",
+  "Settlement",
+];
 
 type User = {
   id: number;
@@ -71,10 +81,10 @@ type DATA = {
   patient: {
     id?: string;
     name?: string;
-     hospital: {
-    id?: string;
-    name?: string;
-  };
+    hospital: {
+      id?: string;
+      name?: string;
+    };
   };
   totalBill?: string;
   totalApproval?: string;
@@ -123,9 +133,9 @@ export function SettledDataTable({
   };
   useEffect(() => {
     if (initialSearchTerm) {
-      setSearchTerm(initialSearchTerm); // shows in input
+      setSearchTerm(initialSearchTerm);
       setDebouncedSearchTerm(initialSearchTerm);
-      getSearchData(initialSearchTerm, "debouncedSearchTerm"); // triggers search
+      getSearchData(initialSearchTerm, "debouncedSearchTerm");
     }
   }, [initialSearchTerm]);
 
@@ -135,6 +145,7 @@ export function SettledDataTable({
       getSearchData(selectedStatuses, "selectedStatuses");
     }
   }, [selectedStatuses]);
+
   useEffect(() => {
     if (selectedDate) {
       setPage(1);
@@ -147,10 +158,10 @@ export function SettledDataTable({
       setDebouncedSearchTerm(searchTerm);
       setPage(1);
       getSearchData(searchTerm, "debouncedSearchTerm");
-    }, 500); // 500ms debounce
+    }, 500);
 
     return () => {
-      clearTimeout(handler); // Cleanup if user keeps typing
+      clearTimeout(handler);
     };
   }, [searchTerm]);
 
@@ -160,7 +171,6 @@ export function SettledDataTable({
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
-
       <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
         <div className="flex gap-2 md:flex-wrap">
           <div className="relative">
@@ -184,14 +194,6 @@ export function SettledDataTable({
               </svg>
             </span>
           </div>
-          {/* <MultiSelect
-            mode="multi"
-            selectedStatuses={selectedStatuses}
-            status={statusOptions.filter((item) => item?.name == "Settled")}
-            toggleStatus={toggleStatus}
-            setSelectedStatuses={setSelectedStatuses}
-          /> */}
-          {/* <DatePicker date={selectedDate} onChange={setSelectedDate} /> */}
         </div>
 
         <Button
@@ -207,20 +209,18 @@ export function SettledDataTable({
       </div>
 
       {/* Table */}
-      <div className="  overflow-x-auto">
+      <div className="overflow-x-auto">
         <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-300px)] md:h-[calc(100vh-210px)]">
-          <Table className="min-w-full ">
-            <TableHeader className="text-red-400  w-full">
+          <Table className="min-w-full">
+            <TableHeader className="text-red-400 w-full">
               <TableRow className="bg-white text-[#FBBC05]">
-                {/* <div className="rounded-md border  w-20"> */}
-                {/* <TableHead className="text-[#FBBC05] border p-3">S No.</TableHead> */}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Patient Name
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Claim ID
                 </TableHead>
-                   <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Hospital Name
                 </TableHead>
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
@@ -228,10 +228,10 @@ export function SettledDataTable({
                 </TableHead>
                 {(!roles?.includes(UserRole.ADMIN) ||
                   !roles?.includes(UserRole.SUPER_ADMIN)) && (
-                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                      Status
-                    </TableHead>
-                  )}
+                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                    Status
+                  </TableHead>
+                )}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
                   Created Date
                 </TableHead>
@@ -243,10 +243,10 @@ export function SettledDataTable({
                 </TableHead>
                 {(roles?.includes(UserRole.ADMIN) ||
                   roles?.includes(UserRole.SUPER_ADMIN)) && (
-                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                      Assingee
-                    </TableHead>
-                  )}
+                  <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
+                    Assingee
+                  </TableHead>
+                )}
                 <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
                   Total Bill
                 </TableHead>
@@ -259,105 +259,117 @@ export function SettledDataTable({
                 <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
                   Action
                 </TableHead>
-                {/* </div> */}
               </TableRow>
             </TableHeader>
-            {/* <br /> */}
             <div className="mb-2 block"></div>
             <TableBody className="bg-white">
               {data?.length
-                ? data?.map((row, index) => (
-                  <TableRow
-                    key={index + "_" + row?.patient.name}
-                    className=""
-                  >
-                    {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
+                ? data?.map((row, index) => { //  changed arrow to block body
+                    //  Compute dynamic settlement tab index per row
+                    // const maxIndex =
+                    //   statusMaxIndexMap[row?.status] ??
+                    //   allTabLabels.length - 1;
+                    // const visibleTabs = filterTabsByData(
+                    //   allTabLabels.slice(0, maxIndex + 1),
+                    //   row
+                    // );
+                    // const settlementTabIndex = visibleTabs.findIndex(
+                    //   (label) => label === "Settlement"
+                    // );
+                    const maxIndex =
+                        statusMaxIndexMap[row?.status] ?? allTabLabels.length - 1;
+                        const visibleTabs = allTabLabels.slice(0, maxIndex + 1);
+                        const settlementTabIndex = visibleTabs.findIndex(
+                          (label) => label === "Settlement"
+                           );
 
-                    <TableCell className=" border p-5">
-                      {row?.patient.name}
-                    </TableCell>
-                    <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                      {row?.refNumber}
-                    </TableCell>
-                       <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                      {row?.patient?.hospital?.name}
-                    </TableCell>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
-                            <span className="truncate block max-w-[200px] ">
-                              {row?.description?.length > 30
-                                ? row?.description.slice(0, 30) + "..."
-                                : row?.description}
-                            </span>
+                    return ( //  explicit return
+                      <TableRow
+                        key={index + "_" + row?.patient.name}
+                        className=""
+                      >
+                        <TableCell className=" border p-5">
+                          {row?.patient.name}
+                        </TableCell>
+                        <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                          {row?.refNumber}
+                        </TableCell>
+                        <TableCell className=" border p-5 md:w-32 min-w-[120px]">
+                          {row?.patient?.hospital?.name}
+                        </TableCell>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
+                                <span className="truncate block max-w-[200px] ">
+                                  {row?.description?.length > 30
+                                    ? row?.description.slice(0, 30) + "..."
+                                    : row?.description}
+                                </span>
+                              </TableCell>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-xs break-words">
+                              {row?.description}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                        {(!roles?.includes(UserRole.ADMIN) ||
+                          !roles?.includes(UserRole.SUPER_ADMIN)) && (
+                          <TableCell className=" border p-5 ">
+                            {STATUS_LABELS[row.status]}
                           </TableCell>
-                        </TooltipTrigger>
-                        <TooltipContent className="max-w-xs break-words">
-                          {row?.description}
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    {(!roles?.includes(UserRole.ADMIN) ||
-                      !roles?.includes(UserRole.SUPER_ADMIN)) && (
-                        <TableCell className=" border p-5 ">
-                          {STATUS_LABELS[row.status]}
-                        </TableCell>
-                      )}
-                    <TableCell className=" border p-5 ">
-                      {format(new Date(row?.settlementDate), "yyyy/MM/dd")}
-                    </TableCell>
-                    <TableCell className=" border p-5 ">
-                      {row?.doctorName}
-                    </TableCell>
-                    <TableCell className=" border p-5 ">
-                      {row?.isPreAuth ? "True" : "False"}
-                    </TableCell>
-                    {(roles?.includes(UserRole.ADMIN) ||
-                      roles?.includes(UserRole.SUPER_ADMIN)) && (
-                        <TableCell className=" border p-5 ">
-                          {row?.assignee?.name || "---"}
-                        </TableCell>
-                      )}
-                    <TableCell className="border p-5">{row?.totalBill}</TableCell>
-                    <TableCell className="border p-5">{row?.totalApproval}</TableCell>
-                    <TableCell className="border p-5">{row?.settlementAmount}</TableCell>
-                    <TableCell className=" border p-5">
-                      <div className="flex gap-2 justify-start text-muted-foreground">
-                        {!roles?.includes(UserRole.ADMIN) && (
-                          <Link href={`/newClaim/${row?.refNumber}`}>
-                            <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
-                          </Link>
                         )}
-                        {/* <Trash2  onClick={() => handleDeleteClaim(row.refNumber)} className="w-4 h-4 hover:text-red-600 cursor-pointer" /> */}
-                        {row?.status !== StatusType.DRAFT && (
-                          <>
-                            {roles?.includes(UserRole.ADMIN) ? (
-                              <Link
-                                href={`/claims/${row?.refNumber}?showStatus=true&tab=5`}
-                              >
-                                <Eye
-                                  // onClick={() => row.patient.id}
-                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                />
-                              </Link>
-                            ) : (
-                              <Link href={`/claims/${row?.refNumber}`}>
-                                <Eye
-                                  // onClick={() => row.patient.id}
-                                  className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                />
+                        <TableCell className=" border p-5 ">
+                          {format(new Date(row?.settlementDate), "yyyy/MM/dd")}
+                        </TableCell>
+                        <TableCell className=" border p-5 ">
+                          {row?.doctorName}
+                        </TableCell>
+                        <TableCell className=" border p-5 ">
+                          {row?.isPreAuth ? "True" : "False"}
+                        </TableCell>
+                        {(roles?.includes(UserRole.ADMIN) ||
+                          roles?.includes(UserRole.SUPER_ADMIN)) && (
+                          <TableCell className=" border p-5 ">
+                            {row?.assignee?.name || "---"}
+                          </TableCell>
+                        )}
+                        <TableCell className="border p-5">
+                          {row?.totalBill}
+                        </TableCell>
+                        <TableCell className="border p-5">
+                          {row?.totalApproval}
+                        </TableCell>
+                        <TableCell className="border p-5">
+                          {row?.settlementAmount}
+                        </TableCell>
+                        <TableCell className=" border p-5">
+                          <div className="flex gap-2 justify-start text-muted-foreground">
+                            {!roles?.includes(UserRole.ADMIN) && (
+                              <Link href={`/newClaim/${row?.refNumber}`}>
+                                <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                               </Link>
                             )}
-                            {/* {!roles?.includes(UserRole.ADMIN) && (
-                                <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" />
-                              )} */}
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                            {row?.status !== StatusType.DRAFT && (
+                              <>
+                                {roles?.includes(UserRole.ADMIN) ? (
+                                  <Link
+                                    href={`/claims/${row?.refNumber}?showStatus=true&tab=${settlementTabIndex}`} // ✅ dynamic tab index
+                                  >
+                                    <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
+                                  </Link>
+                                ) : (
+                                  <Link href={`/claims/${row?.refNumber}`}>
+                                    <Eye className="w-4 h-4 hover:text-blue-600 cursor-pointer" />
+                                  </Link>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 : ""}
             </TableBody>
           </Table>
