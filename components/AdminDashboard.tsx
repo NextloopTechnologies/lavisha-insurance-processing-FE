@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import PieCharts from "@/components/PieCharts";
 import BarCharts from "@/components/BarCharts";
 import { ChartNoAxesColumnIncreasing } from "lucide-react";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import DasboardStatCard from "./DashboardStatCard";
-import { boolean } from "yup";
 import { getUsersDropdown } from "@/services/users";
 
 interface Props {
@@ -73,13 +72,13 @@ const AdminDashboard: React.FC<Props> = ({
     { name: ADMIN_CHART.oneYear, count: dashboardData.oneYear },
   ];
   return (
-    <>
-      <div className="flex justify-between items-center">
-        <h1 className="text-[#474747] font-semibold">Dashboard</h1>
-        <div className="flex justify-between items-center gap-x-4">
+    <div className="flex flex-col gap-4 p-3 sm:p-4 md:p-6 w-full overflow-x-hidden">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+        <h1 className="text-[#474747] font-semibold text-lg">Dashboard</h1>
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
           {hospitalFilter && (
-            <div className="min-w-[200px] flex justify-end gap-x-4">
-              <Label className="text-sm font-bold text-muted-foreground mb-1">
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-2">
+              <Label className="text-sm font-bold text-muted-foreground whitespace-nowrap">
                 All Hospital
               </Label>
               <Select
@@ -87,10 +86,10 @@ const AdminDashboard: React.FC<Props> = ({
                 onValueChange={handleHospitalChange}
                 defaultValue=" "
               >
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-full sm:w-[160px] md:w-[180px]">
                   <SelectValue placeholder="All Hospital" />
                 </SelectTrigger>
-                <SelectContent className=" w-full">
+                <SelectContent>
                   <SelectGroup>
                     <SelectItem value={" "}>All Hospital</SelectItem>
                     {users?.map((item, index) => (
@@ -103,62 +102,75 @@ const AdminDashboard: React.FC<Props> = ({
               </Select>
             </div>
           )}
-          <DateRangePicker date={dateRange} setDate={setDateRange} />
+          <div className="w-full sm:w-auto">
+            <DateRangePicker date={dateRange} setDate={setDateRange} />
+          </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-        <Card className=" md:col-span-2 flex flex-row  items-center justify-between p-6">
-          <div>
-            <h2 className="text-3xl font-semibold mt-4">Welcome!</h2>
-            <p className="text-gray-600">{loggedInUserName}</p>
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-6 xl:gap-6">
+        <Card className="xl:col-span-2 flex flex-row items-center justify-between gap-3 p-4 sm:p-5 overflow-hidden">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold truncate">
+              Welcome!
+            </h2>
+            <p className="text-gray-600 text-sm sm:text-base truncate">
+              {loggedInUserName}
+            </p>
           </div>
           <img
             src="assets/doctor-hospital.svg"
             alt="doctor"
-            className="h-20 md:h-20"
+            className="h-14 sm:h-16 md:h-20 w-auto flex-shrink-0"
           />
         </Card>
 
-        <Card className="md:col-span-4 grid md:grid-cols-3 grid-cols-1 md:gap-10 md:px-10 px-2">
-          {statCardData?.map((item) => (
-            <DasboardStatCard
-              icon={
-                <ChartNoAxesColumnIncreasing className="text-[#3E79D6] bg-white rounded-[4px]" />
-              }
-              value={item?.value}
-              label={item?.label}
-            />
-          ))}
+        <Card className="xl:col-span-4 p-4 sm:p-5 overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 md:gap-6 h-full">
+            {statCardData?.map((item, index) => (
+              <DasboardStatCard
+                key={index}
+                icon={
+                  <ChartNoAxesColumnIncreasing className="text-[#3E79D6] bg-white rounded-[4px]" />
+                }
+                value={item?.value}
+                label={item?.label}
+              />
+            ))}
+          </div>
         </Card>
       </div>
 
       {/* Chart Filter and Graphs */}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-6">
-        <Card className="p-4 md:col-span-2">
-          <PieCharts data={dashboardData} />
+      <div className="flex flex-col gap-4 xl:grid xl:grid-cols-6 xl:gap-6">
+
+        <Card className="xl:col-span-2 p-3 sm:p-4 w-full overflow-hidden">
+          <div className="w-full max-w-full">
+            <PieCharts data={dashboardData} />
+          </div>
         </Card>
 
-        {/* Right - Bar Chart by TPA */}
-        <Card className="p-4 md:col-span-4">
-          {/* <BarCharts data={dashboardData} /> */}
-          {(roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN")) && (
-            <BarCharts
-              data={adminChartData}
-              showDropdown={false}
-              dropdownLabel="Claims By"
-            />
-          )}
-          {(roles?.includes("HOSPITAL") ||
-            roles?.includes("HOSPITAL_MANAGER")) && (
+        {/* Bar chart — full width below xl */}
+        <Card className="xl:col-span-4 p-3 sm:p-4 w-full overflow-hidden">
+          <div className="w-full max-w-full overflow-x-auto">
+            {(roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN")) && (
+              <BarCharts
+                data={adminChartData}
+                showDropdown={false}
+                dropdownLabel="Claims By"
+              />
+            )}
+            {(roles?.includes("HOSPITAL") ||
+              roles?.includes("HOSPITAL_MANAGER")) && (
               <BarCharts
                 data={dashboardData}
                 showDropdown
                 dropdownLabel="Claims By"
               />
             )}
+          </div>
         </Card>
       </div>
-    </>
+    </div>
   );
 };
 

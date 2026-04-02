@@ -12,9 +12,11 @@ import { Button } from "@/components/ui/button";
 export function DatePicker({
   date,
   onChange,
+  disableFuture = false,
 }: {
   date: Date | undefined;
   onChange: (date: Date | undefined) => void;
+  disableFuture?: boolean;
 }) {
   return (
     <Popover>
@@ -34,6 +36,7 @@ export function DatePicker({
           mode="single"
           selected={date}
           onSelect={onChange}
+          disabled={disableFuture ? { after: new Date() } : undefined}
         />
       </PopoverContent>
     </Popover>

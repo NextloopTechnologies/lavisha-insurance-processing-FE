@@ -198,7 +198,7 @@ export function DataTable({
             setSelectedStatuses={setSelectedStatuses}
           />
           <div>
-            <DatePicker date={selectedDate} onChange={setSelectedDate} />
+            <DatePicker date={selectedDate} onChange={setSelectedDate} disableFuture />
             {selectedDate && (
               <span
                 className="text-2xl ml-2 cursor-pointer"
@@ -277,8 +277,6 @@ export function DataTable({
                 {/* </div> */}
               </TableRow>
             </TableHeader>
-            {/* <br /> */}
-            <div className="mb-2 block"></div>
             <TableBody className="bg-white">
               {data?.length
                 ? data?.map((row, index) => (
@@ -409,7 +407,7 @@ export function DataTable({
                     </TableCell>
                   </TableRow>
                 ))
-                : ""}
+                : null}
             </TableBody>
           </Table>
           {data?.length == 0 ? (
