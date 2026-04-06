@@ -59,6 +59,7 @@ type DATA = {
   status?: string;
   doctorName?: string;
   createdAt: string;
+  updatedAt:string;
   description?: string;
   claimId: string;
   refNumber?: string;
@@ -77,12 +78,12 @@ type DATA = {
   commentsCountMap: { [key: string]: number };
 };
 export const eyeTap = async (roles: string[], refNumber: Number) => {
-    try {
-      const response = await markCommentsAsRead(refNumber,roles[0]);
-      return response.data;
-    } catch (error) {
-      console.error("Failed to mark comments as read:", error);
-    }
+  try {
+    const response = await markCommentsAsRead(refNumber, roles[0]);
+    return response.data;
+  } catch (error) {
+    console.error("Failed to mark comments as read:", error);
+  }
  
 };
 
@@ -98,7 +99,7 @@ export function DataTable({
   roles,
   setClaims,
   users,
-  commentsCountMap
+  commentsCountMap,
 }: {
   roles?: string[];
   data: DATA[];
@@ -119,20 +120,21 @@ export function DataTable({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
   const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
-  const [assignedClaimRefNumber, setAssignedClaimRefNumber] =
-    useState<string>("");
+  const [assignedClaimRefNumber, setAssignedClaimRefNumber] = useState<string>("");
+
   const toggleStatus = (status: string) => {
-    setSelectedStatuses((prev) => {
-      return prev.includes(status)
+    setSelectedStatuses((prev) =>
+      prev.includes(status)
         ? prev.filter((item) => item !== status)
-        : [...prev, status];
-    });
+        : [...prev, status]
+    );
   };
+
   useEffect(() => {
     if (initialSearchTerm) {
-      setSearchTerm(initialSearchTerm); // shows in input
+      setSearchTerm(initialSearchTerm);
       setDebouncedSearchTerm(initialSearchTerm);
-      getSearchData(initialSearchTerm, "debouncedSearchTerm"); // triggers search
+      getSearchData(initialSearchTerm, "debouncedSearchTerm");
     }
   }, [initialSearchTerm]);
 
@@ -142,6 +144,7 @@ export function DataTable({
       getSearchData(selectedStatuses, "selectedStatuses");
     }
   }, [selectedStatuses]);
+
   useEffect(() => {
     if (selectedDate || selectedDate == undefined) {
       setPage(1);
@@ -154,38 +157,34 @@ export function DataTable({
       setDebouncedSearchTerm(searchTerm);
       setPage(1);
       getSearchData(searchTerm, "debouncedSearchTerm");
-    }, 500); // 500ms debounce
-
-    return () => {
-      clearTimeout(handler); // Cleanup if user keeps typing
-    };
+    }, 500);
+    return () => clearTimeout(handler);
   }, [searchTerm]);
 
   const totalPages = Math.ceil(total);
 
+  const thStyle = {
+    position: "sticky" as const,
+    top: 0,
+    backgroundColor: "#3E79D6",
+    color: "white",
+    zIndex: 10,
+  };
+
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
-
-      <div className=" flex flex-wrap gap-4 justify-between items-center mb-4">
+      <div className="flex flex-wrap gap-4 justify-between items-center mb-4">
         <div className="flex gap-2 md:flex-wrap">
           <div className="relative">
             <Input
               placeholder="Search here"
               className="pl-10 w-[180px] md:w-56 bg-white rounded-4xl"
               value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-              }}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
             <span className="absolute left-3 top-2.5 text-[#3E79D6]">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-              >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85zm-5.242 1.656a5 5 0 1 1 0-10 5 5 0 0 1 0 10z" />
               </svg>
             </span>
@@ -200,17 +199,12 @@ export function DataTable({
           <div>
             <DatePicker date={selectedDate} onChange={setSelectedDate} />
             {selectedDate && (
-              <span
-                className="text-2xl ml-2 cursor-pointer"
-                onClick={() => setSelectedDate(undefined)}
-              >
+              <span className="text-2xl ml-2 cursor-pointer" onClick={() => setSelectedDate(undefined)}>
                 X
               </span>
-            )}{" "}
+            )}
           </div>
         </div>
-        {/* {(roles.includes(UserRole.HOSPITAL) ||
-          roles.includes(UserRole.HOSPITAL_MANAGER)) && ( */}
         <>
           <Button
             onClick={() => router.push("/newClaim")}
@@ -218,148 +212,95 @@ export function DataTable({
           >
             <Plus className="mr-2 h-4 w-4" /> New Claim
           </Button>
-
-          <Plus
-            onClick={() => router.push("/newClaim")}
-            className="mr-2 h-4 w-4 block md:hidden cursor-pointer"
-          />
+          <Plus onClick={() => router.push("/newClaim")} className="mr-2 h-4 w-4 block md:hidden cursor-pointer" />
         </>
-        {/* )} */}
       </div>
 
       {/* Table */}
-      <div className="  overflow-x-auto">
-        <div className="overflow-y-auto rounded-sm bg-white border h-[calc(100vh-300px)] md:h-[calc(100vh-210px)]">
-          <Table className="min-w-full ">
-            <TableHeader className="text-red-400  w-full">
-              <TableRow className="bg-white text-[#FBBC05]">
-                {/* <div className="rounded-md border  w-20"> */}
-                {/* <TableHead className="text-[#FBBC05] border p-3">S No.</TableHead> */}
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
-                  Patient Name
-                </TableHead>
-                {(roles?.includes(UserRole.ADMIN) ||
-                  roles?.includes(UserRole.SUPER_ADMIN)) && (
-                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                      Hospital Name
-                    </TableHead>
-                  )}
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3">
-                  Claim ID
-                </TableHead>
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Description
-                </TableHead>
-                {(!roles?.includes(UserRole.ADMIN) ||
-                  !roles?.includes(UserRole.SUPER_ADMIN)) && (
-                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                      Status
-                    </TableHead>
-                  )}
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Created Date
-                </TableHead>
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Dr. Name
-                </TableHead>
-                <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                  Pre-Auth Status
-                </TableHead>
-                {(roles?.includes(UserRole.ADMIN) ||
-                  roles?.includes(UserRole.SUPER_ADMIN)) && (
-                    <TableHead className="text-[#FFFF] bg-[#3E79D6] border p-3 ">
-                      Assingee
-                    </TableHead>
-                  )}
-                <TableHead className="text-center text-[#FFFF] bg-[#3E79D6] border p-3">
-                  Action
-                </TableHead>
-                {/* </div> */}
-              </TableRow>
-            </TableHeader>
-            {/* <br /> */}
-            <div className="mb-2 block"></div>
-            <TableBody className="bg-white">
-              {data?.length
-                ? data?.map((row, index) => (
-                  <TableRow key={index} className="">
-                    {/* <TableCell className=" border p-3">{row.id}</TableCell> */}
-
-                    <TableCell className=" border p-5">
-                      {row?.patient.name}
-                    </TableCell>
-                    {(roles?.includes(UserRole.ADMIN) ||
-                      roles?.includes(UserRole.SUPER_ADMIN)) && (
-                        <TableCell className="border p-5">
-                          {row?.patient?.hospital?.name || "---"}
-                        </TableCell>
-                      )}
-                    <TableCell className=" border p-5 md:w-32 min-w-[120px]">
-                      {row?.refNumber}
-                    </TableCell>
+      <div
+        className="rounded-sm bg-white border"
+        style={{
+          height: "calc(100vh - 210px)",
+          overflowY: "auto",
+          overflowX: "scroll",
+        }}
+      >
+        <table className="min-w-full border-collapse">
+          <thead>
+            <tr>
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">
+                Patient Name
+              </th>
+              {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (
+                <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">
+                  Hospital Name
+                </th>
+              )}
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Claim ID</th>
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Description</th>
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Status</th>
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Updated Date</th>
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Dr. Name</th> */}
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Pre-Auth Status</th> */}
+              {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (
+                <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Assignee</th>
+              )}
+              <th style={thStyle} className="border py-2 px-3 text-center text-sm font-normal whitespace-nowrap">Action</th>
+           
+            </tr>
+          </thead>
+          <tbody className="bg-white">
+            {data?.length
+              ? data.map((row, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="border py-2 px-3 text-sm">{row?.patient.name}</td>
+                    {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (
+                      <td className="border py-2 px-3 text-sm">{row?.patient?.hospital?.name || "---"}</td>
+                    )}
+                    <td className="border py-2 px-3 text-sm min-w-[120px]">{row?.refNumber}</td>
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <TableCell className="border p-5 md:w-48 min-w-[250px] cursor-pointer">
-                            <span className="truncate block max-w-[200px] ">
+                          <td className="border py-2 px-3 text-sm min-w-[200px] cursor-pointer">
+                            <span className="truncate block max-w-[200px]">
                               {row?.description?.length > 30
                                 ? row?.description.slice(0, 30) + "..."
                                 : row?.description}
                             </span>
-                          </TableCell>
+                          </td>
                         </TooltipTrigger>
                         <TooltipContent className="max-w-xs break-words">
                           {row?.description}
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
-                    {/* {(!roles?.includes(UserRole.ADMIN) ||
-                        !roles?.includes(UserRole.SUPER_ADMIN)) && ( */}
-                    <TableCell className=" border p-5 ">
-                      {STATUS_LABELS[row.status]}
-                    </TableCell>
-                    {/* )} */}
-                    <TableCell className=" border p-5 ">
-                      {format(new Date(row.createdAt), "yyyy/MM/dd")}
-                    </TableCell>
-                    <TableCell className=" border p-5 ">
-                      {row?.doctorName}
-                    </TableCell>
-                    <TableCell className=" border p-5 ">
-                      {row?.isPreAuth ? "True" : "False"}
-                    </TableCell>
-                    {(roles?.includes(UserRole.ADMIN) ||
-                      roles?.includes(UserRole.SUPER_ADMIN)) && (
-                        <TableCell className=" border p-5 ">
-                          {/* {row?.assignee || "---"} */}
-                          <AssigneeDropdown
-                            claimId={row?.refNumber}
-                            currentAssignee={row?.assignee?.id}
-                            users={users} // pass list of users to assign
-                            onUpdate={(id, newAssignee) => {
-                              // conditional visibility for view option in action
-                              if (newAssignee) {
-                                setIsClaimAssigned(true);
-                                setAssignedClaimRefNumber(row.refNumber);
-                              }
-                              setClaims((prev) =>
-                                prev.map((c) =>
-                                  c.id === id
-                                    ? { ...c, assignee: newAssignee }
-                                    : c
-                                )
-                              );
-                            }}
-                          />
-                        </TableCell>
-                      )}
-                    <TableCell className=" border p-5">
-                      <div className="flex gap-2  text-muted-foreground  items-center">
-                        {/* {!roles?.includes("ADMIN") && ( */}
+                    <td className="border py-2 px-3 text-sm whitespace-nowrap">{STATUS_LABELS[row.status]}</td>
+                    <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.updatedAt), "yyyy/MM/dd")}</td>
+                    {/* <td className="border py-2 px-3 text-sm">{row?.doctorName}</td> */}
+                    {/* <td className="border py-2 px-3 text-sm">{row?.isPreAuth ? "True" : "False"}</td> */}
+                    {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (
+                      <td className="border py-2 px-3 text-sm">
+                        <AssigneeDropdown
+                          claimId={row?.refNumber}
+                          currentAssignee={row?.assignee?.id}
+                          users={users}
+                          onUpdate={(id, newAssignee) => {
+                            if (newAssignee) {
+                              setIsClaimAssigned(true);
+                              setAssignedClaimRefNumber(row.refNumber);
+                            }
+                            setClaims((prev) =>
+                              prev.map((c) => (c.id === id ? { ...c, assignee: newAssignee } : c))
+                            );
+                          }}
+                        />
+                      </td>
+                    )}
+                    <td className="border py-2 px-3 text-sm">
+                      <div className="flex gap-2 text-muted-foreground items-center justify-center">
                         <Link href={`/newClaim/${row?.refNumber}`}>
                           <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
                         </Link>
-                        {/* )} */}
                         {row?.status == StatusType.DRAFT && (
                           <Trash2
                             onClick={() => handleDeleteClaim(row.refNumber)}
@@ -368,83 +309,58 @@ export function DataTable({
                         )}
                         {row?.status !== StatusType.DRAFT && (
                           <>
-                            {/* {roles?.includes("ADMIN") ? (
-                                <Link
-                                  href={`/claims/${row?.refNumber}?showStatus=true&tab=5`}
-                                >
-                                  <Eye
-                                    // onClick={() => row.patient.id}
-                                    className="w-4 h-4 hover:text-blue-600 cursor-pointer"
-                                  />
-                                </Link>
-                              ) : ( */}
                             {(row.assignee !== null ||
-                              (isClaimAssigned &&
-                                assignedClaimRefNumber ===
-                                row.refNumber)) && (
-                            
-                                <Button variant="ghost" size="icon" className="relative" onClick={async () => {
+                              (isClaimAssigned && assignedClaimRefNumber === row.refNumber)) && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="relative"
+                                onClick={async () => {
                                   await eyeTap(roles, row?.id);
                                   window.location.assign(`/claims/${row?.refNumber}`);
-                                }}>
-                                  <Eye size={20} className="text-[#3E79D6]" />
-
-                                  {commentsCountMap[row?.id] > 0 && (
-                                    <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                                      {commentsCountMap[row?.id]} {/* The unread count */}
-                                    </span>
-                                  )}
-                                </Button>
-
-                              )}
-
-
-                            {/* )} */}
-                            {/* {!roles?.includes("ADMIN") && ( */}
-                            {/* <Copy className="w-4 h-4 hover:text-purple-600 cursor-pointer" /> */}
-                            {/* )} */}
+                                }}
+                              >
+                                <Eye size={20} className="text-[#3E79D6]" />
+                                {commentsCountMap[row?.id] > 0 && (
+                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                                    {commentsCountMap[row?.id]}
+                                  </span>
+                                )}
+                              </Button>
+                            )}
                           </>
                         )}
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 ))
-                : ""}
-            </TableBody>
-          </Table>
-          {data?.length == 0 ? (
-            <div className="text-center w-full flex justify-center items-center h-[calc(100%-300px)] md:h-[calc(100%-210px)]">
-              No record found
-            </div>
-          ) : (
-            ""
-          )}
-        </div>
-        <div className="flex justify-between items-center mt-4">
-          <button
-            onClick={() => {
-              setPage((prev) => Math.max(prev - 1, 1));
-            }}
-            disabled={page > 1 ? false : true}
-            className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
-          >
-            Previous
-          </button>
+              : null}
+          </tbody>
+        </table>
+        {data?.length == 0 && (
+          <div className="text-center w-full flex justify-center items-center" style={{ height: "calc(100% - 50px)" }}>
+            No record found
+          </div>
+        )}
+      </div>
 
-          <span className="text-sm">
-            Page {page} of {totalPages}
-          </span>
-
-          <button
-            onClick={() => {
-              setPage((prev) => prev + 1);
-            }}
-            disabled={page < total ? false : true}
-            className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <button
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+          disabled={page <= 1}
+          className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span className="text-sm">Page {page} of {totalPages}</span>
+        <button
+          onClick={() => setPage((prev) => prev + 1)}
+          disabled={page >= total}
+          className="px-4 py-1 text-sm bg-gray-200 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   );
