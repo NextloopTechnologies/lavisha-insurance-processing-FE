@@ -39,7 +39,7 @@ import { statusOptions } from "@/constants/menu";
 import DeletePopup from "./DeletePopup";
 import { StatusType } from "@/types/claims";
 import { format } from "date-fns";
-import { STATUS_LABELS, filterTabsByData, statusMaxIndexMap } from "@/lib/utils"; // ✅ added imports
+import { STATUS_LABELS, filterTabsByData, statusMaxIndexMap } from "@/lib/utils"; 
 import { UserRole } from "@/types/comments";
 import { getClaimsById } from "@/services/claims";
 
@@ -168,7 +168,7 @@ export function SettledDataTable({
 
   const totalPages = Math.ceil(total);
   const handleChange = (name, value) => {};
-  
+
   return (
     <div className="min-h-[calc(100vh-75px)] p-4">
       {/* Top bar */}
