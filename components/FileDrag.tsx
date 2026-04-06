@@ -133,6 +133,16 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     }
   }
 
+const getDisplayName = (file: any) => {
+  if (file?.name) return file.name; // raw File object (before upload)
+  if (file?.fileName) {
+    const keyWithoutFolder = file.fileName.split('/').pop() || "";
+    // strip the _UUID part
+    const withoutUUID = keyWithoutFolder.replace(/_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/, '');
+    return withoutUUID || keyWithoutFolder;
+  }
+  return "";
+};
   return (
     <div className="border rounded-md bg-blue-50 p-0 w-full max-w-full mb-3">
       {/* Header */}
@@ -185,6 +195,7 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
               <div
                 onClick={() => handleFileClick(file)}
                 className="border p-2 rounded"
+                  title={getDisplayName(file)}
               >
                 {file?.type?.startsWith("image/") ? (
                   <Image className="h-10 w-10 text-blue-500 mx-auto" />
@@ -192,9 +203,13 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
                   <Folder className="h-10 w-10 text-blue-400 mx-auto" />
                 )}
               </div>
-              <div className="text-xs mt-1 truncate max-w-[80px]">
-                {file?.name}
+              <div className="text-xs mt-1 truncate max-w-[80px]"
+                title={getDisplayName(file)}
+                  >
+                {/* {file?.name} */}
                  {/* {file?.name || file?.fileName || ""} */}
+                 {getDisplayName(file)}
+
               </div>
               <span
                 onClick={() => removeFile(index, file)}
