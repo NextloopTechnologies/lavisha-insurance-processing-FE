@@ -134,6 +134,7 @@ export default function CreateClaim({
         const uploadedFiles = res?.data?.map((file) => ({
           fileName: file?.key,
           type: name,
+          isNew: true,
           ...(name === "OTHER" && { remark: "custom remark" }),
         }));
 
@@ -182,6 +183,7 @@ export default function CreateClaim({
             fileName: res?.data?.key,
             type: name,
             file: value[0],
+            isNew: true,
             ...(name === "OTHER" && { remark: "custom remark" }),
           },
         }));

@@ -80,17 +80,24 @@ export default function EditClaimForm() {
         if (Array.isArray(OTHER)) {
           OTHER.forEach(removeKeys);
         }
+        const isNewUpload = (doc: any) => doc && !!doc.isNew;
+
         const payload = {
           ...others,
           status: value ? value : undefined,
-          documents: [
-            CLINIC_PAPER,
-            ICP,
-            PAST_INVESTIGATION,
-            CURRENT_INVESTIGATION,
-            ...(OTHER || []), 
-          ].filter(Boolean),
-          isBasicClaimUpdate: isClaimAssigned
+          isBasicClaimUpdate: isClaimAssigned,
+          ...((() => {
+            const changed = [
+              isNewUpload(CLINIC_PAPER) ? CLINIC_PAPER : null,
+              isNewUpload(ICP) ? ICP : null,
+              isNewUpload(PAST_INVESTIGATION) ? PAST_INVESTIGATION : null,
+              isNewUpload(CURRENT_INVESTIGATION) ? CURRENT_INVESTIGATION : null,
+              ...(Array.isArray(OTHER) ? OTHER.filter(isNewUpload) : []),
+            ].filter(Boolean)
+              .map(({ url, file, isNew, ...rest }) => rest);
+
+            return changed.length > 0 ? { documents: changed } : {};
+          })()),
         };
         setLoading(true);
         const res = await updateClaims(payload, id);
