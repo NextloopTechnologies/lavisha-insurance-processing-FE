@@ -59,6 +59,7 @@ type DATA = {
   status?: string;
   doctorName?: string;
   createdAt: string;
+  updatedAt:string;
   description?: string;
   claimId: string;
   refNumber?: string;
