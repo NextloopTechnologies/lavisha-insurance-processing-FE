@@ -45,6 +45,8 @@ export default function SettlementsContent() {
 
       if (searchData.debouncedSearchTerm) {
         query.patientName = searchData.debouncedSearchTerm;
+        query.hospitalName = searchData.debouncedSearchTerm;
+        query.refNumber = searchData.debouncedSearchTerm;
       }
       if (searchData.selectedStatuses.length > 0) {
         query.status = searchData.selectedStatuses.join(",");
