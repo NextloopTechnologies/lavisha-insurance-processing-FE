@@ -53,6 +53,16 @@ export default function EditClaimForm() {
   const params = useParams();
   const id = params.id;
   const handleCreateClaim = async (value = null) => {
+
+      if (Array.isArray(claimInputs.OTHER) && claimInputs.OTHER.length > 0) {
+    const missingRemark = claimInputs.OTHER.some(
+      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
+    );
+    if (missingRemark) {
+      toast.error("Please add a note for all miscellaneous documents.");
+      return;
+    }
+  }
     if (!!claims) {
       try {
         const {

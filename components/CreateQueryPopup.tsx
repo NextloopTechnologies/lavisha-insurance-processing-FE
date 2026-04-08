@@ -234,6 +234,16 @@ export default function CreateQueryPopup({
     return obj;
   };
   const handleCreateQuery = async () => {
+
+    if (Array.isArray(queryInputs.OTHER) && queryInputs.OTHER.length > 0) {
+    const missingRemark = queryInputs.OTHER.some(
+      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
+    );
+    if (missingRemark) {
+      toast.error("Please add a note for all miscellaneous documents.");
+      return;
+    }
+  }
     try {
       const {
         OTHER,
@@ -369,6 +379,18 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
+                onRemarkChange={(fileName, remark) => {  
+                  setQueryInputs((prev) => ({
+                    ...prev,
+                    OTHER: Array.isArray(prev.OTHER)
+                      ? prev.OTHER.map((file) =>
+                          (file?.fileName === fileName || file?.name === fileName)
+                            ? { ...file, remark }
+                            : file
+                        )
+                      : prev.OTHER,
+                  }));
+                }}
                 // claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
                 claimInputs={Array.isArray(queryInputs?.OTHER) ? queryInputs?.OTHER : []}
               />

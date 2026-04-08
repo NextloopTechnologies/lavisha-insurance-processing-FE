@@ -227,6 +227,16 @@ export default function CreateDischargePopup({
   };
 
   const handleCreateClaim = async () => {
+    if (Array.isArray(claimInputs.DISCHARGE_OTHER) && claimInputs.DISCHARGE_OTHER.length > 0) {
+    console.log(claimInputs.DISCHARGE_OTHER)
+      const missingRemark = claimInputs.DISCHARGE_OTHER.some(
+      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
+    );
+    if (missingRemark) {
+      toast.error("Please add a note for all miscellaneous documents.");
+      return;
+    }
+  }
     try {
       const {
         CLINIC_PAPER,
@@ -333,6 +343,18 @@ export default function CreateDischargePopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"DISCHARGE_OTHER"}
+                onRemarkChange={(fileName, remark) => {
+                setClaimInputs((prev) => ({
+                  ...prev,
+                  DISCHARGE_OTHER: Array.isArray(prev.DISCHARGE_OTHER)
+                    ? prev.DISCHARGE_OTHER.map((file) =>
+                        (file?.fileName === fileName || file?.name === fileName)
+                          ? { ...file, remark }
+                          : file
+                      )
+                    : prev.DISCHARGE_OTHER,
+                }));
+              }}
                 claimInputs={Array.isArray(claimInputs?.DISCHARGE_OTHER) ? claimInputs?.DISCHARGE_OTHER : []}
               />
 

@@ -7,6 +7,7 @@ interface FileDropzoneProps {
   title: string;
   multiple?: boolean;
   onChange?: (files: File[], name?: string, multiple?: boolean) => void;
+  onRemarkChange?: (fileName: string, remark: string) => void;
   name?: string;
   claimInputs?: any;
 }
@@ -15,10 +16,12 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
   title,
   multiple = false,
   onChange,
+  onRemarkChange,
   name,
   claimInputs,
 }) => {
-  const [files, setFiles] = useState<File[]>([]);
+  // const [files, setFiles] = useState<File[]>([]);
+  const [files, setFiles] = useState<any[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<{
@@ -211,6 +214,23 @@ const getDisplayName = (file: any) => {
                  {getDisplayName(file)}
 
               </div>
+                 {multiple && (
+                  <input
+                    type="text"
+                    placeholder="Add note..."
+                     maxLength={30}
+                    defaultValue={file?.remark && file.remark !== "custom remark" ? file.remark : ""}
+                    onChange={(e) => onRemarkChange?.(file?.fileName || file?.name, e.target.value)}
+                    // className="text-xs mt-1 w-[80px] border border-gray-300 rounded px-1 py-0.5 outline-blue-300 bg-white"
+                    className={`text-xs mt-1 w-[80px] border rounded px-1 py-0.5 outline-blue-300 bg-white
+                    ${!file?.remark || file?.remark === "custom remark" 
+                    ? "border-red-400" 
+                    : "border-gray-300"
+                    }`}
+                    onClick={(e) => e.stopPropagation()} // prevent file open on click
+                    title={file?.remark || ""}
+                  />
+                )}
               <span
                 onClick={() => removeFile(index, file)}
                 className="cursor-pointer text-sm absolute -top-2 -right-1 text-red-500"

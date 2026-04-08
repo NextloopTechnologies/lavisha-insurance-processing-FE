@@ -61,7 +61,12 @@ export default function DocumentDetails({ data, type }) {
             )}
           </div>
 
-          <p className="text-sm text-gray-700">{doc?.type}</p>
+          {/* <p className="text-sm text-gray-700">{doc?.type}</p> */}
+            <p className="text-sm text-gray-700">
+                {["OTHER", "DISCHARGE_OTHER", "SETTLEMENT_OTHER"].includes(doc?.type)
+                  ? (doc?.remark?.trim() ? doc.remark : "Other")
+                  : doc?.type}
+            </p>
           <span>
             <Eye className="h-4 w-4 text-blue-500 absolute top-1 left-1" />
           </span>
