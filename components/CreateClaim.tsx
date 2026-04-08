@@ -482,6 +482,18 @@ export default function CreateClaim({
           onChange={handleFileChange}
           name={"OTHER"}
           claimInputs={claimInputs?.OTHER}
+          onRemarkChange={(fileName, remark) => {  
+            setClaimInputs((prev) => ({
+              ...prev,
+              OTHER: Array.isArray(prev.OTHER)
+                ? prev.OTHER.map((file) =>
+                    (file?.fileName === fileName || file?.name === fileName)
+                      ? { ...file, remark }
+                      : file
+                  )
+                : prev.OTHER,
+            }));
+          }}
         />
 
         <div className="mt-4">

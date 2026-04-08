@@ -245,6 +245,15 @@ export default function CreateSettlementPopup({
   };
 
   const handleCreateSettlement = async () => {
+    if (Array.isArray(claimInputs.SETTLEMENT_OTHER) && claimInputs.SETTLEMENT_OTHER.length > 0) {
+    const missingRemark = claimInputs.SETTLEMENT_OTHER.some(
+      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
+    );
+    if (missingRemark) {
+      toast.error("Please add a note for all miscellaneous documents.");
+      return;
+    }
+  }
     try {
       const {
         CLINIC_PAPER, PAST_INVESTIGATION, CURRENT_INVESTIGATION,
@@ -302,13 +311,13 @@ export default function CreateSettlementPopup({
     <>
       {loading && <LoadingOverlay />}
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="min-w-5xl max-w-lg text-center p-8 rounded-lg">
-          <DialogHeader>
+        <DialogContent className="min-w-5xl max-w-lg text-center p-0 rounded-lg flex flex-col max-h-[90vh]">
+          <DialogHeader className="px-8 pt-8 pb-4 shrink-0">
             <DialogTitle>
               {isEditMode ? `Edit ${selectedTab}` : `Create ${selectedTab}`}
             </DialogTitle>
           </DialogHeader>
-          <div className="realtive w-full">
+           <div className="overflow-y-auto flex-1 px-8 pb-6">
             <div className="bg-white  w-full  mx-auto mt-4">
               {/* <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                 <Input
@@ -412,12 +421,24 @@ export default function CreateSettlementPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"SETTLEMENT_OTHER"}
+                 onRemarkChange={(fileName, remark) => {  
+                  setClaimInputs((prev) => ({
+                    ...prev,
+                    SETTLEMENT_OTHER: Array.isArray(prev.SETTLEMENT_OTHER)
+                      ? prev.SETTLEMENT_OTHER.map((file) =>
+                          (file?.fileName === fileName || file?.name === fileName)
+                            ? { ...file, remark }
+                            : file
+                        )
+                      : prev.SETTLEMENT_OTHER,
+                  }));
+                }}
                 // claimInputs={claimInputs?.SETTLEMENT_OTHER ? [claimInputs?.SETTLEMENT_OTHER] : []}
                 claimInputs={Array.isArray(claimInputs?.SETTLEMENT_OTHER) ? claimInputs?.SETTLEMENT_OTHER : []}
               />
 
               {/* Action Buttons */}
-              <div className="mt-6 flex justify-end space-x-4 absolute bottom-2 right-5">
+              <div className="shrink-0 px-8 py-4 border-t bg-white flex justify-end gap-4">
                 <Button
                   onClick={handleClose}
                   className="text-[#3E79D6]"

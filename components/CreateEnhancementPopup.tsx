@@ -226,6 +226,15 @@ export default function CreateEnhancementPopup({
     return obj;
   };
   const handleCreateEnhancement = async () => {
+    if (Array.isArray(enhancementInputs.OTHER) && enhancementInputs.OTHER.length > 0) {
+    const missingRemark = enhancementInputs.OTHER.some(
+      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
+    );
+    if (missingRemark) {
+      toast.error("Please add a note for all miscellaneous documents.");
+      return;
+    }
+  }
     try {
       const { OTHER, ICP, insuranceRequestId, status, numberOfDays, ...others } =
         enhancementInputs;
@@ -337,6 +346,18 @@ export default function CreateEnhancementPopup({
                 title={"Miscellaneous Documents"}
                 multiple={true}
                 onChange={handleFileChange}
+                onRemarkChange={(fileName, remark) => {  
+                  setEnhancementInputs((prev) => ({
+                    ...prev,
+                    OTHER: Array.isArray(prev.OTHER)
+                      ? prev.OTHER.map((file) =>
+                          (file?.fileName === fileName || file?.name === fileName)
+                            ? { ...file, remark }
+                            : file
+                        )
+                      : prev.OTHER,
+                  }));
+                }}
                 name={"OTHER"}
                 claimInputs={enhancementInputs?.OTHER}
               />
