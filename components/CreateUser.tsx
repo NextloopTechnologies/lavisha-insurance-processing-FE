@@ -171,7 +171,12 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
 
     } catch (error) {
       console.error("User Create error:", error);
-      toast.error("User Create error:");
+
+      const message =
+      error?.response?.data?.message ||
+      "Something went wrong";
+
+      toast.error(message);
     } finally {
       setUser({
         role: "",
