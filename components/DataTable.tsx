@@ -197,7 +197,7 @@ export function DataTable({
             setSelectedStatuses={setSelectedStatuses}
           />
           <div>
-            <DatePicker date={selectedDate} onChange={setSelectedDate} />
+            <DatePicker date={selectedDate} onChange={setSelectedDate} disableFuture />
             {selectedDate && (
               <span className="text-2xl ml-2 cursor-pointer" onClick={() => setSelectedDate(undefined)}>
                 X

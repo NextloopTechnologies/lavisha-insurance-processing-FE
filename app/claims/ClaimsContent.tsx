@@ -13,41 +13,49 @@ import { getUsersDropdown } from "@/services/users";
 import { getComments } from "@/services/comments";
 
 export default function ClaimsContent() {
+  const [mounted, setMounted] = useState(false); // ✅ important
+
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [total, setTotal] = useState(0);
+  const [total, setTotal] = useState(1);
+
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
   const [searchData, setSearchData] = useState({
     selectedStatuses: [],
     selectedDate: "",
     debouncedSearchTerm: "",
   });
+
   const [users, setUsers] = useState([]);
   const [loggedInUserRole, setLoggedInUserRole] = useState<string | null>(null);
-  const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const [commentsCountMap, setCommentsCountMap] = useState({});
+
+  const searchParams = useSearchParams();
+  const patientNameFromQuery = searchParams.get("patientName") || "";
+
+  const roles = Cookies.get("user_role")?.split(",") || [];
+
+  // ✅ Ensure client-only rendering after mount
+  useEffect(() => {
+    setMounted(true);
+
+    setLoggedInUserRole(localStorage.getItem("userRole"));
+  }, []);
+
   const fetchUsersDropdown = async () => {
-    // setLoading(true);
     try {
       const res = await getUsersDropdown("ADMIN");
       if (res?.status === 200) {
-        setUsers(res?.data);
+        setUsers(res.data);
       }
     } catch (err) {
       console.error("Failed to fetch users:", err);
-    } finally {
-      // setLoading(false);
     }
   };
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setLoggedInUserRole(localStorage.getItem("userRole"));
-      setLoggedInUserId(localStorage.getItem("userId"));
-    }
-  }, []);
 
   useEffect(() => {
     fetchUsersDropdown();
@@ -56,10 +64,6 @@ export default function ClaimsContent() {
   const getSearchData = (value, name) => {
     setSearchData((prev) => ({ ...prev, [name]: value }));
   };
-
-  const searchParams = useSearchParams();
-  const patientNameFromQuery = searchParams.get("patientName");
-  const roles = Cookies.get("user_role")?.split(",") || []; // supports multiple roles
 
   const fetchClaims = async () => {
     setLoading(true);
@@ -113,6 +117,45 @@ export default function ClaimsContent() {
     fetchClaims();
   }, [page, pageSize, searchData]);
 
+  // ✅ FIX: batch comment fetching
+  useEffect(() => {
+    if (!loggedInUserRole || claims.length === 0) return;
+
+    const fetchAllComments = async () => {
+      try {
+        const results = await Promise.all(
+          claims.map((claim) =>
+            getComments({
+              role: loggedInUserRole,
+              insuranceRequestId: claim.id,
+            })
+          )
+        );
+
+        const newMap = {};
+
+        results.forEach((res, index) => {
+          if (res?.status === 200) {
+            const unread = res.data.filter((item) => {
+              if (loggedInUserRole === "HOSPITAL") {
+                return !item.isRead && item?.creator?.role !== "HOSPITAL";
+              }
+              return !item.isRead && item?.creator?.role === "HOSPITAL";
+            });
+
+            newMap[claims[index].id] = unread.length;
+          }
+        });
+
+        setCommentsCountMap(newMap);
+      } catch (err) {
+        console.error("Comments fetch error:", err);
+      }
+    };
+
+    fetchAllComments();
+  }, [claims, loggedInUserRole]);
+
   const handleDeleteClaim = (id: string) => {
     setSelectedId(id);
     setOpenDeleteDialog(true);
@@ -121,51 +164,11 @@ export default function ClaimsContent() {
   const confirmDelete = async () => {
     setOpenDeleteDialog(false);
     const res = await deleteClaims(selectedId);
-    if (res?.status === 200) {
-      fetchClaims();
-    }
-  };
-  useEffect(() => {
-    claims.forEach((claim) => {
-      fetchComments(claim.id);
-    });
-  }, [claims]);
-
-  const fetchComments = async (claimId) => {
-    try {
-      setLoading(true);
-      if (loggedInUserRole) {
-        const commentsResponse = await getComments({
-          role: loggedInUserRole,
-          insuranceRequestId: claimId,
-        });
-
-        if (commentsResponse.status === 200) {
-          const unreadComments = commentsResponse.data.filter((item) => {
-            if (loggedInUserRole === "HOSPITAL")  {
-              return item.isRead === false && item?.creator?.role !== "HOSPITAL";
-            } else {
-              return item.isRead === false && item?.creator?.role === "HOSPITAL";
-            }
-          });
-
-          const unreadCount = unreadComments.length;
-          setCommentsCountMap((prevState) => ({
-            ...prevState,
-            [claimId]: unreadCount,
-          }));
-        }
-
-      }
-     
-
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    } finally {
-      setLoading(false);
-    }
+    if (res?.status === 200) fetchClaims();
   };
 
+  // ✅ CRITICAL: prevent hydration mismatch
+  if (!mounted) return null;
 
   return (
     <SidebarLayout>
