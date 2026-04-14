@@ -18,7 +18,7 @@ export default function ClaimsContent() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState([]);
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setpageSize] = useState(10);
   const [total, setTotal] = useState(1);
 
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
