@@ -109,11 +109,11 @@ export const NotificationPopover = () => {
           </h3>
           <div className="border-b" />
           <div className="max-h-[35rem] overflow-y-auto">
-            {notificationData.length > 0 && (
+            {notificationData.length > 0 && unReadCount > 0 && (
               <div ref={containerRef} className="border-b my-4">
                 <div className="flex justify-between my-4 pl-4">
                   <p className="text-xs text-gray-700">
-                    Unread {unReadCount ? unReadCount : ""}
+                    Unread {unReadCount}
                   </p>
                   <span
                     onClick={() => {

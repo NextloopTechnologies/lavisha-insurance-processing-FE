@@ -97,7 +97,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
 
             <div className="text-center">
               <h4 className="font-semibold text-sm">
-                {profileData?.[0]?.hospitalName}
+                {profileData?.[0]?.name}
               </h4>
               <p className="text-xs text-muted-foreground">
                 {profileData?.[0]?.address}
