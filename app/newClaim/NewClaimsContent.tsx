@@ -70,7 +70,7 @@ const handleCreateClaim = async (value = null) => {
     } = claimInputs;
 
     //  Pure function — never mutates state
-    const cleanDoc = ({ url, file, ...rest }: any) => rest;
+     const cleanDoc = ({ url, file,isNew, ...rest }: any) => rest;
 
     const documents = [
       CLINIC_PAPER ? cleanDoc(CLINIC_PAPER) : null,
