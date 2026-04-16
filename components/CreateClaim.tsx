@@ -411,6 +411,7 @@ export default function CreateClaim({
             selectOption={TPA_OPTIONS}
             Icon={UserIcon}
             label={"TPA Name"}
+            searchable
           />
 
           <SelectComponent
@@ -421,6 +422,7 @@ export default function CreateClaim({
             selectOption={INSURANCE_COMPANIES}
             Icon={UserIcon}
             label={"Insurance Company"}
+            searchable
           />
         </div>
 
