@@ -42,9 +42,9 @@ type HospitalPayload = BasePayload & {
 
 type Payload = BasePayload | HospitalPayload;
 
-export default function CreateUser({ userData, setUserData, setOpenDialog, fetchUsers }) {
+export default function CreateUser({ userData, setUserData, setOpenDialog, fetchUsers ,onSuccess,defaultRole,  disableRole = false  }) {
   const [user, setUser] = useState({
-    role: "",
+      role: defaultRole || "",  
     name: "",
     email: "",
     password: "",
@@ -52,6 +52,7 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
     hospitalName: "",
     rateListFileName: "",
     hospitalId: "",
+    
   });
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewURL, setPreviewURL] = useState<string | null>(null);
@@ -59,22 +60,22 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
   const [users, setUsers] = useState([]);
   const [fileUpload, setFileUpload] = useState({});
 
-  useEffect(() => {
-    if (!userData) {
-      return;
-    } else {
-      setUser({
-        role: userData?.role,
-        name: userData?.name,
-        email: userData?.email,
-        password: userData?.password,
-        address: userData?.address,
-        hospitalName: userData?.hospital?.id,
-        rateListFileName: userData?.rateListFileName,
-        hospitalId: userData?.hospitalId ?? userData?.hospital?.id ?? null,
-      });
-    }
-  }, [userData]);
+useEffect(() => {
+  if (userData) {
+    setUser({
+      role: userData?.role,
+      name: userData?.name,
+      email: userData?.email,
+      password: userData?.password,
+      address: userData?.address,
+      hospitalName: userData?.hospital?.id,
+      rateListFileName: userData?.rateListFileName,
+      hospitalId: userData?.hospitalId ?? userData?.hospital?.id ?? null,
+    });
+  } else if (defaultRole) {
+    setUser((prev) => ({ ...prev, role: defaultRole }));
+  }
+}, [userData, defaultRole]);
   const handleFileChange = async (value, name, multiple) => {
     const formData = new FormData();
     formData.append("file", value[0]);
@@ -161,6 +162,7 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
         if (res?.status === 201) {
           setLoading(false);
           toast.success("Created Successfully");
+            onSuccess?.(res.data); 
         }
       }
 
@@ -243,6 +245,8 @@ export default function CreateUser({ userData, setUserData, setOpenDialog, fetch
           <Select
             value={user.role}
             onValueChange={(value) => handleChange("role", value)}
+                        disabled={disableRole} // 👈
+
           >
             <SelectTrigger className="w-full flex justify-between bg-[#F2F7FC] text-black font-semibold">
               <div className="flex gap-x-2 items-center">
