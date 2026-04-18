@@ -42,7 +42,15 @@ type HospitalPayload = BasePayload & {
 
 type Payload = BasePayload | HospitalPayload;
 
-export default function CreateUser({ userData, setUserData, setOpenDialog, fetchUsers ,onSuccess,defaultRole,  disableRole = false  }) {
+export default function CreateUser({ userData, setUserData, setOpenDialog, fetchUsers, onSuccess, defaultRole, disableRole = false }: {
+  userData?: any;
+  setUserData: any;
+  setOpenDialog: any;
+  fetchUsers: any;
+  onSuccess?: (data?: any) => void;
+  defaultRole?: string;
+  disableRole?: boolean;
+}) {
   const [user, setUser] = useState({
       role: defaultRole || "",  
     name: "",
