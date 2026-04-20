@@ -33,6 +33,7 @@ export default function EditClaimForm() {
   const [loading, setLoading] = useState(false);
   const [claims, setClaims] = useState<any>(null);
   const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
+  const [initialHospitalId, setInitialHospitalId] = useState("");
   const [claimInputs, setClaimInputs] = useState({
     isPreAuth: false,
     patientId: "",
@@ -239,6 +240,11 @@ export default function EditClaimForm() {
     // conditional notification to assignee on updates
     // only from edit icon from actions
     setIsClaimAssigned(claims.assignee === null)
+
+
+      if (claims.patient?.hospital?.id) {
+    setInitialHospitalId(claims.patient.hospital.id);
+  }
   }, [claims]);
 
   return (
@@ -251,6 +257,8 @@ export default function EditClaimForm() {
         claimInputs={claimInputs}
         setClaimInputs={setClaimInputs}
         isEditMode={!!claims}
+        initialHospitalId={initialHospitalId} 
+
       />
     </SidebarLayout>
   );

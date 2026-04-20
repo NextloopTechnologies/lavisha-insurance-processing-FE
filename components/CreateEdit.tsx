@@ -18,6 +18,8 @@ interface PatientFormDialogProps {
   defaultData?: { name: string; age: number; image?: string; url?: string;  hospitalUserId?: string };
   isEditMode?: boolean;
   hospitals?: { id: string; name: string }[];
+  preSelectedHospitalId?: string;
+
 }
 
 export default function PatientFormDialog({
@@ -27,6 +29,8 @@ export default function PatientFormDialog({
   defaultData,
   isEditMode = false,
   hospitals = [],
+  preSelectedHospitalId = "", 
+
 }: PatientFormDialogProps) {
   const [name, setName] = useState("");
   const [age, setAge] = useState<number | undefined>();
@@ -52,10 +56,12 @@ export default function PatientFormDialog({
         setAge(undefined);
         setImage(undefined);
         setHospitalId("");
+        setHospitalId(preSelectedHospitalId || "");
+
       }
       setErrors({});
     }
-  }, [defaultData, open]);
+  }, [defaultData, open, preSelectedHospitalId]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
