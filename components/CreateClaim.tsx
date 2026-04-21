@@ -30,7 +30,7 @@ import { useRouter } from "next/navigation";
 // import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, UploadCloud, UserIcon, Building2 } from "lucide-react"; // 👈 added Building2
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { userRound } from "@/assets";
 import PatientFormDialog from "@/components/CreateEdit";
@@ -61,9 +61,14 @@ export default function CreateClaim({
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [hospitals, setHospitals] = useState([]);
   const [hospitalSearch, setHospitalSearch] = useState("");           // 👈 added
+  const [hospitalSearchLoading, setHospitalSearchLoading] = useState(false);
+  const [debouncedHospitalSearchTerm, setDebouncedHospitalSearchTerm] = useState("");
   const [selectedHospitalId, setSelectedHospitalId] = useState("");   // 👈 added
   const [openHospitalDialog, setOpenHospitalDialog] = useState(false);// 👈 added
   const [newHospitalUser, setNewHospitalUser] = useState(null);       // 👈 added
+
+  const hasAutoSelectedHospital = useRef(false);
+  // const hasAutoSelectedPatient = useRef(false);
 
   const router = useRouter();
   const params = useParams();
@@ -194,22 +199,22 @@ export default function CreateClaim({
   };
 
   const fetchHospitalsDropdown = async () => {
-    setLoading(true);
+    setHospitalSearchLoading(true);
     try {
-      const res = await getUsersDropdown("HOSPITAL");
+      const res = await getUsersDropdown("HOSPITAL", debouncedHospitalSearchTerm);
       if (res?.status === 200) {
         setHospitals(res?.data);
       }
     } catch (err) {
       console.error("Failed to fetch hospitals:", err);
     } finally {
-      setLoading(false);
+      setHospitalSearchLoading(false);
     }
   };
 
   useEffect(() => {
     fetchHospitalsDropdown();
-  }, []);
+  }, [debouncedHospitalSearchTerm]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -219,6 +224,15 @@ export default function CreateClaim({
       clearTimeout(handler);
     };
   }, [searchTerm]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedHospitalSearchTerm(hospitalSearch);
+    }, 500);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [hospitalSearch]);
 
   const fetchPatients = async () => {
     setSearchLoading(true);
@@ -243,6 +257,24 @@ export default function CreateClaim({
   useEffect(() => {
     fetchPatients();
   }, [debouncedSearchTerm, selectedHospitalId]); // 👈 added selectedHospitalId
+
+  useEffect(() => {
+    if (!isEditMode && isUserAdminOrSuperAdmin && !initialHospitalId && !hasAutoSelectedHospital.current && hospitals.length > 0) {
+      if (!selectedHospitalId) {
+        setSelectedHospitalId(hospitals[0]?.id);
+      }
+      hasAutoSelectedHospital.current = true;
+    }
+  }, [hospitals, isEditMode, isUserAdminOrSuperAdmin, selectedHospitalId, initialHospitalId]);
+
+  // useEffect(() => {
+  //   if (!isEditMode && isUserAdminOrSuperAdmin && !hasAutoSelectedPatient.current && patients.length > 0) {
+  //     if (!claimInputs.patientId) {
+  //       setClaimInputs((prev) => ({ ...prev, patientId: patients[0]?.id }));
+  //     }
+  //     hasAutoSelectedPatient.current = true;
+  //   }
+  // }, [patients, isEditMode, isUserAdminOrSuperAdmin, claimInputs.patientId]);
 
   const fetchPatientsById = async () => {
     setSearchLoading(true);
@@ -299,10 +331,7 @@ export default function CreateClaim({
     }
   };
 
-  // 👈 added
-  const filteredHospitals = hospitals.filter((h) =>
-    h.name?.toLowerCase().includes(hospitalSearch.toLowerCase())
-  );
+
 
   return (
     <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
@@ -334,7 +363,7 @@ export default function CreateClaim({
                 <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black">
                   <div className="flex gap-x-2 items-center">
                     <Building2 className="w-4 h-4 text-[#3E79D6]" />
-                    <SelectValue placeholder="Select Hospital (Optional)" />
+                    <SelectValue placeholder="Select Hospital" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
@@ -366,8 +395,10 @@ export default function CreateClaim({
                       Clear hospital filter
                     </button>
                   )}
-                  {filteredHospitals.length ? (
-                    filteredHospitals.map((hospital) => (
+                  {hospitalSearchLoading ? (
+                    <div className="text-sm text-gray-400 px-2 py-1">Loading...</div>
+                  ) : hospitals.length ? (
+                    hospitals.map((hospital) => (
                       <SelectItem key={hospital.id} value={hospital.id}>
                         {hospital.name}
                       </SelectItem>
