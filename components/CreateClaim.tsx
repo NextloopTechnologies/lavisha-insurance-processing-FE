@@ -30,7 +30,7 @@ import { useRouter } from "next/navigation";
 // import { Textarea } from "@/components/ui/textarea"
 import { Plus, Search, UploadCloud, UserIcon, Building2 } from "lucide-react"; // 👈 added Building2
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import { userRound } from "@/assets";
 import PatientFormDialog from "@/components/CreateEdit";
@@ -64,6 +64,9 @@ export default function CreateClaim({
   const [selectedHospitalId, setSelectedHospitalId] = useState("");   // 👈 added
   const [openHospitalDialog, setOpenHospitalDialog] = useState(false);// 👈 added
   const [newHospitalUser, setNewHospitalUser] = useState(null);       // 👈 added
+
+  const hasAutoSelectedHospital = useRef(false);
+  // const hasAutoSelectedPatient = useRef(false);
 
   const router = useRouter();
   const params = useParams();
@@ -244,6 +247,24 @@ export default function CreateClaim({
     fetchPatients();
   }, [debouncedSearchTerm, selectedHospitalId]); // 👈 added selectedHospitalId
 
+  useEffect(() => {
+    if (!isEditMode && isUserAdminOrSuperAdmin && !initialHospitalId && !hasAutoSelectedHospital.current && hospitals.length > 0) {
+      if (!selectedHospitalId) {
+        setSelectedHospitalId(hospitals[0]?.id);
+      }
+      hasAutoSelectedHospital.current = true;
+    }
+  }, [hospitals, isEditMode, isUserAdminOrSuperAdmin, selectedHospitalId, initialHospitalId]);
+
+  // useEffect(() => {
+  //   if (!isEditMode && isUserAdminOrSuperAdmin && !hasAutoSelectedPatient.current && patients.length > 0) {
+  //     if (!claimInputs.patientId) {
+  //       setClaimInputs((prev) => ({ ...prev, patientId: patients[0]?.id }));
+  //     }
+  //     hasAutoSelectedPatient.current = true;
+  //   }
+  // }, [patients, isEditMode, isUserAdminOrSuperAdmin, claimInputs.patientId]);
+
   const fetchPatientsById = async () => {
     setSearchLoading(true);
     try {
@@ -334,7 +355,7 @@ export default function CreateClaim({
                 <SelectTrigger className="w-full bg-[#F2F7FC] text-sm font-semibold text-black">
                   <div className="flex gap-x-2 items-center">
                     <Building2 className="w-4 h-4 text-[#3E79D6]" />
-                    <SelectValue placeholder="Select Hospital (Optional)" />
+                    <SelectValue placeholder="Select Hospital" />
                   </div>
                 </SelectTrigger>
                 <SelectContent>
