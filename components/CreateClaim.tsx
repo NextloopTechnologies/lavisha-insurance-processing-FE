@@ -61,6 +61,8 @@ export default function CreateClaim({
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [hospitals, setHospitals] = useState([]);
   const [hospitalSearch, setHospitalSearch] = useState("");           // 👈 added
+  const [hospitalSearchLoading, setHospitalSearchLoading] = useState(false);
+  const [debouncedHospitalSearchTerm, setDebouncedHospitalSearchTerm] = useState("");
   const [selectedHospitalId, setSelectedHospitalId] = useState("");   // 👈 added
   const [openHospitalDialog, setOpenHospitalDialog] = useState(false);// 👈 added
   const [newHospitalUser, setNewHospitalUser] = useState(null);       // 👈 added
@@ -197,22 +199,22 @@ export default function CreateClaim({
   };
 
   const fetchHospitalsDropdown = async () => {
-    setLoading(true);
+    setHospitalSearchLoading(true);
     try {
-      const res = await getUsersDropdown("HOSPITAL");
+      const res = await getUsersDropdown("HOSPITAL", debouncedHospitalSearchTerm);
       if (res?.status === 200) {
         setHospitals(res?.data);
       }
     } catch (err) {
       console.error("Failed to fetch hospitals:", err);
     } finally {
-      setLoading(false);
+      setHospitalSearchLoading(false);
     }
   };
 
   useEffect(() => {
     fetchHospitalsDropdown();
-  }, []);
+  }, [debouncedHospitalSearchTerm]);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -222,6 +224,15 @@ export default function CreateClaim({
       clearTimeout(handler);
     };
   }, [searchTerm]);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedHospitalSearchTerm(hospitalSearch);
+    }, 500);
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [hospitalSearch]);
 
   const fetchPatients = async () => {
     setSearchLoading(true);
@@ -320,10 +331,7 @@ export default function CreateClaim({
     }
   };
 
-  // 👈 added
-  const filteredHospitals = hospitals.filter((h) =>
-    h.name?.toLowerCase().includes(hospitalSearch.toLowerCase())
-  );
+
 
   return (
     <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
@@ -387,8 +395,10 @@ export default function CreateClaim({
                       Clear hospital filter
                     </button>
                   )}
-                  {filteredHospitals.length ? (
-                    filteredHospitals.map((hospital) => (
+                  {hospitalSearchLoading ? (
+                    <div className="text-sm text-gray-400 px-2 py-1">Loading...</div>
+                  ) : hospitals.length ? (
+                    hospitals.map((hospital) => (
                       <SelectItem key={hospital.id} value={hospital.id}>
                         {hospital.name}
                       </SelectItem>
