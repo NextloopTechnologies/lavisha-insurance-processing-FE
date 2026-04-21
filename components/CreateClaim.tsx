@@ -26,9 +26,7 @@ import {
   getPatientsByParams,
 } from "@/services/patients";
 import { useRouter } from "next/navigation";
-
-// import { Textarea } from "@/components/ui/textarea"
-import { Plus, Search, UploadCloud, UserIcon, Building2 } from "lucide-react"; // 👈 added Building2
+import { Plus, Search, UploadCloud, UserIcon, Building2 } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
@@ -40,8 +38,8 @@ import SelectComponent from "./SelectComponent";
 import Link from "next/link";
 import { getUsersDropdown } from "@/services/users";
 import { bulkDeleteFiles } from "@/services/files";
-import CreateEditUser from "@/components/CreateEditUser"; // 👈 added
-import CreateUser from "@/components/CreateUser";         // 👈 added
+import CreateEditUser from "@/components/CreateEditUser";
+import CreateUser from "@/components/CreateUser";
 
 export default function CreateClaim({
   handleCreateClaim,
@@ -50,8 +48,7 @@ export default function CreateClaim({
   claimInputs,
   setClaimInputs,
   isEditMode = false,
-  initialHospitalId = "",  // 👈 new prop
-
+  initialHospitalId = "",
 }) {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,50 +57,136 @@ export default function CreateClaim({
   const [openPatientDialog, setOpenPatientDialog] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [hospitals, setHospitals] = useState([]);
-  const [hospitalSearch, setHospitalSearch] = useState("");           // 👈 added
+  const [hospitalSearch, setHospitalSearch] = useState("");
   const [hospitalSearchLoading, setHospitalSearchLoading] = useState(false);
   const [debouncedHospitalSearchTerm, setDebouncedHospitalSearchTerm] = useState("");
-  const [selectedHospitalId, setSelectedHospitalId] = useState("");   // 👈 added
-  const [openHospitalDialog, setOpenHospitalDialog] = useState(false);// 👈 added
-  const [newHospitalUser, setNewHospitalUser] = useState(null);       // 👈 added
-
-  const hasAutoSelectedHospital = useRef(false);
-  // const hasAutoSelectedPatient = useRef(false);
+  const [selectedHospitalId, setSelectedHospitalId] = useState("");
+  const [openHospitalDialog, setOpenHospitalDialog] = useState(false);
+  const [newHospitalUser, setNewHospitalUser] = useState(null);
 
   const router = useRouter();
   const params = useParams();
   const id = params.id;
   const roles = Cookies.get("user_role")?.split(",") || [];
   const isUserAdminOrSuperAdmin = roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN");
-  const isHospitalRole =
-    roles?.includes("HOSPITAL") || roles?.includes("HOSPITAL_MANAGER");
-
-  // For hospital/hospital manager, the logged-in user's own ID is their hospitalId
+  const isHospitalRole = roles?.includes("HOSPITAL") || roles?.includes("HOSPITAL_MANAGER");
   const loggedInUserId =
     typeof window !== "undefined" ? localStorage.getItem("userId") ?? "" : "";
 
+  // ── 1 Sync hospitalId from initialHospitalId (edit mode) or role ──
   useEffect(() => {
     if (isHospitalRole && loggedInUserId) {
-      // Auto-filter patients by the hospital user's own id
       setSelectedHospitalId(loggedInUserId);
     } else if (initialHospitalId) {
       setSelectedHospitalId(initialHospitalId);
     }
-  }, [initialHospitalId]);
+  }, [initialHospitalId]); // re-fires when API data arrives
+
+  // ── 2 Auto-select first hospital in create mode (admin only) ──
+  useEffect(() => {
+    if (!isEditMode && isUserAdminOrSuperAdmin && hospitals.length > 0 && !selectedHospitalId) {
+      setSelectedHospitalId(hospitals[0]?.id);
+    }
+  }, [hospitals]);
+
+  // ── 3 Fetch patients when search or hospital changes ──
+  useEffect(() => {
+    if (isEditMode && initialHospitalId && !selectedHospitalId) return; // wait for hospitalId in edit mode
+      if (!debouncedSearchTerm && !selectedHospitalId) return; // ← add this line
+
+    fetchPatients();
+  }, [debouncedSearchTerm, selectedHospitalId]);
+
+  // ── 4 Fetch single patient by id (edit mode) ──
+  useEffect(() => {
+    fetchPatientsById();
+  }, [claimInputs.patientId]);
+
+  // ── Debounce patient search ──
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedSearchTerm(searchTerm), 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
+
+  // ── Debounce hospital search ──
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedHospitalSearchTerm(hospitalSearch), 500);
+    return () => clearTimeout(handler);
+  }, [hospitalSearch]);
+
+  // ── Fetch hospitals (on search change) ──
+  useEffect(() => {
+    fetchHospitalsDropdown();
+  }, [debouncedHospitalSearchTerm]);
 
   const handleSelectChange = (value: string | boolean, name: string) => {
-    setClaimInputs((prev) => {
-      return {
-        ...prev,
-        [name]: value,
-      };
-    });
+    setClaimInputs((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 👈 added
   const handleHospitalChange = (hospitalId: string) => {
     setSelectedHospitalId(hospitalId);
     setClaimInputs((prev) => ({ ...prev, patientId: "" }));
+  };
+
+  const fetchHospitalsDropdown = async () => {
+    setHospitalSearchLoading(true);
+    try {
+      const res = await getUsersDropdown("HOSPITAL", debouncedHospitalSearchTerm);
+      if (res?.status === 200) setHospitals(res?.data);
+    } catch (err) {
+      console.error("Failed to fetch hospitals:", err);
+    } finally {
+      setHospitalSearchLoading(false);
+    }
+  };
+
+  const fetchPatients = async () => {
+    setSearchLoading(true);
+    try {
+      const query: any = { sortOrder: "desc" };
+      if (debouncedSearchTerm) query.search = debouncedSearchTerm;
+      if (selectedHospitalId) query.hospitalId = selectedHospitalId;
+      const res = await getPatientsByDropdownParams(query);
+      if (res?.status == 200) setPatients(res.data);
+    } catch (err) {
+      console.error("Failed to fetch patients:", err);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const fetchPatientsById = async () => {
+    try {
+      if (claimInputs.patientId && !patients.some(p => p.id === claimInputs.patientId)) {
+        const res = await getPatientById(claimInputs.patientId);
+        if (res?.status == 200) {
+          setPatients((prev) =>
+            prev.some(p => p.id === res.data.id) ? prev : [...prev, res.data]
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch patient by id:", err);
+    }
+  };
+
+  const handleCreatePatient = async (payload) => {
+    const { name, age, fileName, url, hospitalId } = payload;
+    const dataToSend = isUserAdminOrSuperAdmin
+      ? { name, age, fileName, url, hospitalId }
+      : { name, age, fileName, url };
+    try {
+      setLoading(true);
+      const response = await createPatient(dataToSend);
+      if (response.status == 201) {
+        fetchPatients();
+        setClaimInputs((prev) => ({ ...prev, patientId: response?.data?.id }));
+      }
+    } catch (error: any) {
+      console.error("Error creating patient:", error.response?.data || error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleFileChange = async (value, name, multiple) => {
@@ -116,16 +199,13 @@ export default function CreateClaim({
             ...prev,
             OTHER: Array.isArray(prev.OTHER)
               ? prev.OTHER.filter((file) => {
-                if (value.id && file.id) return file.id !== value.id;
-                return file.fileName !== value.fileName;
-              })
+                  if (value.id && file.id) return file.id !== value.id;
+                  return file.fileName !== value.fileName;
+                })
               : [],
           }));
         } else {
-          setClaimInputs((prev) => ({
-            ...prev,
-            [value.type]: "",
-          }));
+          setClaimInputs((prev) => ({ ...prev, [value.type]: "" }));
         }
         toast.success("File removed successfully");
       } catch (error) {
@@ -136,9 +216,7 @@ export default function CreateClaim({
       }
     } else if (multiple) {
       const formData = new FormData();
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
+      Array.from(value).forEach((file: any) => formData.append("files", file));
       formData.append("folder", "claims");
       try {
         setLoading(true);
@@ -186,10 +264,7 @@ export default function CreateClaim({
         }));
         toast.success("File uploaded successfully");
       } catch (error) {
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: "",
-        }));
+        setClaimInputs((prev) => ({ ...prev, [name]: "" }));
         console.error("Single upload failed:", error);
         toast.error("Failed to upload file");
       } finally {
@@ -197,141 +272,6 @@ export default function CreateClaim({
       }
     }
   };
-
-  const fetchHospitalsDropdown = async () => {
-    setHospitalSearchLoading(true);
-    try {
-      const res = await getUsersDropdown("HOSPITAL", debouncedHospitalSearchTerm);
-      if (res?.status === 200) {
-        setHospitals(res?.data);
-      }
-    } catch (err) {
-      console.error("Failed to fetch hospitals:", err);
-    } finally {
-      setHospitalSearchLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchHospitalsDropdown();
-  }, [debouncedHospitalSearchTerm]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedSearchTerm(searchTerm);
-    }, 500);
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [searchTerm]);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedHospitalSearchTerm(hospitalSearch);
-    }, 500);
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [hospitalSearch]);
-
-  const fetchPatients = async () => {
-    setSearchLoading(true);
-    try {
-      const query: any = {
-        sortOrder: "desc",
-      };
-      if (debouncedSearchTerm) query.search = debouncedSearchTerm;
-      if (selectedHospitalId) query.hospitalId = selectedHospitalId; // 👈 added
-      const res = await getPatientsByDropdownParams(query);
-      if (res?.status == 200) {
-        setPatients(res.data);
-        setSearchLoading(false);
-      }
-    } catch (err) {
-      console.error("Failed to fetch claims:", err);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPatients();
-  }, [debouncedSearchTerm, selectedHospitalId]); // 👈 added selectedHospitalId
-
-  useEffect(() => {
-    if (!isEditMode && isUserAdminOrSuperAdmin && !initialHospitalId && !hasAutoSelectedHospital.current && hospitals.length > 0) {
-      if (!selectedHospitalId) {
-        setSelectedHospitalId(hospitals[0]?.id);
-      }
-      hasAutoSelectedHospital.current = true;
-    }
-  }, [hospitals, isEditMode, isUserAdminOrSuperAdmin, selectedHospitalId, initialHospitalId]);
-
-  // useEffect(() => {
-  //   if (!isEditMode && isUserAdminOrSuperAdmin && !hasAutoSelectedPatient.current && patients.length > 0) {
-  //     if (!claimInputs.patientId) {
-  //       setClaimInputs((prev) => ({ ...prev, patientId: patients[0]?.id }));
-  //     }
-  //     hasAutoSelectedPatient.current = true;
-  //   }
-  // }, [patients, isEditMode, isUserAdminOrSuperAdmin, claimInputs.patientId]);
-
-  const fetchPatientsById = async () => {
-    setSearchLoading(true);
-    try {
-      if (claimInputs.patientId && !patients.some(patient => patient.id === claimInputs.patientId)) {
-        const res = await getPatientById(claimInputs.patientId);
-        if (res?.status == 200) {
-          setPatients((prevPatients) => {
-            const patientExists = prevPatients.some(patient => patient.id === res.data.id);
-            if (!patientExists) {
-              return [...prevPatients, res.data];
-            }
-            return prevPatients;
-          });
-          setLoading(false);
-        }
-      }
-    } catch (err) {
-      setLoading(false);
-      console.error("Failed to fetch patients:", err);
-    } finally {
-      setSearchLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPatientsById();
-  }, [claimInputs]);
-
-  const handleCreatePatient = async (payload) => {
-    const { name, age, fileName, url, hospitalId } = payload;
-    const dataToSend = isUserAdminOrSuperAdmin
-      ? { name, age, fileName, url, hospitalId }
-      : { name, age, fileName, url };
-    try {
-      setLoading(true);
-      const response = await createPatient(dataToSend);
-      if (response.status == 201) {
-        setLoading(false);
-        fetchPatients();
-        setClaimInputs((prev) => {
-          return {
-            ...prev,
-            ["patientId"]: response?.data?.id,
-          };
-        });
-      }
-    } catch (error: any) {
-      setLoading(false);
-      console.error(
-        "Error creating patient:",
-        error.response?.data || error.message
-      );
-    }
-  };
-
-
 
   return (
     <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
@@ -355,7 +295,6 @@ export default function CreateClaim({
       <div className="bg-white rounded-xl shadow-md p-4 w-full max-w-6xl mx-auto mt-4">
 
         {isUserAdminOrSuperAdmin ? (
-          /* ── Admin / Super Admin layout ── */
           <>
             {/* Row 1: Hospital + Patient */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -434,25 +373,25 @@ export default function CreateClaim({
                     <Plus size={16} className="mr-2 text-[#3E79D6]" />
                     Add New Patient
                   </button>
-                  {searchLoading
-                    ? "Loading..."
-                    : patients?.length
-                      ? patients.map((item) => (
-                        <SelectItem key={item.id} value={item.id} className="flex items-center">
-                          <Image src={userRound} alt="User Icon" width={20} height={20} />
-                          {`${item.name}   ${item.hospital?.name ?? ""}`}
-                        </SelectItem>
-                      ))
-                      : (
-                        <p className="text-sm text-gray-400 px-2 py-1">
-                          {selectedHospitalId ? "No patients for this hospital" : "No Patients"}
-                        </p>
-                      )}
+                  {searchLoading ? (
+                    <p className="text-sm text-gray-400 px-2 py-1">Loading...</p>
+                  ) : patients?.length ? (
+                    patients.map((item) => (
+                      <SelectItem key={item.id} value={item.id} className="flex items-center">
+                        <Image src={userRound} alt="User Icon" width={20} height={20} />
+                        {`${item.name}  ${item.hospital?.name ?? ""}`}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-400 px-2 py-1">
+                      {selectedHospitalId ? "No patients for this hospital" : "No Patients"}
+                    </p>
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
-            {/* Row 2: Doctor + TPA + Insurance (3 cols) */}
+            {/* Row 2: Doctor + TPA + Insurance */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
               <InputComponent
                 placeHolder={"Dr. Name"}
@@ -479,9 +418,8 @@ export default function CreateClaim({
             </div>
           </>
         ) : (
-          /* ── Hospital / Hospital Manager layout ── */
           <>
-            {/* Row 1: Patient + Doctor (2 cols) */}
+            {/* Row 1: Patient + Doctor */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Select
                 value={claimInputs.patientId}
@@ -508,18 +446,18 @@ export default function CreateClaim({
                     <Plus size={16} className="mr-2 text-[#3E79D6]" />
                     Add New Patient
                   </button>
-                  {searchLoading
-                    ? "Loading..."
-                    : patients?.length
-                      ? patients.map((item) => (
-                        <SelectItem key={item.id} value={item.id} className="flex items-center">
-                          <Image src={userRound} alt="User Icon" width={20} height={20} />
-                          {item.name}
-                        </SelectItem>
-                      ))
-                      : (
-                        <p className="text-sm text-gray-400 px-2 py-1">No Patients</p>
-                      )}
+                  {searchLoading ? (
+                    <p className="text-sm text-gray-400 px-2 py-1">Loading...</p>
+                  ) : patients?.length ? (
+                    patients.map((item) => (
+                      <SelectItem key={item.id} value={item.id} className="flex items-center">
+                        <Image src={userRound} alt="User Icon" width={20} height={20} />
+                        {item.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-400 px-2 py-1">No Patients</p>
+                  )}
                 </SelectContent>
               </Select>
 
@@ -531,7 +469,7 @@ export default function CreateClaim({
               />
             </div>
 
-            {/* Row 2: TPA + Insurance (2 cols) */}
+            {/* Row 2: TPA + Insurance */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
               <SelectComponent
                 value={claimInputs.tpaName}
@@ -558,7 +496,7 @@ export default function CreateClaim({
             value={claimInputs.description}
             onChange={(e) => handleSelectChange(e.target.value, "description")}
             placeholder="Description"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
           />
         </div>
 
@@ -569,10 +507,9 @@ export default function CreateClaim({
           defaultData={selectedPatient}
           isEditMode={!!selectedPatient}
           hospitals={hospitals}
-          preSelectedHospitalId={selectedHospitalId} // 👈 added
+          preSelectedHospitalId={selectedHospitalId}
         />
 
-        {/* 👈 added: Hospital create dialog */}
         <CreateEditUser
           open={openHospitalDialog}
           onOpenChange={(isOpen) => {
@@ -597,14 +534,8 @@ export default function CreateClaim({
           />
         </CreateEditUser>
 
-        {/* Upload Fields (unchanged) */}
         {claimInputs?.isPreAuth && (
-          <FileDrag
-            title={"Pre Auth"}
-            multiple={false}
-            onChange={handleFileChange}
-            name={"preAuth"}
-          />
+          <FileDrag title={"Pre Auth"} multiple={false} onChange={handleFileChange} name={"preAuth"} />
         )}
         <FileDrag
           title={"ICP "}
@@ -645,10 +576,10 @@ export default function CreateClaim({
               ...prev,
               OTHER: Array.isArray(prev.OTHER)
                 ? prev.OTHER.map((file) =>
-                  (file?.fileName === fileName || file?.name === fileName)
-                    ? { ...file, remark }
-                    : file
-                )
+                    file?.fileName === fileName || file?.name === fileName
+                      ? { ...file, remark }
+                      : file
+                  )
                 : prev.OTHER,
             }));
           }}
@@ -659,12 +590,10 @@ export default function CreateClaim({
             value={claimInputs.additionalNotes}
             onChange={(e) => handleSelectChange(e.target.value, "additionalNotes")}
             placeholder="Additional Notes"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300  focus:outline-border w-full"
+            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
           />
         </div>
 
-        {/* Action Buttons (👈 removed absolute positioning) */}
-        {/* <div className="mt-6 mb-4 flex justify-end space-x-4"> */}
         <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 sm:right-20 right-5">
           <Link href="/claims">
             <Button className="text-[#3E79D6]" variant="outline">
