@@ -15,7 +15,9 @@ interface CreateEditUserProps {
   onSubmit?: (data: { name: string; age: number; image?: string }) => void;
   defaultData?: { name: string; age: number; image?: string; url?: string };
   isEditMode?: boolean;
-  children
+  children,
+   title?: string;
+
 }
 
 export default function CreateEditUser({
@@ -24,7 +26,9 @@ export default function CreateEditUser({
   onSubmit,
   defaultData,
   isEditMode = false,
-  children
+  children,
+    title
+
 }: CreateEditUserProps) {
 
   return (
@@ -32,7 +36,7 @@ export default function CreateEditUser({
       <DialogContent className="max-w-sm text-center p-6 rounded-lg">
         <DialogHeader>
           <DialogTitle>
-            {isEditMode ? "Edit User" : "Create User"}
+            {title ?? (isEditMode ? "Edit User" : "Create User")} 
           </DialogTitle>
         </DialogHeader>
 
