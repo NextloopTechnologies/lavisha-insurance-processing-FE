@@ -122,6 +122,134 @@ export function DataTable({
   const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
   const [assignedClaimRefNumber, setAssignedClaimRefNumber] = useState<string>("");
 
+  const [currentTime, setCurrentTime] = useState(Date.now());
+  const TAT_MINUTES = 10;
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // useEffect(() => {
+  //   if (!data || data.length === 0) return;
+    
+  //   // Get alerted from localStorage
+  //   const storedAlerted = localStorage.getItem("tat_alerted_claims");
+  //   const alertedClaims = storedAlerted ? JSON.parse(storedAlerted) : [];
+    
+  //   let hasNewAlerts = false;
+    
+  //   data.forEach((claim: any) => {
+  //     // Skip if settled or missing updatedAt
+  //     if (claim.status === StatusType.SETTLED || !claim.updatedAt) return;
+
+  //     const cacheKey = `${claim.refNumber}_${new Date(claim.updatedAt).getTime()}`;
+  //     if (alertedClaims.includes(cacheKey)) return;
+      
+  //     const updatedTime = new Date(claim.updatedAt).getTime();
+  //     const expiryTime = updatedTime + TAT_MINUTES * 60 * 1000;
+      
+  //     if (currentTime >= expiryTime) {
+  //       // Create system notification
+  //       createNotification({
+  //         title: "TAT Breach",
+  //         message: `Claim #${claim.refNumber} has expired due to TAT breach`,
+  //         roles: ["SUPER_ADMIN"],
+  //       }).catch((err) => console.error("Failed to send TAT breach notification", err));
+
+  //       alertedClaims.push(cacheKey);
+  //       hasNewAlerts = true;
+  //     }
+  //   });
+
+  //   if (hasNewAlerts) {
+  //     localStorage.setItem("tat_alerted_claims", JSON.stringify(alertedClaims));
+  //   }
+  // }, [currentTime, data]);
+
+  // const getTATStatus = (status: string, updatedAt: string) => {
+  //   if (status === StatusType.SETTLED) {
+  //     return { text: "-", color: "bg-gray-200 text-gray-600" };
+  //   }
+  //   if (!updatedAt) return { text: "-", color: "bg-gray-100 text-gray-800" };
+    
+  //   const updatedTime = new Date(updatedAt).getTime();
+  //   const expiryTime = updatedTime + TAT_MINUTES * 60 * 1000;
+  //   const diff = expiryTime - currentTime;
+    
+  //   if (diff <= 0) {
+  //     return { text: "Expired", color: "bg-gray-200 text-gray-600" };
+  //   }
+    
+  //   const minutes = Math.floor(diff / 1000 / 60);
+  //   const seconds = Math.floor((diff / 1000) % 60);
+  //   const formatted = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+  //   if (minutes >= 5) {
+  //     return { text: formatted, color: "bg-green-100 text-green-800 border border-green-200" };
+  //   } else if (minutes >= 1) {
+  //     return { text: formatted, color: "bg-yellow-100 text-yellow-800 border border-yellow-200" };
+  //   } else {
+  //     return { text: formatted, color: "bg-red-100 text-red-800 border border-red-200 animate-pulse" };
+  //   }
+  // };
+  const getTATStatus = (status: string, updatedAt: string) => {
+  if (status === StatusType.SETTLED) {
+    return { text: "Settled", color: "bg-green-100 text-green-800 border border-green-200" };
+  }
+  if (!updatedAt) return { text: "-", color: "bg-gray-100 text-gray-800" };
+
+  const updatedTime = new Date(updatedAt).getTime();
+  const expiryTime = updatedTime + TAT_MINUTES * 60 * 1000;
+  const diff = expiryTime - currentTime;
+
+ if (diff <= 0) {
+  const delayMs = Math.abs(diff);
+  const totalSeconds = Math.floor(delayMs / 1000);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const totalHours = Math.floor(totalMinutes / 60);
+  const totalDays = Math.floor(totalHours / 24);
+  const totalMonths = Math.floor(totalDays / 30);
+  const totalYears = Math.floor(totalMonths / 12);
+
+  const seconds = totalSeconds % 60;
+  const minutes = totalMinutes % 60;
+  const hours = totalHours % 24;
+  const days = totalDays % 30;
+  const months = totalMonths % 12;
+
+  let delayText = "";
+  if (totalYears > 0) {
+    delayText = `+${totalYears}y ${months}mo`;
+  } else if (totalMonths > 0) {
+    delayText = `+${totalMonths}mo ${days}d`;
+  } else if (totalDays > 0) {
+    delayText = `+${totalDays}d ${hours.toString().padStart(2, "0")}h`;
+  } else if (totalHours > 0) {
+    delayText = `+${totalHours}h ${minutes.toString().padStart(2, "0")}m`;
+  } else {
+    delayText = `+${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+  }
+
+  return {
+    text: delayText,
+    color: "bg-red-100 text-red-800 border border-red-300 animate-pulse",
+  };
+}
+
+  // Active countdown — yellow
+  const minutes = Math.floor(diff / 1000 / 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+  const formatted = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+  return {
+    text: formatted,
+    color: "bg-yellow-100 text-yellow-800 border border-yellow-200",
+  };
+};
+
   const toggleStatus = (status: string) => {
     setSelectedStatuses((prev) =>
       prev.includes(status)
@@ -237,8 +365,9 @@ export function DataTable({
                 </th>
               )}
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Claim ID</th>
-              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Description</th>
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Description</th> */}
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Status</th>
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">TAT Clock</th>
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Updated Date</th>
               {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Dr. Name</th> */}
               {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Pre-Auth Status</th> */}
@@ -258,7 +387,7 @@ export function DataTable({
                       <td className="border py-2 px-3 text-sm">{row?.patient?.hospital?.name || "---"}</td>
                     )}
                     <td className="border py-2 px-3 text-sm min-w-[120px]">{row?.refNumber}</td>
-                    <TooltipProvider>
+                    {/* <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <td className="border py-2 px-3 text-sm min-w-[200px] cursor-pointer">
@@ -273,8 +402,18 @@ export function DataTable({
                           {row?.description}
                         </TooltipContent>
                       </Tooltip>
-                    </TooltipProvider>
+                    </TooltipProvider> */}
                     <td className="border py-2 px-3 text-sm whitespace-nowrap">{STATUS_LABELS[row.status]}</td>
+                    <td className="border py-2 px-3 text-sm whitespace-nowrap">
+                      {(() => {
+                        const tat = getTATStatus(row.status, row.updatedAt);
+                        return (
+                          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold inline-block w-16 text-center ${tat.color}`}>
+                            {tat.text}
+                          </span>
+                        );
+                      })()}
+                    </td>
                     <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.updatedAt), "yyyy/MM/dd")}</td>
                     {/* <td className="border py-2 px-3 text-sm">{row?.doctorName}</td> */}
                     {/* <td className="border py-2 px-3 text-sm">{row?.isPreAuth ? "True" : "False"}</td> */}
@@ -285,14 +424,18 @@ export function DataTable({
                           currentAssignee={row?.assignee?.id}
                           users={users}
                           onUpdate={(id, newAssignee) => {
-                            if (newAssignee) {
-                              setIsClaimAssigned(true);
-                              setAssignedClaimRefNumber(row.refNumber);
-                            }
-                            setClaims((prev) =>
-                              prev.map((c) => (c.id === id ? { ...c, assignee: newAssignee } : c))
-                            );
-                          }}
+                          if (newAssignee) {
+                            setIsClaimAssigned(true);
+                            setAssignedClaimRefNumber(row.refNumber);
+                          }
+                          setClaims((prev) =>
+                            prev.map((c) =>
+                              c.refNumber === id  // ← use refNumber instead of c.id
+                                ? { ...c, assignee: newAssignee, updatedAt: new Date().toISOString() }
+                                : c
+                            )
+                          );
+                        }}
                         />
                       </td>
                     )}
