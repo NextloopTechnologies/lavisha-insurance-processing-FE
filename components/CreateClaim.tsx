@@ -26,7 +26,8 @@ import {
   getPatientsByParams,
 } from "@/services/patients";
 import { useRouter } from "next/navigation";
-import { Plus, Search, UploadCloud, UserIcon, Building2 } from "lucide-react";
+import { Plus, Search, UploadCloud, UserIcon, Building2, CalendarIcon } from "lucide-react";
+import { DatePicker } from "@/components/DatePicker";
 import { useParams } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
@@ -40,6 +41,7 @@ import { getUsersDropdown } from "@/services/users";
 import { bulkDeleteFiles } from "@/services/files";
 import CreateEditUser from "@/components/CreateEditUser";
 import CreateUser from "@/components/CreateUser";
+import { DatePicker2 } from "./DatePicker2";
 
 export default function CreateClaim({
   handleCreateClaim,
@@ -497,6 +499,41 @@ export default function CreateClaim({
             onChange={(e) => handleSelectChange(e.target.value, "description")}
             placeholder="Description"
             className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
+          />
+        </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                 <div className="flex flex-col gap-1">
+          {/* <Label className="text-xs text-gray-500 ml-1">Admission Date</Label> */}
+                <div className="w-full">
+                  <DatePicker2
+                    date={claimInputs.dateOfAdmission ? new Date(claimInputs.dateOfAdmission) : undefined}
+                    onChange={(date) => {
+                      handleSelectChange(date ? date.toISOString() : "", "dateOfAdmission");
+                      // Clear discharge if it's before new admission date
+                      if (date && claimInputs.dateOfDischarge) {
+                        const discharge = new Date(claimInputs.dateOfDischarge);
+                        if (discharge < date) {
+                          handleSelectChange("", "dateOfDischarge");
+                        }
+                      }
+                    }}
+                    disableFuture
+                    placeholder="Admission Date"
+                  />
+                 </div>
+                </div>
+          
+          <InputComponent
+            placeHolder="Diagnosis"
+            Icon={UserIcon}
+            value={claimInputs.diagnosis}
+            onChange={(e) => handleSelectChange(e.target.value, "diagnosis")}
+          />
+          <InputComponent
+            placeHolder="Provisional Amount"
+            Icon={UserIcon}
+            value={claimInputs.provisionalAmount}
+            onChange={(e) => handleSelectChange(e.target.value, "provisionalAmount")}
           />
         </div>
 

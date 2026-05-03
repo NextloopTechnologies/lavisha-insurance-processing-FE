@@ -49,6 +49,9 @@ export default function EditClaimForm() {
     CURRENT_INVESTIGATION: "",
     CLINIC_PAPER: "",
     ICP: "",
+    dateOfAdmission: "",
+    diagnosis: "",
+    provisionalAmount: "",
   });
   const router = useRouter();
   const params = useParams();
@@ -236,6 +239,9 @@ export default function EditClaimForm() {
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
       // SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      dateOfAdmission: claims.dateOfAdmission || "",
+      diagnosis: claims.diagnosis || "",
+      provisionalAmount: claims.provisionalAmount || "",
     });
     // conditional notification to assignee on updates
     // only from edit icon from actions
