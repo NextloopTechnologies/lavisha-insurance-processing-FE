@@ -78,6 +78,10 @@ type DATA = {
     };
   };
   commentsCountMap: { [key: string]: number };
+  dateOfAdmission?: string;
+  dateOfDischarge?: string;
+  diagnosis?: string;
+  provisioalAmount?:string;
 };
 export const eyeTap = async (roles: string[], refNumber: Number) => {
   try {
