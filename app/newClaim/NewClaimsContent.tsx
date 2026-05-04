@@ -52,6 +52,9 @@ export default function NewClaimsContent() {
     CURRENT_INVESTIGATION: "",
     CLINIC_PAPER: "",
     ICP: "",
+    dateOfAdmission: "",
+    diagnosis: "",
+    provisionalAmount: "",
   });
   const router = useRouter();
   const params = useParams();
