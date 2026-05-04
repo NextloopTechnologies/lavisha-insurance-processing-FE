@@ -386,8 +386,8 @@ export function DataTable({
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">TAT Clock</th>
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Updated Date</th>
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Admission Date</th>
-              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Discharge Date</th>
-              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Created Date</th>
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Discharge Date</th> */}
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Created Date</th> */}
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Diagnosis</th>
               {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Provisional Amount</th> */}
               {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Dr. Name</th> */}
@@ -437,8 +437,8 @@ export function DataTable({
                     </td>
                     <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.updatedAt), "yyyy/MM/dd")}</td>
                     <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.dateOfAdmission ? format(new Date(row.dateOfAdmission), "yyyy/MM/dd") : "---"}</td>
-                    <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.dateOfDischarge ? format(new Date(row.dateOfDischarge), "yyyy/MM/dd") : "---"}</td>
-                    <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.createdAt), "yyyy/MM/dd")}</td>
+                    {/* <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.dateOfDischarge ? format(new Date(row.dateOfDischarge), "yyyy/MM/dd") : "---"}</td> */}
+                    {/* <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.createdAt), "yyyy/MM/dd")}</td> */}
                     <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.diagnosis || "---"}</td>
                     {/* <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.provisionalAmount || "---"}</td> */}
                     {/* <td className="border py-2 px-3 text-sm">{row?.doctorName}</td> */}
