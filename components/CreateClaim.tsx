@@ -572,7 +572,7 @@ export default function CreateClaim({
         </CreateEditUser>
 
         {claimInputs?.isPreAuth && (
-          <FileDrag title={"Pre Auth"} multiple={false} onChange={handleFileChange} name={"preAuth"} />
+          <FileDrag title={"Pre Auth"} multiple={false} onChange={handleFileChange} name={"PRE_AUTH"} claimInputs={claimInputs?.PRE_AUTH ? [claimInputs?.PRE_AUTH] : []} />
         )}
         <FileDrag
           title={"ICP "}
