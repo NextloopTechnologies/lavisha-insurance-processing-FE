@@ -90,7 +90,7 @@ export default function PatientClaimDetails() {
     insuranceCompany: "",
     // status: "",
     description: "",
-    preAuth: "",
+    PRE_AUTH: "",
     OTHER: "",
     additionalNotes: "",
     PAST_INVESTIGATION: "",
@@ -398,6 +398,7 @@ export default function PatientClaimDetails() {
                 }}
               />
               <DocumentDetails data={claims?.documents} type={[
+                "PRE_AUTH",
                 "ICP",
                 "OTHER",
                 "CLINIC_PAPER",
