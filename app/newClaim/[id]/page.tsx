@@ -42,7 +42,7 @@ export default function EditClaimForm() {
     insuranceCompany: "",
     status: "",
     description: "",
-    preAuth: "",
+    PRE_AUTH: "",
     OTHER: "",
     additionalNotes: "",
     PAST_INVESTIGATION: "",
@@ -75,7 +75,7 @@ export default function EditClaimForm() {
           CURRENT_INVESTIGATION,
           OTHER,
           ICP,
-          preAuth,
+          PRE_AUTH,
           status,
           ...others
         } = claimInputs;
@@ -89,7 +89,7 @@ export default function EditClaimForm() {
         removeKeys(CURRENT_INVESTIGATION);
         removeKeys(OTHER);
         removeKeys(ICP);
-        removeKeys(preAuth);
+        removeKeys(PRE_AUTH);
         removeKeys(status);
         if (Array.isArray(OTHER)) {
           OTHER.forEach(removeKeys);
@@ -102,6 +102,7 @@ export default function EditClaimForm() {
           isBasicClaimUpdate: isClaimAssigned,
           ...((() => {
             const changed = [
+              isNewUpload(PRE_AUTH) ? PRE_AUTH : null,
               isNewUpload(CLINIC_PAPER) ? CLINIC_PAPER : null,
               isNewUpload(ICP) ? ICP : null,
               isNewUpload(PAST_INVESTIGATION) ? PAST_INVESTIGATION : null,
@@ -135,7 +136,7 @@ export default function EditClaimForm() {
           CURRENT_INVESTIGATION,
           OTHER,
           ICP,
-          preAuth,
+          PRE_AUTH,
           status,
           ...others
         } = claimInputs;
@@ -154,7 +155,7 @@ export default function EditClaimForm() {
         removeKeys(CURRENT_INVESTIGATION);
         removeKeys(OTHER);
         removeKeys(ICP);
-        removeKeys(preAuth);
+        removeKeys(PRE_AUTH);
         removeKeys(status);
         if (Array.isArray(OTHER)) {
           OTHER.forEach(removeKeys);
@@ -162,6 +163,7 @@ export default function EditClaimForm() {
         const payload = {
           ...others,
           documents: [
+            PRE_AUTH,
             CLINIC_PAPER,
             ICP,
             PAST_INVESTIGATION,
@@ -231,7 +233,7 @@ export default function EditClaimForm() {
       insuranceCompany: claims.insuranceCompany,
       status: claims.status,
       description: claims.description,
-      preAuth: "", 
+      PRE_AUTH: documentMap.PRE_AUTH || "",
       additionalNotes: claims.additionalNotes || "",
       OTHER: documentMap.OTHER || [],
       CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
