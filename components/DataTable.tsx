@@ -25,6 +25,7 @@ import {
   Trash2,
   Copy,
   EllipsisVertical,
+  Download,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { MultiSelect } from "./MultiSelect";
@@ -43,6 +44,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { markCommentsAsRead } from "@/services/comments";
+import { exportClaimsToExcel } from "@/lib/exportExcel";
 type User = {
   id: number;
   patientName: string;
@@ -76,6 +78,10 @@ type DATA = {
     };
   };
   commentsCountMap: { [key: string]: number };
+  dateOfAdmission?: string;
+  dateOfDischarge?: string;
+  diagnosis?: string;
+  provisioalAmount?:string;
 };
 export const eyeTap = async (roles: string[], refNumber: Number) => {
   try {
@@ -333,7 +339,17 @@ export function DataTable({
             )}
           </div>
         </div>
-        <>
+        <div className="flex gap-2 items-center">
+          <Button
+            onClick={() => exportClaimsToExcel(data)}
+            className="bg-green-600 hover:bg-green-700 text-white rounded-sm hidden md:flex cursor-pointer"
+          >
+            <Download className="mr-2 h-4 w-4" /> Download Excel
+          </Button>
+          <Download
+            onClick={() => exportClaimsToExcel(data)}
+            className="mr-2 h-4 w-4 text-green-600 block md:hidden cursor-pointer"
+          />
           <Button
             onClick={() => router.push("/newClaim")}
             className="bg-[#3E79D6] hover:bg-[#3E79D6] text-white rounded-sm hidden md:flex cursor-pointer"
@@ -341,7 +357,7 @@ export function DataTable({
             <Plus className="mr-2 h-4 w-4" /> New Claim
           </Button>
           <Plus onClick={() => router.push("/newClaim")} className="mr-2 h-4 w-4 block md:hidden cursor-pointer" />
-        </>
+        </div>
       </div>
 
       {/* Table */}
@@ -369,6 +385,11 @@ export function DataTable({
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Status</th>
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">TAT Clock</th>
               <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Updated Date</th>
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Admission Date</th>
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Discharge Date</th> */}
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Created Date</th> */}
+              <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Diagnosis</th>
+              {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Provisional Amount</th> */}
               {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Dr. Name</th> */}
               {/* <th style={thStyle} className="border py-2 px-3 text-left text-sm font-normal whitespace-nowrap">Pre-Auth Status</th> */}
               {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (
@@ -415,6 +436,11 @@ export function DataTable({
                       })()}
                     </td>
                     <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.updatedAt), "yyyy/MM/dd")}</td>
+                    <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.dateOfAdmission ? format(new Date(row.dateOfAdmission), "yyyy/MM/dd") : "---"}</td>
+                    {/* <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.dateOfDischarge ? format(new Date(row.dateOfDischarge), "yyyy/MM/dd") : "---"}</td> */}
+                    {/* <td className="border py-2 px-3 text-sm whitespace-nowrap">{format(new Date(row.createdAt), "yyyy/MM/dd")}</td> */}
+                    <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.diagnosis || "---"}</td>
+                    {/* <td className="border py-2 px-3 text-sm whitespace-nowrap">{row?.provisionalAmount || "---"}</td> */}
                     {/* <td className="border py-2 px-3 text-sm">{row?.doctorName}</td> */}
                     {/* <td className="border py-2 px-3 text-sm">{row?.isPreAuth ? "True" : "False"}</td> */}
                     {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (

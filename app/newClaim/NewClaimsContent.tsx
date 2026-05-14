@@ -45,13 +45,16 @@ export default function NewClaimsContent() {
     insuranceCompany: "",
     status: "",
     description: "",
-    preAuth: "",
+    PRE_AUTH: "",
     OTHER: "",
     additionalNotes: "",
     PAST_INVESTIGATION: "",
     CURRENT_INVESTIGATION: "",
     CLINIC_PAPER: "",
     ICP: "",
+    dateOfAdmission: "",
+    diagnosis: "",
+    provisionalAmount: "",
   });
   const router = useRouter();
   const params = useParams();
@@ -64,7 +67,7 @@ const handleCreateClaim = async (value = null) => {
       CURRENT_INVESTIGATION,
       OTHER,
       ICP,
-      preAuth,
+      PRE_AUTH,
       status,
       ...others
     } = claimInputs;
@@ -73,6 +76,7 @@ const handleCreateClaim = async (value = null) => {
      const cleanDoc = ({ url, file,isNew, ...rest }: any) => rest;
 
     const documents = [
+      PRE_AUTH ? cleanDoc(PRE_AUTH) : null,
       CLINIC_PAPER ? cleanDoc(CLINIC_PAPER) : null,
       ICP ? cleanDoc(ICP) : null,
       PAST_INVESTIGATION ? cleanDoc(PAST_INVESTIGATION) : null,

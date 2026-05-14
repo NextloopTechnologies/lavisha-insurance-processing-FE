@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
+import { DatePicker } from "@/components/DatePicker";
 import { bulkDeleteFiles, bulkUploadFiles, uploadFiles } from "@/services/files";
 import {
   Select,
@@ -22,6 +23,7 @@ import { ParamValue } from "next/dist/server/request/params";
 import LoadingOverlay from "./LoadingOverlay";
 import { StatusType } from "@/types/claims";
 import { toast } from "sonner";
+import { DatePicker2 } from "./DatePicker2";
 interface CreateSettlementPopupProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -68,6 +70,7 @@ export default function CreateDischargePopup({
     SETTLEMENT_LETTER: "",
     DISCHARGE_OTHER: [],
     dischargeSummary: "",
+    dateOfDischarge: "",
   });
   useEffect(() => {
     if (!data) return;
@@ -112,6 +115,7 @@ export default function CreateDischargePopup({
       SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
       DISCHARGE_OTHER: documentMap.DISCHARGE_OTHER || [],
       dischargeSummary: data?.dischargeSummary,
+      dateOfDischarge: data?.dateOfDischarge || "",
     });
   }, [data]);
   const handleSelectChange = (value: string | boolean, name: string) => {
@@ -264,6 +268,7 @@ export default function CreateDischargePopup({
       const payload = {
         ...others,
         dischargeSummary,
+        dateOfDischarge: claimInputs.dateOfDischarge,
         status: StatusType.DISCHARGED,
         documents,
       };
@@ -310,6 +315,19 @@ export default function CreateDischargePopup({
                     handleSelectChange(e.target.value, "doctorName")
                   }
                 /> */}
+              </div>
+
+              <div className="my-4">
+                <Label className="text-xs text-gray-500 ml-1 mb-1">Discharge Date</Label>
+                <DatePicker2
+                date={claimInputs.dateOfDischarge ? new Date(claimInputs.dateOfDischarge) : undefined}
+                onChange={(date) =>
+                  handleSelectChange(date ? date.toISOString() : "", "dateOfDischarge")
+                }
+                disableFuture
+                placeholder="Discharge Date"
+                disableBefore={claimInputs.dateOfAdmission ? new Date(claimInputs.dateOfAdmission) : undefined}
+              />
               </div>
 
               {
