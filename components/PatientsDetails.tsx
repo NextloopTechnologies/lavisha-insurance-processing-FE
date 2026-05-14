@@ -1,6 +1,8 @@
 import { doctorBriefcase, editIcon, userRound } from "@/assets";
 import Image from "next/image";
-
+// add import at top
+import RateListDocs from "@/components/RateListDocs";
+import Cookies from "js-cookie";
 export default function PatientDetails({ data, show }) {
   const userData = [
     ...(show?.name

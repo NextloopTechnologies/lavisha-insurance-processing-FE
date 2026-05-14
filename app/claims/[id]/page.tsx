@@ -4,6 +4,8 @@ import { Tabs } from "@/components/Tabs";
 import SidebarLayout from "@/components/SidebarLayout";
 import PatientDetails from "@/components/PatientsDetails";
 import DocumentDetails from "@/components/DocumentDetails";
+import RateListDocs from "@/components/RateListDocs";
+import Cookies from "js-cookie";
 import {
   Select,
   SelectContent,
@@ -111,7 +113,7 @@ export default function PatientClaimDetails() {
   const searchParams = useSearchParams();
   const statusFromQuery = searchParams.get("showStatus");
   const tabFromQuery = searchParams.get("tab");
-
+  const roles = Cookies.get("user_role")?.split(",") || [];
   const fetchPatients = async () => {
     setLoading(true);
     try {
@@ -406,6 +408,10 @@ export default function PatientClaimDetails() {
                 "PAST_INVESTIGATION",
                 "EXCEL_REPORT",
                   ]}/>
+      
+          {(roles?.includes("ADMIN") || roles?.includes("SUPER_ADMIN")) && (
+            <RateListDocs hospital={claims?.patient?.hospital} />
+            )}
             </>
           )}
 
