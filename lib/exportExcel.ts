@@ -16,6 +16,7 @@ type ClaimRow = {
   diagnosis?: string;
   provisionalAmount?: string;
   actualQuotedAmount?: string;  // ← renamed
+  totalBill?:string
   patient: {
     name?: string;
     hospital?: {
@@ -32,7 +33,7 @@ export function exportClaimsToExcel(
 
   const rows = claims.map((claim, index) => {
     const previousAmount = parseFloat(claim.provisionalAmount ?? "0") || 0;
-    const finalAmount = parseFloat(claim.actualQuotedAmount ?? "0") || 0;  // ← renamed
+    const finalAmount = parseFloat(claim.totalBill ?? "0") || 0;  // ← renamed
     const increasedAmount = finalAmount - previousAmount;
 
     return {
