@@ -24,7 +24,7 @@ interface UserPopoverProps {
       address?: string;
       rateListUrl?: string;
       profileUrl?: string;
-      rateListFileName?: string;
+      rateListFileNames?: string[];
       name?: string;
     }
   ];
@@ -103,7 +103,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
                 {profileData?.[0]?.address}
               </p>
 
-              {roles?.includes(UserRole.HOSPITAL) && (
+              {/* {roles?.includes(UserRole.HOSPITAL) && (
                 <div
                   onClick={() =>
                     handleViewRateList(profileData?.[0]?.rateListUrl)
@@ -115,7 +115,7 @@ export const ProfilePopover: React.FC<UserPopoverProps> = ({
                     View Rate list
                   </a>
                 </div>
-              )}
+              )} */}
 
               <div
                 onClick={() => setOpenEditProfile(true)}
