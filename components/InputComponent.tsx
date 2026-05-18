@@ -2,7 +2,7 @@
 import React from "react";
 import { Input } from "./ui/input";
 
-const InputComponent = ({ value, onChange, placeHolder,Icon }) => {
+const InputComponent = ({ value, onChange, onBlur = undefined, placeHolder, Icon }) => {
   return (
     <div className="flex items-center gap-2 bg-[#F2F7FC] p-1 rounded-md h-10"> 
       <Icon className="w-4 h-4 text-[#3E79D6] ml-2" />
@@ -11,6 +11,7 @@ const InputComponent = ({ value, onChange, placeHolder,Icon }) => {
         className="pl-1 w-full h-full py-0 bg-transparent border-none focus-visible:ring-0 shadow-none placeholder:text-black placeholder:font-semibold" 
         value={value}
         onChange={onChange}
+        onBlur={onBlur}
       />
     </div>
   );

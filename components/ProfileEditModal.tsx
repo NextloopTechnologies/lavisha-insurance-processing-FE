@@ -8,35 +8,27 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { CloudUpload, Folder, UserIcon } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import InputComponent from "./InputComponent";
 import { bulkDeleteFiles, uploadFiles } from "@/services/files";
 import { updateProfile } from "@/services/profile";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
+import { useFormik } from "formik";
+import { buildProfileEditSchema } from "@/lib/validationSchemas";
+import { useState } from "react";
 
 export function ProfileEditModal({
   openEditProfile,
   setOpenEditProfile,
   profileData,
 }) {
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [loggedInUserName, setLoggedInUserName] = useState<string | null>(null);
   const [loggedInUserId, setLoggedInUserId] = useState<string | null>(null);
   const rateListInputRef = useRef<HTMLInputElement>(null);
 
-  const [profileInput, setProfileInput] = useState({
-    name: loggedInUserName,
-    address: "",
-    hospitalName: "",
-    rateListFileNames: [] as string[],
-    rateListUrls: [] as string[],
-    profileFileName: "",
-    profileUrl: "",
-  });
-
-  const isAdminOrSuperAdmin = ['ADMIN', 'SUPER_ADMIN'].some(role =>
+  const isAdminOrSuperAdmin = ["ADMIN", "SUPER_ADMIN"].some((role) =>
     Cookies.get("user_role")?.includes(role)
   );
 
@@ -47,36 +39,55 @@ export function ProfileEditModal({
     }
   }, []);
 
-  useEffect(() => {
-    if (!profileData?.length) {
-      setProfileInput({
-        name: loggedInUserName,
-        address: "",
-        hospitalName: "",
-        rateListFileNames: [],
-        rateListUrls: [],
-        profileFileName: "",
-        profileUrl: "",
-      });
-    } else {
-      setProfileInput({
-        name: profileData?.[0]?.name || loggedInUserName,
-        address: profileData?.[0]?.address,
-        hospitalName: profileData?.[0]?.hospitalName,
-        rateListFileNames: profileData?.[0]?.rateListFileNames ?? [],
-        rateListUrls: profileData?.[0]?.rateListUrls ?? [],
-        profileFileName: profileData?.[0]?.profileFileName,
-        profileUrl: profileData?.[0]?.profileUrl,
-      });
-    }
-  }, [profileData, loggedInUserName]);
+  const validationSchema = buildProfileEditSchema(isAdminOrSuperAdmin);
 
+  // ---------------------------------------------------------------------------
+  // Formik
+  // ---------------------------------------------------------------------------
+  const formik = useFormik({
+    enableReinitialize: true,
+    initialValues: {
+      name:
+        profileData?.[0]?.name ||
+        loggedInUserName ||
+        "",
+      address: profileData?.[0]?.address || "",
+      hospitalName: profileData?.[0]?.hospitalName || "",
+      rateListFileNames: profileData?.[0]?.rateListFileNames ?? [],
+      rateListUrls: profileData?.[0]?.rateListUrls ?? [],
+      profileFileName: profileData?.[0]?.profileFileName || "",
+      profileUrl: profileData?.[0]?.profileUrl || "",
+    },
+    validationSchema,
+    onSubmit: async (values) => {
+      if (!loggedInUserId) return;
+      try {
+        const { rateListUrls, ...payload } = values;
+        setLoading(true);
+        const res = await updateProfile(payload, loggedInUserId);
+        if (res?.status === 200) {
+          setLoading(false);
+          setOpenEditProfile(false);
+          toast.success("Profile updated successfully");
+        }
+      } catch (error) {
+        console.error("Upload error:", error);
+        toast.error("Failed to update profile");
+      } finally {
+        setLoading(false);
+      }
+    },
+  });
+
+  // ---------------------------------------------------------------------------
+  // Profile photo upload (not validated)
+  // ---------------------------------------------------------------------------
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setLoading(true);
-    setImagePreview(URL.createObjectURL(file));
+    formik.setFieldValue("profileUrl", URL.createObjectURL(file));
 
     const formData = new FormData();
     formData.append("file", file);
@@ -84,25 +95,19 @@ export function ProfileEditModal({
 
     try {
       const res = await uploadFiles(formData);
-      setProfileInput((prev) => ({
-        ...prev,
-        profileFileName: res?.data?.key,
-        profileUrl: res.data?.url,
-      }));
+      formik.setFieldValue("profileFileName", res?.data?.key);
+      formik.setFieldValue("profileUrl", res.data?.url);
     } catch (error) {
       console.error("Upload error:", error);
+      toast.error("Failed to upload profile photo");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleInputChange = (value: string | boolean, name: string) => {
-    setProfileInput((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
+  // ---------------------------------------------------------------------------
+  // Rate list upload/remove (not validated)
+  // ---------------------------------------------------------------------------
   const handleRateListUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (!files.length) return;
@@ -120,32 +125,37 @@ export function ProfileEditModal({
       const newKeys = results.map((res) => res?.data?.key).filter(Boolean);
       const newUrls = results.map((res) => res?.data?.url).filter(Boolean);
 
-      setProfileInput((prev) => ({
-        ...prev,
-        rateListFileNames: [...prev.rateListFileNames, ...newKeys],
-        rateListUrls: [...prev.rateListUrls, ...newUrls],
-      }));
+      formik.setFieldValue("rateListFileNames", [
+        ...formik.values.rateListFileNames,
+        ...newKeys,
+      ]);
+      formik.setFieldValue("rateListUrls", [
+        ...formik.values.rateListUrls,
+        ...newUrls,
+      ]);
       toast.success("Files uploaded successfully");
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error("Failed to upload files");
     } finally {
       setLoading(false);
-      // reset input so same file can be re-uploaded if needed
       if (rateListInputRef.current) rateListInputRef.current.value = "";
     }
   };
 
   const handleRemoveRateList = async (index: number) => {
-    const fileName = profileInput.rateListFileNames[index];
+    const fileName = formik.values.rateListFileNames[index];
     try {
       setLoading(true);
       await bulkDeleteFiles([fileName]);
-      setProfileInput((prev) => ({
-        ...prev,
-        rateListFileNames: prev.rateListFileNames.filter((_, i) => i !== index),
-        rateListUrls: prev.rateListUrls.filter((_, i) => i !== index),
-      }));
+      formik.setFieldValue(
+        "rateListFileNames",
+        formik.values.rateListFileNames.filter((_, i) => i !== index)
+      );
+      formik.setFieldValue(
+        "rateListUrls",
+        formik.values.rateListUrls.filter((_, i) => i !== index)
+      );
       toast.success("File removed successfully");
     } catch (error) {
       console.error("Delete failed:", error);
@@ -155,44 +165,36 @@ export function ProfileEditModal({
     }
   };
 
-  const handleUpdateProfile = async () => {
-    if (loggedInUserId) {
-      try {
-        // strip rateListUrls — only S3 keys go to the backend
-        const { rateListUrls, ...payload } = profileInput;
-        setLoading(true);
-        const res = await updateProfile(payload, loggedInUserId);
-        if (res?.status === 200) {
-          setLoading(false);
-          setOpenEditProfile(false);
-        }
-      } catch (error) {
-        console.error("Upload error:", error);
-      }
-    }
-  };
-
   const handleClose = (isOpen: boolean) => {
     setOpenEditProfile(isOpen);
+    if (!isOpen) formik.resetForm();
   };
+
+  // Inline error helper
+  const fieldError = (name: string) =>
+    (formik.touched as any)[name] && (formik.errors as any)[name] ? (
+      <p className="text-red-500 text-xs mt-1">{(formik.errors as any)[name]}</p>
+    ) : null;
 
   return (
     <Dialog open={openEditProfile} onOpenChange={handleClose}>
       <DialogContent
-        className={`sm:max-w-md ${isAdminOrSuperAdmin ? "max-w-[500px]" : "h-[calc(100vh-100px)]"} rounded-2xl px-6 py-8`}
+        className={`sm:max-w-md ${
+          isAdminOrSuperAdmin ? "max-w-[500px]" : "h-[calc(100vh-100px)]"
+        } rounded-2xl px-6 py-8`}
       >
         <DialogHeader>
           <DialogTitle className="text-xl font-semibold">Profile Edit</DialogTitle>
         </DialogHeader>
 
         <div className="overflow-y-scroll">
-          {/* Profile photo */}
+          {/* Profile photo — no validation */}
           <div className="flex flex-col items-center justify-center gap-3 my-4">
             <label htmlFor="profile-photo" className="cursor-pointer">
-              {profileInput?.profileUrl != null ? (
+              {formik.values.profileUrl ? (
                 <div className="w-full flex justify-center items-center">
                   <img
-                    src={profileInput?.profileUrl}
+                    src={formik.values.profileUrl}
                     alt="Preview"
                     className="w-24 h-24 object-cover rounded-full border"
                   />
@@ -200,7 +202,7 @@ export function ProfileEditModal({
               ) : (
                 <div className="w-24 h-24 flex items-center justify-center rounded-full border">
                   <span className="text-[50px] font-semibold text-[#3E79D6]">
-                    {profileInput?.name?.[0]}
+                    {formik.values.name?.[0]}
                   </span>
                 </div>
               )}
@@ -217,29 +219,36 @@ export function ProfileEditModal({
             </label>
           </div>
 
-          {/* Name */}
+          {/* Name — validated */}
           <div className="w-full">
             <InputComponent
               placeHolder={!isAdminOrSuperAdmin ? "Hospital Name" : "Admin Name"}
               Icon={UserIcon}
-              value={profileInput.name}
-              onChange={(e) => handleInputChange(e.target.value, "name")}
+              value={formik.values.name}
+              onChange={(e) => formik.setFieldValue("name", e.target.value)}
+              onBlur={() => formik.setFieldTouched("name", true)}
             />
+            {fieldError("name")}
           </div>
 
-          {/* Address */}
+          {/* Address — validated for non-admin */}
           <div className="my-4">
             {!isAdminOrSuperAdmin && (
-              <textarea
-                value={profileInput.address}
-                onChange={(e) => handleInputChange(e.target.value, "address")}
-                placeholder="Address"
-                className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
-              />
+              <div>
+                <textarea
+                  name="address"
+                  value={formik.values.address}
+                  onChange={formik.handleChange}
+                  onBlur={formik.handleBlur}
+                  placeholder="Address"
+                  className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
+                />
+                {fieldError("address")}
+              </div>
             )}
           </div>
 
-          {/* Rate List — misc-docs style */}
+          {/* Rate List — no validation */}
           {!isAdminOrSuperAdmin && (
             <div className="border rounded-md bg-blue-50 p-0 w-full max-w-full mb-3">
               {/* Header */}
@@ -265,12 +274,12 @@ export function ProfileEditModal({
               </div>
 
               {/* Files grid */}
-              {profileInput.rateListFileNames.length > 0 && (
+              {formik.values.rateListFileNames.length > 0 && (
                 <div className="p-4 flex gap-4 items-center flex-wrap">
-                  {profileInput.rateListFileNames.map((key, i) => (
+                  {formik.values.rateListFileNames.map((key, i) => (
                     <div key={i} className="text-center relative">
                       <a
-                        href={profileInput.rateListUrls[i]}
+                        href={formik.values.rateListUrls[i]}
                         target="_blank"
                         rel="noopener noreferrer"
                         title={key.split("/").pop()}
@@ -306,7 +315,7 @@ export function ProfileEditModal({
               </Button>
             </DialogClose>
             <Button
-              onClick={handleUpdateProfile}
+              onClick={() => formik.handleSubmit()}
               className="bg-[#3E79D6] text-white"
               disabled={loading}
             >
