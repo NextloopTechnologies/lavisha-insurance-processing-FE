@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "node --experimental-transform-types --no-warnings --import ./tests/register-hooks.mjs --test tests/*.test.mts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",
