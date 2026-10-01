@@ -6,7 +6,11 @@
     "dev": "next dev --turbopack",
     "build": "next build --webpack",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "node scripts/guard/install-hooks.mjs",
+    "guard": "node scripts/guard/repo-hygiene.mjs && node scripts/guard/merge-injection.mjs",
+    "test:guard": "node --test scripts/guard/guard.test.mjs",
+    "test": "node --experimental-transform-types --no-warnings --import ./tests/register-hooks.mjs --test tests/*.test.mts"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.3.2",

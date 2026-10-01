@@ -126,7 +126,6 @@ export default function ClaimsContent() {
         const results = await Promise.all(
           claims.map((claim) =>
             getComments({
-              role: loggedInUserRole,
               insuranceRequestId: claim.id,
             })
           )
