@@ -1,0 +1,8 @@
+{
+  "maxLineLength": 1000,
+  "maxConfigLineLength": 300,
+  "longLineAllow": ["package-lock.json", "**/*.svg", "**/*.min.js", "public/sw.js", "public/workbox-*.js"],
+  "allowedPrepareScripts": ["node scripts/guard/install-hooks.mjs"],
+  "allowedRegistryHosts": ["registry.npmjs.org"],
+  "eolOnlyChangeLimit": 5
+}
