@@ -62,7 +62,6 @@ export default function Comments({
     try {
       setLoading(true);
       const commentsResponse = await getComments({
-        role: loggedInUserRole,
         insuranceRequestId: claimId,
       });
       if (commentsResponse.status === 200) {

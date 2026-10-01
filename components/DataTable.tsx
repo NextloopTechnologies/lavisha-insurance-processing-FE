@@ -85,7 +85,7 @@ type DATA = {
 };
 export const eyeTap = async (roles: string[], refNumber: Number) => {
   try {
-    const response = await markCommentsAsRead(refNumber, roles[0]);
+    const response = await markCommentsAsRead(refNumber);
     return response.data;
   } catch (error) {
     console.error("Failed to mark comments as read:", error);
