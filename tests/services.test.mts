@@ -40,6 +40,7 @@ const { default: api } = await import("@/lib/axios");
 const comments = await import("@/services/comments");
 const { getDashboardByDate } = await import("@/services/dashboard");
 const auth = await import("@/services/auth");
+const files = await import("@/services/files");
 
 // capture requests instead of sending them
 type Captured = { method?: string; url?: string; params?: any; data?: any; uri: string };
@@ -86,6 +87,20 @@ describe("comments service: no role sent, params encoded", () => {
   it("markRead encodes the hospital id in the path", async () => {
     await comments.markReadForAdminManagerComments("a/../b");
     assert.equal(requests[0].url, "/comments/markRead/a%2F..%2Fb");
+  });
+});
+
+describe("files service: download link", () => {
+  it("asks the API for a download link with the key as an encoded query param", async () => {
+    nextResponse = { data: { url: "https://signed.example/x", fileName: "a b.pdf" } };
+    const res = await files.getDownloadUrl("claims/a b&key=other.pdf");
+    assert.equal(requests[0].method, "get");
+    assert.equal(requests[0].url, "/file/download-url");
+    assert.deepEqual(requests[0].params, { key: "claims/a b&key=other.pdf" });
+    const query = new URLSearchParams(requests[0].uri.split("?")[1]);
+    assert.deepEqual([...query.keys()], ["key"]);
+    assert.equal(query.get("key"), "claims/a b&key=other.pdf");
+    assert.equal(res.data.fileName, "a b.pdf");
   });
 });
 

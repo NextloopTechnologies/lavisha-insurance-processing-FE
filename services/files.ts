@@ -19,4 +19,8 @@ export const bulkUploadFiles = (data: any) =>
 export const bulkDeleteFiles = (fileNames: string[]) =>
   api.delete("/file/bulkDelete", { data: { fileNames } });
 
+// Short-lived link that makes the browser save a claim document under its original name
+export const getDownloadUrl = (key: string) =>
+  api.get<{ url: string; fileName: string }>("/file/download-url", { params: { key } });
+
 // export const deletePatient = (id: string) => api.delete(`/patients/${id}`);
