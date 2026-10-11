@@ -31,6 +31,7 @@ import PatientFormDialog from "@/components/CreateEdit";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import CreateClaim from "@/components/CreateClaim";
 import { startOfTodayISO } from "@/lib/utils";
+import { CLAIM_DOC_TYPES, collectDocuments } from "@/lib/claimDocuments";
 
 export default function NewClaimsContent() {
   const [loading, setLoading] = useState(false);
@@ -73,18 +74,7 @@ const handleCreateClaim = async (value = null) => {
       ...others
     } = claimInputs;
 
-    //  Pure function — never mutates state
-     const cleanDoc = ({ url, file,isNew, ...rest }: any) => rest;
-
-    const documents = [
-      PRE_AUTH ? cleanDoc(PRE_AUTH) : null,
-      CLINIC_PAPER ? cleanDoc(CLINIC_PAPER) : null,
-      ICP ? cleanDoc(ICP) : null,
-      PAST_INVESTIGATION ? cleanDoc(PAST_INVESTIGATION) : null,
-      CURRENT_INVESTIGATION ? cleanDoc(CURRENT_INVESTIGATION) : null,
-      //  OTHER is an array — map each file through cleanDoc
-      ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
-    ].filter(Boolean);
+    const documents = collectDocuments(claimInputs, CLAIM_DOC_TYPES);
 
     const payload = { ...others, documents };
 

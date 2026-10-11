@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/select";
 import { INSURANCE_COMPANIES, TPA_OPTIONS } from "@/constants/menu";
 import { createClaims } from "@/services/claims";
-import { bulkUploadFiles, uploadFiles } from "@/services/files";
+import { uploadManyFiles } from "@/services/files";
+import { appendUploads, asArray, removeFromSlot, setRemark } from "@/lib/claimDocuments";
 import {
   createPatient,
   getPatientById,
@@ -199,19 +200,7 @@ export default function CreateClaim({
       try {
         setLoading(true);
         await bulkDeleteFiles([value.fileName]);
-        if (value.type == "OTHER") {
-          setClaimInputs((prev) => ({
-            ...prev,
-            OTHER: Array.isArray(prev.OTHER)
-              ? prev.OTHER.filter((file) => {
-                  if (value.id && file.id) return file.id !== value.id;
-                  return file.fileName !== value.fileName;
-                })
-              : [],
-          }));
-        } else {
-          setClaimInputs((prev) => ({ ...prev, [value.type]: "" }));
-        }
+        setClaimInputs((prev) => removeFromSlot(prev, value));
         toast.success("File removed successfully");
       } catch (error) {
         console.error("Bulk delete failed:", error);
@@ -219,62 +208,21 @@ export default function CreateClaim({
       } finally {
         setLoading(false);
       }
-    } else if (multiple) {
-      const formData = new FormData();
-      Array.from(value).forEach((file: any) => formData.append("files", file));
-      formData.append("folder", "claims");
-      try {
-        setLoading(true);
-        const res = await bulkUploadFiles(formData);
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          isNew: true,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
-        }));
-        toast.success("Files uploaded successfully");
-      } catch (error) {
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: Array.isArray(prev[name]) ? prev[name] : [],
-        }));
-        console.error("Bulk upload failed:", error);
-        toast.error("Failed to upload files");
-      } finally {
-        setLoading(false);
-      }
-    } else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
-      try {
-        setLoading(true);
-        const res = await uploadFiles(formData);
-        const existingDocument = claimInputs?.[name];
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key,
-            type: name,
-            file: value[0],
-            isNew: true,
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-        toast.success("File uploaded successfully");
-      } catch (error) {
-        setClaimInputs((prev) => ({ ...prev, [name]: "" }));
-        console.error("Single upload failed:", error);
-        toast.error("Failed to upload file");
-      } finally {
-        setLoading(false);
-      }
+      return;
+    }
+
+    const files: File[] = Array.from(value);
+    if (!files.length) return;
+    try {
+      setLoading(true);
+      const uploaded = await uploadManyFiles(files, "claims");
+      setClaimInputs((prev) => appendUploads(prev, name, uploaded, files));
+      toast.success(files.length > 1 ? "Files uploaded successfully" : "File uploaded successfully");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error(files.length > 1 ? "Failed to upload files" : "Failed to upload file");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -585,54 +533,19 @@ export default function CreateClaim({
         </CreateEditUser>
 
         {claimInputs?.isPreAuth && (
-          <FileDrag title={"Pre Auth"} multiple={false} onChange={handleFileChange} name={"PRE_AUTH"} claimInputs={claimInputs?.PRE_AUTH ? [claimInputs?.PRE_AUTH] : []} />
+          <FileDrag title={"Pre Auth"} multiple remarks={false} onChange={handleFileChange} name={"PRE_AUTH"} claimInputs={asArray(claimInputs?.PRE_AUTH)} />
         )}
-        <FileDrag
-          title={"ICP "}
-          multiple={false}
-          onChange={handleFileChange}
-          name={"ICP"}
-          claimInputs={claimInputs?.ICP ? [claimInputs?.ICP] : []}
-        />
-        <FileDrag
-          title={"Clinic Paper"}
-          multiple={false}
-          onChange={handleFileChange}
-          name={"CLINIC_PAPER"}
-          claimInputs={claimInputs?.CLINIC_PAPER ? [claimInputs?.CLINIC_PAPER] : []}
-        />
-        <FileDrag
-          title={"Past Investigation"}
-          multiple={false}
-          onChange={handleFileChange}
-          name={"PAST_INVESTIGATION"}
-          claimInputs={claimInputs?.PAST_INVESTIGATION ? [claimInputs?.PAST_INVESTIGATION] : []}
-        />
-        <FileDrag
-          title={"Current Investigation"}
-          multiple={false}
-          onChange={handleFileChange}
-          name={"CURRENT_INVESTIGATION"}
-          claimInputs={claimInputs?.CURRENT_INVESTIGATION ? [claimInputs?.CURRENT_INVESTIGATION] : []}
-        />
+        <FileDrag title={"ICP "} multiple remarks={false} onChange={handleFileChange} name={"ICP"} claimInputs={asArray(claimInputs?.ICP)} />
+        <FileDrag title={"Clinic Paper"} multiple remarks={false} onChange={handleFileChange} name={"CLINIC_PAPER"} claimInputs={asArray(claimInputs?.CLINIC_PAPER)} />
+        <FileDrag title={"Past Investigation"} multiple remarks={false} onChange={handleFileChange} name={"PAST_INVESTIGATION"} claimInputs={asArray(claimInputs?.PAST_INVESTIGATION)} />
+        <FileDrag title={"Current Investigation"} multiple remarks={false} onChange={handleFileChange} name={"CURRENT_INVESTIGATION"} claimInputs={asArray(claimInputs?.CURRENT_INVESTIGATION)} />
         <FileDrag
           title={"Misc Documents "}
           multiple={true}
           onChange={handleFileChange}
           name={"OTHER"}
-          claimInputs={claimInputs?.OTHER}
-          onRemarkChange={(fileName, remark) => {
-            setClaimInputs((prev) => ({
-              ...prev,
-              OTHER: Array.isArray(prev.OTHER)
-                ? prev.OTHER.map((file) =>
-                    file?.fileName === fileName || file?.name === fileName
-                      ? { ...file, remark }
-                      : file
-                  )
-                : prev.OTHER,
-            }));
-          }}
+          claimInputs={asArray(claimInputs?.OTHER)}
+          onRemarkChange={(fileName, remark) => setClaimInputs((prev) => setRemark(prev, "OTHER", fileName, remark))}
         />
 
         <div className="mt-4">

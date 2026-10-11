@@ -8,7 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { bulkDeleteFiles, bulkUploadFiles, uploadFiles } from "@/services/files";
+import { bulkDeleteFiles, uploadManyFiles } from "@/services/files";
+import { appendUploads, asArray, collectDocuments, groupDocuments, hasMissingRemarks, removeFromSlot, setRemark } from "@/lib/claimDocuments";
+
+const QUERY_DOC_TYPES = ["EXCEL_REPORT", "ICP", "CURRENT_INVESTIGATION", "OTHER"];
 import {
   Select,
   SelectContent,
@@ -78,34 +81,14 @@ export default function CreateQueryPopup({
         CURRENT_INVESTIGATION: "",
       });
     } else {
-      // Map documents by their type
-      const documentMap = selectedQuery?.documents?.reduce((acc, doc) => {
-        if (doc.type === "OTHER") {
-          acc[doc.type] = acc[doc.type] || [];
-          acc[doc.type].push({
-            id: doc.id,
-            fileName: doc.fileName,
-            type: doc.type,
-            remark: doc.remark,
-            url: doc.url
-          });
-        } else {
-          acc[doc.type] = {
-            id: doc.id,
-            fileName: doc.fileName,
-            type: doc.type,
-            url: doc.url
-          };
-        }
-        return acc;
-      }, {});
+      const documentMap = groupDocuments(selectedQuery?.documents, QUERY_DOC_TYPES);
 
       setQueryInputs({
         notes: selectedQuery?.notes,
-        OTHER: documentMap.OTHER || [],
-        ICP: documentMap.ICP || "",
-        EXCEL_REPORT: documentMap.EXCEL_REPORT || "",
-        CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
+        OTHER: documentMap.OTHER,
+        ICP: documentMap.ICP,
+        EXCEL_REPORT: documentMap.EXCEL_REPORT,
+        CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION,
 
         //   CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
         //   PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
@@ -124,27 +107,11 @@ export default function CreateQueryPopup({
   };
 
   const handleFileChange = async (value, name, multiple) => {
-    //  Add remove handler
     if (name === "remove") {
       try {
         setLoading(true);
         await bulkDeleteFiles([value.fileName]);
-        if (value.type === "OTHER") {
-          setQueryInputs((prev) => ({
-            ...prev,
-            OTHER: Array.isArray(prev.OTHER)
-              ? prev.OTHER.filter((file) => {
-                if (value.id && file.id) return file.id !== value.id;
-                return file.fileName !== value.fileName;
-              })
-              : [],
-          }));
-        } else {
-          setQueryInputs((prev) => ({
-            ...prev,
-            [value.type]: "",
-          }));
-        }
+        setQueryInputs((prev) => removeFromSlot(prev, value));
         toast.success("File removed successfully");
       } catch (error) {
         console.error("Bulk delete failed:", error);
@@ -155,95 +122,27 @@ export default function CreateQueryPopup({
       return;
     }
 
-    else if (multiple) {
-      const formData = new FormData();
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
-      formData.append("folder", "claims");
-
-      try {
-        setLoading(true);
-        const res = await bulkUploadFiles(formData);
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-
-        //  Append to existing array
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
-        }));
-        toast.success("Files uploaded successfully");
-      } catch (error) {
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: Array.isArray(prev[name]) ? prev[name] : [],
-        }));
-        console.error("Bulk upload failed:", error);
-        toast.error("Failed to upload files");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
-
-      try {
-        setLoading(true);
-        const res = await uploadFiles(formData);
-
-        const existingDocument = queryInputs?.[name];
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key,
-            type: name,
-            file: value[0],
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-        toast.success("File uploaded successfully");
-      } catch (error) {
-        //  Use name not value.type
-        setQueryInputs((prev) => ({
-          ...prev,
-          [name]: "",
-        }));
-        console.error("Single upload failed:", error);
-        toast.error("Failed to upload file");
-      } finally {
-        setLoading(false);
-      }
+    const files: File[] = Array.from(value);
+    if (!files.length) return;
+    try {
+      setLoading(true);
+      const uploaded = await uploadManyFiles(files, "claims");
+      setQueryInputs((prev) => appendUploads(prev, name, uploaded, files));
+      toast.success(files.length > 1 ? "Files uploaded successfully" : "File uploaded successfully");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error(files.length > 1 ? "Failed to upload files" : "Failed to upload file");
+    } finally {
+      setLoading(false);
     }
   };
-  const removeKeys = (obj) => {
-    if (!obj) {
-      return;
-    }
-    delete obj.url;
-    delete obj.file;
-    return obj;
-  };
+
   const handleCreateQuery = async () => {
 
-    if (Array.isArray(queryInputs.OTHER) && queryInputs.OTHER.length > 0) {
-    const missingRemark = queryInputs.OTHER.some(
-      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
-    );
-    if (missingRemark) {
+    if (hasMissingRemarks(queryInputs, QUERY_DOC_TYPES)) {
       toast.error("Please add a note for all miscellaneous documents.");
       return;
     }
-  }
     try {
       const {
         OTHER,
@@ -257,15 +156,7 @@ export default function CreateQueryPopup({
         ...others
       } = queryInputs;
 
-      //  Pure function — never mutates state
-      const cleanDoc = ({ url, file, ...rest }: any) => rest;
-
-      const documents = [
-        ICP ? cleanDoc(ICP) : null,
-        CURRENT_INVESTIGATION ? cleanDoc(CURRENT_INVESTIGATION) : null,
-        EXCEL_REPORT ? cleanDoc(EXCEL_REPORT) : null,
-        ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
-      ].filter(Boolean);
+      const documents = collectDocuments(queryInputs, QUERY_DOC_TYPES);
 
       const payload = {
         ...others,
@@ -353,25 +244,28 @@ export default function CreateQueryPopup({
 
               <FileDrag
                 title={"Excel Report"}
-                multiple={false}
+                multiple
+                remarks={false}
                 onChange={handleFileChange}
                 name={"EXCEL_REPORT"}
-                claimInputs={queryInputs?.EXCEL_REPORT ? [queryInputs?.EXCEL_REPORT] : []}
+                claimInputs={asArray(queryInputs?.EXCEL_REPORT)}
               />
 
               <FileDrag
                 title={"ICP"}
-                multiple={false}
+                multiple
+                remarks={false}
                 onChange={handleFileChange}
                 name={"ICP"}
-                claimInputs={queryInputs?.ICP ? [queryInputs?.ICP] : []}
+                claimInputs={asArray(queryInputs?.ICP)}
               />
               <FileDrag
                 title={"Investigation"}
-                multiple={false}
+                multiple
+                remarks={false}
                 onChange={handleFileChange}
                 name={"CURRENT_INVESTIGATION"}
-                claimInputs={queryInputs?.CURRENT_INVESTIGATION ? [queryInputs?.CURRENT_INVESTIGATION] : []}
+                claimInputs={asArray(queryInputs?.CURRENT_INVESTIGATION)}
               />
 
               <FileDrag
@@ -379,20 +273,8 @@ export default function CreateQueryPopup({
                 multiple={true}
                 onChange={handleFileChange}
                 name={"OTHER"}
-                onRemarkChange={(fileName, remark) => {  
-                  setQueryInputs((prev) => ({
-                    ...prev,
-                    OTHER: Array.isArray(prev.OTHER)
-                      ? prev.OTHER.map((file) =>
-                          (file?.fileName === fileName || file?.name === fileName)
-                            ? { ...file, remark }
-                            : file
-                        )
-                      : prev.OTHER,
-                  }));
-                }}
-                // claimInputs={queryInputs?.OTHER ? [queryInputs?.OTHER] : []}
-                claimInputs={Array.isArray(queryInputs?.OTHER) ? queryInputs?.OTHER : []}
+                onRemarkChange={(fileName, remark) => setQueryInputs((prev) => setRemark(prev, "OTHER", fileName, remark))}
+                claimInputs={asArray(queryInputs?.OTHER)}
               />
 
               {/* Action Buttons */}

@@ -10,6 +10,8 @@ interface FileDropzoneProps {
   onRemarkChange?: (fileName: string, remark: string) => void;
   name?: string;
   claimInputs?: any;
+  /** Show a note input per file. Defaults to `multiple` (misc slots need notes). */
+  remarks?: boolean;
 }
 
 const FileDrag: React.FC<FileDropzoneProps> = ({
@@ -19,7 +21,9 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
   onRemarkChange,
   name,
   claimInputs,
+  remarks,
 }) => {
+  const showRemarks = remarks ?? multiple;
   // const [files, setFiles] = useState<File[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -84,6 +88,8 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
     if (e.target.files) {
       handleFiles(e.target.files);
     }
+    // allow picking the same file again after removing it
+    e.target.value = "";
   };
 
   // const removeFile = (index: number) => {
@@ -215,7 +221,7 @@ const getDisplayName = (file: any) => {
                  {getDisplayName(file)}
 
               </div>
-                 {multiple && (
+                 {showRemarks && (
                   <input
                     type="text"
                     placeholder="Add note..."

@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
-import { bulkDeleteFiles, bulkUploadFiles, uploadFiles } from "@/services/files";
+import { bulkDeleteFiles, uploadManyFiles } from "@/services/files";
+import { appendUploads, asArray, removeFromSlot } from "@/lib/claimDocuments";
 import {
   Select,
   SelectContent,
@@ -85,7 +86,7 @@ export default function CreateSettlementPopup({
 
     const documentMap = data.documents.reduce((acc, doc) => {
       // Both OTHER and SETTLEMENT_OTHER are arrays
-      if (doc.type === "OTHER" || doc.type === "SETTLEMENT_OTHER") {
+      if (doc.type === "OTHER" || doc.type === "SETTLEMENT_OTHER" || doc.type === "SETTLEMENT_LETTER") {
         acc[doc.type] = acc[doc.type] || [];
         acc[doc.type].push({
           id: doc.id,
@@ -122,7 +123,7 @@ export default function CreateSettlementPopup({
       ICP: documentMap.ICP || "",
       CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
       PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
-      SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
+      SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || [],
       SETTLEMENT_OTHER: documentMap.SETTLEMENT_OTHER || [],
       totalBill: data?.totalBill || "",
       totalApproval: data?.totalApproval || "",
@@ -142,27 +143,11 @@ export default function CreateSettlementPopup({
   };
 
   const handleFileChange = async (value, name, multiple) => {
-    //  Remove handler
     if (name === "remove") {
       try {
         setLoading(true);
         await bulkDeleteFiles([value.fileName]);
-        if (value.type === "OTHER" || value.type === "SETTLEMENT_OTHER") {
-          setClaimInputs((prev) => ({
-            ...prev,
-            [value.type]: Array.isArray(prev[value.type])
-              ? prev[value.type].filter((file) => {
-                if (value.id && file.id) return file.id !== value.id;
-                return file.fileName !== value.fileName;
-              })
-              : [],
-          }));
-        } else {
-          setClaimInputs((prev) => ({
-            ...prev,
-            [value.type]: "",
-          }));
-        }
+        setClaimInputs((prev) => removeFromSlot(prev, value));
         toast.success("File removed successfully");
       } catch (error) {
         console.error("Bulk delete failed:", error);
@@ -173,74 +158,18 @@ export default function CreateSettlementPopup({
       return;
     }
 
-    else if (multiple) {
-      const formData = new FormData();
-      Array.from(value).forEach((file: any) => {
-        formData.append("files", file);
-      });
-      formData.append("folder", "claims");
-
-      try {
-        setLoading(true);
-        const res = await bulkUploadFiles(formData);
-        const uploadedFiles = res?.data?.map((file) => ({
-          fileName: file?.key,
-          type: name,
-          ...(name === "OTHER" && { remark: "custom remark" }),
-        }));
-
-        //  Append to existing array
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: [...(Array.isArray(prev[name]) ? prev[name] : []), ...uploadedFiles],
-        }));
-        toast.success("Files uploaded successfully");
-      } catch (error) {
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: Array.isArray(prev[name]) ? prev[name] : [],
-        }));
-        console.error("Bulk upload failed:", error);
-        toast.error("Failed to upload files");
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    else {
-      const formData = new FormData();
-      formData.append("file", value[0]);
-      formData.append("folder", "claims");
-
-      try {
-        setLoading(true);
-        const res = await uploadFiles(formData);
-
-        const existingDocument = claimInputs?.[name];
-        const existingDocumentId = existingDocument ? existingDocument.id : null;
-
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: {
-            ...(isEditMode && existingDocumentId ? { id: existingDocumentId } : {}),
-            fileName: res?.data?.key,
-            type: name,
-            file: value[0],
-            ...(name === "OTHER" && { remark: "custom remark" }),
-          },
-        }));
-        toast.success("File uploaded successfully");
-      } catch (error) {
-        //  Use name not value.type
-        setClaimInputs((prev) => ({
-          ...prev,
-          [name]: "",
-        }));
-        console.error("Single upload failed:", error);
-        toast.error("Failed to upload file");
-      } finally {
-        setLoading(false);
-      }
+    const files: File[] = Array.from(value);
+    if (!files.length) return;
+    try {
+      setLoading(true);
+      const uploaded = await uploadManyFiles(files, "claims");
+      setClaimInputs((prev) => appendUploads(prev, name, uploaded, files));
+      toast.success(files.length > 1 ? "Files uploaded successfully" : "File uploaded successfully");
+    } catch (error) {
+      console.error("Upload failed:", error);
+      toast.error(files.length > 1 ? "Failed to upload files" : "Failed to upload file");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -267,7 +196,7 @@ export default function CreateSettlementPopup({
       const cleanDoc = ({ url, file, ...rest }: any) => rest;
 
       const documents = [
-        SETTLEMENT_LETTER ? cleanDoc(SETTLEMENT_LETTER) : null,
+        ...asArray(SETTLEMENT_LETTER).map(cleanDoc),
         ...(Array.isArray(SETTLEMENT_OTHER) ? SETTLEMENT_OTHER.map(cleanDoc) : []),
         ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
       ].filter(Boolean);
@@ -410,10 +339,11 @@ export default function CreateSettlementPopup({
               {/*  Upload Section */}
               <FileDrag
                 title={"Settlement"}
-                multiple={false}
+                multiple
+                remarks={false}
                 onChange={handleFileChange}
                 name={"SETTLEMENT_LETTER"}
-                claimInputs={claimInputs?.SETTLEMENT_LETTER ? [claimInputs?.SETTLEMENT_LETTER] : []}
+                claimInputs={asArray(claimInputs?.SETTLEMENT_LETTER)}
               />
 
               <FileDrag
