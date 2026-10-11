@@ -51,6 +51,7 @@ export default function CreateClaim({
   setClaimInputs,
   isEditMode = false,
   initialHospitalId = "",
+  embedded = false, // inside the claim workspace tab: no full-height scroll area, buttons in the flow
 }) {
   const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -275,8 +276,9 @@ export default function CreateClaim({
     }
   };
 
+  // embedded: the page stays open after saving, so leave room below the buttons for the success toasts (bottom-right)
   return (
-    <div className="realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll">
+    <div className={embedded ? "relative bg-gray-100 pb-32" : "realtive h-[calc(100vh-80px)] bg-gray-100 overflow-y-scroll"}>
       <div className="flex justify-start gap-x-10 items-center mt-2 pl-16">
         <h2 className="text-lg font-semibold">
           {isEditMode ? "Edit Claim" : "Add New Claim"}
@@ -631,7 +633,7 @@ export default function CreateClaim({
           />
         </div>
 
-        <div className="mt-6 flex justify-end space-x-4 absolute bottom-5 sm:right-20 right-5">
+        <div className={embedded ? "mt-6 flex justify-end space-x-4" : "mt-6 flex justify-end space-x-4 absolute bottom-5 sm:right-20 right-5"}>
           <Link href="/claims">
             <Button className="text-[#3E79D6]" variant="outline">
               Cancel

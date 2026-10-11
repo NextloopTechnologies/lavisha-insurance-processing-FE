@@ -9,6 +9,9 @@ import { formatDateTime } from "@/lib/utils";
 import { Paperclip } from "lucide-react";
 import { StatusMetaDataType, StatusType } from "@/types/claims";
 
+// how often an open chat checks for new messages / history lines (no push channel exists)
+const COMMENTS_POLL_MS = 30_000;
+
 type CommentsProps = {
   claimId: string;
   disable?: boolean;
@@ -58,14 +61,20 @@ export default function Comments({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [isPopoverOpen]);
 
-  const fetchComments = async () => {
+  // ids of the comments last shown; comments never change once created
+  const shownIds = useRef("");
+
+  // silent: background refresh; leaves state alone when nothing new arrived
+  const fetchComments = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const commentsResponse = await getComments({
-        role: loggedInUserRole,
         insuranceRequestId: claimId,
       });
       if (commentsResponse.status === 200) {
+        const ids = (commentsResponse?.data ?? []).map((item) => item?.id).join(",");
+        if (silent && ids === shownIds.current) return;
+        shownIds.current = ids;
         const modifyData = commentsResponse?.data
           ?.map((item) => {
             return {
@@ -91,12 +100,35 @@ export default function Comments({
     } catch (error) {
       console.error("comment Errpr", error);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
   useEffect(() => {
     fetchComments();
   }, [claimId, loggedInUserRole, loggedInUserId]);
+
+  // show history lines right after this claim changes here (status button, chat status menu, popups, form saves)
+  const claimVersion = `${data?.status ?? ""}|${data?.updatedAt ?? ""}`;
+  const lastClaimVersion = useRef(claimVersion);
+  useEffect(() => {
+    if (lastClaimVersion.current === claimVersion) return;
+    lastClaimVersion.current = claimVersion;
+    if (claimId) fetchComments(true);
+  }, [claimVersion]);
+
+  // pick up other people's messages and changes while the chat is open; paused in hidden tabs
+  useEffect(() => {
+    if (!claimId) return;
+    const refresh = () => {
+      if (document.visibilityState === "visible") fetchComments(true);
+    };
+    const timer = setInterval(refresh, COMMENTS_POLL_MS);
+    document.addEventListener("visibilitychange", refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+    };
+  }, [claimId, loggedInUserId]);
 
   const handleCreateComment = async () => {
     const payload = {

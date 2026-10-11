@@ -85,7 +85,7 @@ type DATA = {
 };
 export const eyeTap = async (roles: string[], refNumber: Number) => {
   try {
-    const response = await markCommentsAsRead(refNumber, roles[0]);
+    const response = await markCommentsAsRead(refNumber);
     return response.data;
   } catch (error) {
     console.error("Failed to mark comments as read:", error);
@@ -126,6 +126,8 @@ export function DataTable({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const router = useRouter();
   const [isClaimAssigned, setIsClaimAssigned] = useState<boolean>(false);
+  // hospitals and admins work a claim from Edit (form + chat + workflow); managers and super-admins use View
+  const canEditClaims = roles?.includes(UserRole.HOSPITAL) || roles?.includes(UserRole.ADMIN);
   const [assignedClaimRefNumber, setAssignedClaimRefNumber] = useState<string>("");
 
   const [currentTime, setCurrentTime] = useState(Date.now());
@@ -467,16 +469,34 @@ export function DataTable({
                     )}
                     <td className="border py-2 px-3 text-sm">
                       <div className="flex gap-2 text-muted-foreground items-center justify-center">
-                        <Link href={`/newClaim/${row?.refNumber}`}>
-                          <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
-                        </Link>
+                        {canEditClaims && (
+                          <Link
+                            href={`/newClaim/${row?.refNumber}`}
+                            className="relative inline-flex p-2"
+                            aria-label={`Edit claim ${row?.refNumber}`}
+                            onClick={async (event) => {
+                              if (row?.status === StatusType.DRAFT) return;
+                              // opening the claim shows its chat, so mark its comments read first
+                              event.preventDefault();
+                              await eyeTap(roles, row?.id);
+                              router.push(`/newClaim/${row?.refNumber}`);
+                            }}
+                          >
+                            <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
+                            {row?.status !== StatusType.DRAFT && commentsCountMap[row?.id] > 0 && (
+                              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                                {commentsCountMap[row?.id]}
+                              </span>
+                            )}
+                          </Link>
+                        )}
                         {row?.status == StatusType.DRAFT && (
                           <Trash2
                             onClick={() => handleDeleteClaim(row.refNumber)}
                             className="w-4 h-4 hover:text-red-600 cursor-pointer"
                           />
                         )}
-                        {row?.status !== StatusType.DRAFT && (
+                        {row?.status !== StatusType.DRAFT && !canEditClaims && (
                           <>
                             {(row.assignee !== null ||
                               (isClaimAssigned && assignedClaimRefNumber === row.refNumber)) && (

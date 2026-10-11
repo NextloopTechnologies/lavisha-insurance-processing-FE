@@ -1,0 +1,3 @@
+#!/bin/sh
+# block obfuscated/padded payloads, hidden executables and broken configs before they are committed
+node scripts/guard/repo-hygiene.mjs --staged || exit 1

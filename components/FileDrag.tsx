@@ -123,7 +123,8 @@ const FileDrag: React.FC<FileDropzoneProps> = ({
 
     if (fileType === "image") {
       setModalOpen(true);
-      setImagePreview({ fileURL, file: f?.fileName });
+      // pass the File itself for local files so the preview can save it under its original name
+      setImagePreview({ fileURL: f?.url || f?.file || fileURL, file: f?.fileName });
     } else if (fileType === "pdf") {
       const newWindow = window.open(fileURL, "_blank");
       newWindow.onload = () => {
