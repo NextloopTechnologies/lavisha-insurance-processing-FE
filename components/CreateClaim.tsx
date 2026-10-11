@@ -66,6 +66,8 @@ export default function CreateClaim({
   const [selectedHospitalId, setSelectedHospitalId] = useState("");
   const [openHospitalDialog, setOpenHospitalDialog] = useState(false);
   const [newHospitalUser, setNewHospitalUser] = useState(null);
+  // Description is optional and hidden by default; shown when toggled or already filled.
+  const [showDescription, setShowDescription] = useState(false);
 
   const router = useRouter();
   const params = useParams();
@@ -496,12 +498,22 @@ export default function CreateClaim({
         )}
 
         <div className="my-4">
-          <textarea
-            value={claimInputs.description}
-            onChange={(e) => handleSelectChange(e.target.value, "description")}
-            placeholder="Description"
-            className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
-          />
+          {showDescription || claimInputs.description ? (
+            <textarea
+              value={claimInputs.description}
+              onChange={(e) => handleSelectChange(e.target.value, "description")}
+              placeholder="Description"
+              className="bg-[#F2F7FC] text-sm font-semibold text-black pl-2 min-h-[100px] outline-blue-300 focus:outline-border w-full"
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowDescription(true)}
+              className="flex items-center gap-1 text-sm font-semibold text-blue-600 hover:underline"
+            >
+              <Plus className="w-4 h-4" /> Add description
+            </button>
+          )}
         </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                  <div className="flex flex-col gap-1">
