@@ -59,7 +59,7 @@ export default function CreateDischargePopup({
     doctorName: "Dr. ",
     tpaName: "",
     insuranceCompany: "",
-    status: StatusType.DISCHARGED,
+    status: StatusType.DISCHARGE_INITIATED,
     description: "",
     preAuth: "",
     OTHER: "",
@@ -198,14 +198,15 @@ export default function CreateDischargePopup({
         ...others,
         dischargeSummary,
         dateOfDischarge: claimInputs.dateOfDischarge,
-        status: StatusType.DISCHARGED,
+        // starting discharge sets the status; editing discharge details later keeps it
+        ...(!isEditMode && { status: StatusType.DISCHARGE_INITIATED }),
         documents,
       };
 
       setLoading(true);
       const res = await updateClaims(payload, claimId);
       if (res?.status == 200) {
-        await updateClaimStatusAfterModalSuccess(StatusType.DISCHARGED);
+        await updateClaimStatusAfterModalSuccess(StatusType.DISCHARGE_INITIATED);
         onOpenChange(!open);
         fetchClaimsById();
         toast.success("Updated Claim with Discharge!");
