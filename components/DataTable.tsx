@@ -45,6 +45,7 @@ import {
 } from "./ui/tooltip";
 import { markCommentsAsRead } from "@/services/comments";
 import { exportClaimsToExcel } from "@/lib/exportExcel";
+import { singleActionRow } from "@/lib/rowAction";
 type User = {
   id: number;
   patientName: string;
@@ -129,6 +130,28 @@ export function DataTable({
   // hospitals and admins work a claim from Edit (form + chat + workflow); managers and super-admins use View
   const canEditClaims = roles?.includes(UserRole.HOSPITAL) || roles?.includes(UserRole.ADMIN);
   const [assignedClaimRefNumber, setAssignedClaimRefNumber] = useState<string>("");
+
+  // opening a claim shows its chat, so its comments are marked read first (not for drafts)
+  const openClaimForEdit = async (row: any) => {
+    if (row?.status !== StatusType.DRAFT) await eyeTap(roles, row?.id);
+    router.push(`/newClaim/${row?.refNumber}`);
+  };
+  const openClaimForView = async (row: any) => {
+    await eyeTap(roles, row?.id);
+    window.location.assign(`/claims/${row?.refNumber}`);
+  };
+  const canViewClaim = (row: any) =>
+    row?.status !== StatusType.DRAFT &&
+    !canEditClaims &&
+    (row.assignee !== null || (isClaimAssigned && assignedClaimRefNumber === row.refNumber));
+  // a row opens its claim when that is its only action; a lone delete (draft) never runs from a row click
+  const rowOpenAction = (row: any) => {
+    const actionCount = [canEditClaims, row?.status === StatusType.DRAFT, canViewClaim(row)].filter(Boolean).length;
+    if (actionCount !== 1) return null;
+    if (canEditClaims) return () => openClaimForEdit(row);
+    if (canViewClaim(row)) return () => openClaimForView(row);
+    return null;
+  };
 
   const [currentTime, setCurrentTime] = useState(Date.now());
   const TAT_MINUTES = 10;
@@ -404,7 +427,7 @@ export function DataTable({
           <tbody className="bg-white">
             {data?.length
               ? data.map((row, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
+                  <tr key={index} {...singleActionRow(rowOpenAction(row), "hover:bg-gray-50")}>
                     <td className="border py-2 px-3 text-sm">{row?.patient.name}</td>
                     {(roles?.includes(UserRole.ADMIN) || roles?.includes(UserRole.SUPER_ADMIN)) && (
                       <td className="border py-2 px-3 text-sm">{row?.patient?.hospital?.name || "---"}</td>
@@ -474,12 +497,9 @@ export function DataTable({
                             href={`/newClaim/${row?.refNumber}`}
                             className="relative inline-flex p-2"
                             aria-label={`Edit claim ${row?.refNumber}`}
-                            onClick={async (event) => {
-                              if (row?.status === StatusType.DRAFT) return;
-                              // opening the claim shows its chat, so mark its comments read first
+                            onClick={(event) => {
                               event.preventDefault();
-                              await eyeTap(roles, row?.id);
-                              router.push(`/newClaim/${row?.refNumber}`);
+                              openClaimForEdit(row);
                             }}
                           >
                             <Pencil className="w-4 h-4 hover:text-green-600 cursor-pointer" />
@@ -496,28 +516,20 @@ export function DataTable({
                             className="w-4 h-4 hover:text-red-600 cursor-pointer"
                           />
                         )}
-                        {row?.status !== StatusType.DRAFT && !canEditClaims && (
-                          <>
-                            {(row.assignee !== null ||
-                              (isClaimAssigned && assignedClaimRefNumber === row.refNumber)) && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="relative"
-                                onClick={async () => {
-                                  await eyeTap(roles, row?.id);
-                                  window.location.assign(`/claims/${row?.refNumber}`);
-                                }}
-                              >
-                                <Eye size={20} className="text-[#3E79D6]" />
-                                {commentsCountMap[row?.id] > 0 && (
-                                  <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
-                                    {commentsCountMap[row?.id]}
-                                  </span>
-                                )}
-                              </Button>
+                        {canViewClaim(row) && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="relative"
+                            onClick={() => openClaimForView(row)}
+                          >
+                            <Eye size={20} className="text-[#3E79D6]" />
+                            {commentsCountMap[row?.id] > 0 && (
+                              <span className="absolute top-0 right-0 bg-red-500 text-white text-[10px] w-4 h-4 flex items-center justify-center rounded-full">
+                                {commentsCountMap[row?.id]}
+                              </span>
                             )}
-                          </>
+                          </Button>
                         )}
                       </div>
                     </td>

@@ -15,6 +15,24 @@ export const bulkUploadFiles = (data: any) =>
     },
   });
 
+/** File picker filter for documents: images, PDFs and Excel sheets (the API allows the same). */
+export const DOCUMENT_FILE_ACCEPT = ".jpeg,.jpg,.png,.webp,.pdf,.xls,.xlsx";
+
+// Must match MAX_BULK_FILES on the API.
+export const MAX_FILES_PER_UPLOAD = 20;
+
+/** Uploads any number of files, in batches the API accepts. Results keep the input order. */
+export async function uploadManyFiles(files: File[], folder: string): Promise<{ key: string; url?: string }[]> {
+  const results: { key: string; url?: string }[] = [];
+  for (let i = 0; i < files.length; i += MAX_FILES_PER_UPLOAD) {
+    const formData = new FormData();
+    files.slice(i, i + MAX_FILES_PER_UPLOAD).forEach((file) => formData.append("files", file));
+    formData.append("folder", folder);
+    const res = await bulkUploadFiles(formData);
+    results.push(...res.data);
+  }
+  return results;
+}
 
 export const bulkDeleteFiles = (fileNames: string[]) =>
   api.delete("/file/bulkDelete", { data: { fileNames } });

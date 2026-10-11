@@ -43,13 +43,15 @@ const allTabLabels = [
   "Settlement",
 ];
 
+// tab to open after a status change (falls back to the first tab)
 const statusToTabLabel: Record<string, string> = {
-  SENT_TO_TPA: "Sent to TPA",
-  DENIED: "Denied",
-  APPROVED: "Approved",
   QUERIED: "Queried",
+  QUERY_REPLY_SENT: "Queried",
   ENHANCEMENT: "Enhancement",
+  DISCHARGE_INITIATED: "Discharge",
+  DISCHARGE_SENT: "Discharge",
   DISCHARGED: "Discharge",
+  SETTLEMENT_INITIATED: "Discharge",
   SETTLED: "Settlement",
 };
 
@@ -57,11 +59,16 @@ const directUpdateStatus = [
   StatusType.SENT_TO_TPA,
   StatusType.DENIED,
   StatusType.APPROVED,
+  StatusType.QUERY_REPLY_SENT,
+  StatusType.DISCHARGE_SENT,
+  StatusType.DISCHARGED,
+  StatusType.SETTLEMENT_INITIATED,
 ];
+// these open a popup to capture details first (query, enhancement, discharge, settlement)
 const modalDependentStatus = [
   StatusType.QUERIED,
   StatusType.ENHANCEMENT,
-  StatusType.DISCHARGED,
+  StatusType.DISCHARGE_INITIATED,
   StatusType.SETTLED,
 ];
 
@@ -175,7 +182,7 @@ export default function ClaimWorkspace({ editable = false }: { editable?: boolea
         const indexToSet = tabs.findIndex(
           (label) =>
             label.toLowerCase() ===
-            statusToTabLabel[currentStatus].toLowerCase()
+            (statusToTabLabel[currentStatus] ?? "").toLowerCase()
         );
         setActiveTab(indexToSet !== -1 ? indexToSet : 0);
       }
@@ -384,7 +391,7 @@ export default function ClaimWorkspace({ editable = false }: { editable?: boolea
             />
           )}
 
-        {modalProcessingStatus === StatusType.DISCHARGED &&
+        {modalProcessingStatus === StatusType.DISCHARGE_INITIATED &&
           openParentLevelModal && (
             <CreateDischargePopup
               open={openParentLevelModal}
