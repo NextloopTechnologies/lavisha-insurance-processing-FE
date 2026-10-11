@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { bulkDeleteFiles, uploadManyFiles } from "@/services/files";
-import { appendUploads, asArray, removeFromSlot } from "@/lib/claimDocuments";
+import { appendUploads, asArray, removeFromSlot, toApiDocument } from "@/lib/claimDocuments";
 import {
   Select,
   SelectContent,
@@ -192,13 +192,11 @@ export default function CreateSettlementPopup({
         transactionId, tds, deduction, ...others
       } = claimInputs;
 
-      //  Pure function — never mutates state
-      const cleanDoc = ({ url, file, ...rest }: any) => rest;
 
       const documents = [
-        ...asArray(SETTLEMENT_LETTER).map(cleanDoc),
-        ...(Array.isArray(SETTLEMENT_OTHER) ? SETTLEMENT_OTHER.map(cleanDoc) : []),
-        ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+        ...asArray(SETTLEMENT_LETTER).map(toApiDocument),
+        ...(Array.isArray(SETTLEMENT_OTHER) ? SETTLEMENT_OTHER.map(toApiDocument) : []),
+        ...(Array.isArray(OTHER) ? OTHER.map(toApiDocument) : []),
       ].filter(Boolean);
 
       const payload = {

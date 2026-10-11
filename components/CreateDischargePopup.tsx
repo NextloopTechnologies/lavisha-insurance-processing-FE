@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useState, useEffect } from "react";
 import { DatePicker } from "@/components/DatePicker";
 import { bulkDeleteFiles, uploadManyFiles } from "@/services/files";
-import { appendUploads, removeFromSlot } from "@/lib/claimDocuments";
+import { appendUploads, removeFromSlot, toApiDocument } from "@/lib/claimDocuments";
 import {
   Select,
   SelectContent,
@@ -186,12 +186,10 @@ export default function CreateDischargePopup({
         ...others
       } = claimInputs;
 
-      //  Pure function — never mutates state
-      const cleanDoc = ({ url, file, ...rest }: any) => rest;
 
       const documents = [
-        ...(Array.isArray(DISCHARGE_OTHER) ? DISCHARGE_OTHER.map(cleanDoc) : []),
-        ...(Array.isArray(OTHER) ? OTHER.map(cleanDoc) : []),
+        ...(Array.isArray(DISCHARGE_OTHER) ? DISCHARGE_OTHER.map(toApiDocument) : []),
+        ...(Array.isArray(OTHER) ? OTHER.map(toApiDocument) : []),
       ].filter(Boolean);
 
       const payload = {
