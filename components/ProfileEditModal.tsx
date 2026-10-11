@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { CloudUpload, Folder, UserIcon } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import InputComponent from "./InputComponent";
-import { bulkDeleteFiles, uploadFiles } from "@/services/files";
+import { bulkDeleteFiles, uploadFiles, DOCUMENT_FILE_ACCEPT } from "@/services/files";
 import { updateProfile } from "@/services/profile";
 import Cookies from "js-cookie";
 import { toast } from "sonner";
@@ -255,7 +255,7 @@ export function ProfileEditModal({
                     <input
                       ref={rateListInputRef}
                       type="file"
-                      accept=".jpeg,.jpg,.png,.webp,.pdf"
+                      accept={DOCUMENT_FILE_ACCEPT}
                       multiple
                       hidden
                       onChange={handleRateListUpload}

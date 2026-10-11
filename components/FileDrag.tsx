@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { UploadCloud, Folder, Image, X } from "lucide-react";
 import ImagePreview from "./ImagePreview";
 import { getFileIconType } from "@/lib/utils";
+import { DOCUMENT_FILE_ACCEPT } from "@/services/files";
 
 interface FileDropzoneProps {
   title: string;
@@ -187,7 +188,7 @@ const getDisplayName = (file: any) => {
             </button>
             <input
               type="file"
-              accept=".jpeg,.jpg,.png,.webp,.pdf"
+              accept={DOCUMENT_FILE_ACCEPT}
               multiple={multiple}
               hidden
               ref={inputRef}

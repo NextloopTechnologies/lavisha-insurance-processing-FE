@@ -15,6 +15,9 @@ export const bulkUploadFiles = (data: any) =>
     },
   });
 
+/** File picker filter for documents: images, PDFs and Excel sheets (the API allows the same). */
+export const DOCUMENT_FILE_ACCEPT = ".jpeg,.jpg,.png,.webp,.pdf,.xls,.xlsx";
+
 // Must match MAX_BULK_FILES on the API.
 export const MAX_FILES_PER_UPLOAD = 20;
 
