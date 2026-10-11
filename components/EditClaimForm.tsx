@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { createClaims, getClaimsById, updateClaims } from "@/services/claims";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import CreateClaim from "@/components/CreateClaim";
+import { startOfTodayISO } from "@/lib/utils";
 
 interface EditClaimFormProps {
   /** claim already loaded by the parent; when omitted the form loads it from the route's ref number */
@@ -87,7 +88,9 @@ export default function EditClaimForm({ claim, embedded = false, onSaved }: Edit
   const [initialHospitalId, setInitialHospitalId] = useState("");
   // start from the claim when the workspace passes one in, so a remount after a save never
   // renders a blank form (blank status would briefly show "Save as Draft")
-  const [claimInputs, setClaimInputs] = useState<any>(() => (claim ? inputsFromClaim(claim) : emptyInputs));
+  const [claimInputs, setClaimInputs] = useState<any>(() =>
+    claim ? inputsFromClaim(claim) : { ...emptyInputs, dateOfAdmission: startOfTodayISO() },
+  );
   const router = useRouter();
   const params = useParams();
   const id = params.id;

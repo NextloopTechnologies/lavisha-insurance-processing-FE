@@ -49,6 +49,13 @@ export function getFileIconType(fileName: string) {
   return "file"; // default generic file 📁
 }
 
+/** Local midnight today as ISO — the default Date of Admission for new claims. */
+export function startOfTodayISO() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.toISOString();
+}
+
 export function formatDateTime(isoString) {
   if (!isoString) return { date: "", time: "" };
 

@@ -30,6 +30,7 @@ import { userRound } from "@/assets";
 import PatientFormDialog from "@/components/CreateEdit";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import CreateClaim from "@/components/CreateClaim";
+import { startOfTodayISO } from "@/lib/utils";
 
 export default function NewClaimsContent() {
   const [loading, setLoading] = useState(false);
@@ -52,7 +53,7 @@ export default function NewClaimsContent() {
     CURRENT_INVESTIGATION: "",
     CLINIC_PAPER: "",
     ICP: "",
-    dateOfAdmission: "",
+    dateOfAdmission: startOfTodayISO(),
     diagnosis: "",
     provisionalAmount: "",
   });
