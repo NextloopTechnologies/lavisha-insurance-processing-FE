@@ -531,7 +531,6 @@ export default function CreateClaim({
                         }
                       }
                     }}
-                    disableFuture
                     placeholder="Admission Date"
                   />
                  </div>

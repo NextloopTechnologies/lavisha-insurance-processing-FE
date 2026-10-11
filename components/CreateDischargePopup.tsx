@@ -326,7 +326,7 @@ export default function CreateDischargePopup({
                 }
                 disableFuture
                 placeholder="Discharge Date"
-                disableBefore={claimInputs.dateOfAdmission ? new Date(claimInputs.dateOfAdmission) : undefined}
+                disableBefore={data?.dateOfAdmission ? new Date(data.dateOfAdmission) : undefined}
               />
               </div>
 
