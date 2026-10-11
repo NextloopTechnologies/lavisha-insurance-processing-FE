@@ -13,7 +13,7 @@ type Stage = { key: string; label: string; count: number; percentage: string; st
 /** Older API responses only had three percentages. */
 const legacyStages = (data: any): Stage[] => [
   { key: "SETTLED", label: "Settled", count: 0, percentage: data?.percentageSettled ?? "0.00", statuses: [] },
-  { key: "RECONSIDERATION", label: "Reconsideration", count: 0, percentage: data?.percentageEnhancement ?? "0.00", statuses: [] },
+  { key: "ENHANCEMENT", label: "Enhancement", count: 0, percentage: data?.percentageEnhancement ?? "0.00", statuses: [] },
   { key: "PRE_AUTH", label: "Pending", count: 0, percentage: data?.percentagePending ?? "0.00", statuses: [] },
 ];
 

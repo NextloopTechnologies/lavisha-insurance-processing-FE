@@ -64,7 +64,7 @@ const directUpdateStatus = [
   StatusType.DISCHARGED,
   StatusType.SETTLEMENT_INITIATED,
 ];
-// these open a popup to capture details first (query, reconsideration, discharge, settlement)
+// these open a popup to capture details first (query, enhancement, discharge, settlement)
 const modalDependentStatus = [
   StatusType.QUERIED,
   StatusType.ENHANCEMENT,

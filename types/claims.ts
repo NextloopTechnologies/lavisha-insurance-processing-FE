@@ -6,7 +6,7 @@ export enum StatusType {
     QUERY_REPLY_SENT = 'QUERY_REPLY_SENT',
     DENIED = 'DENIED',
     APPROVED = 'APPROVED',
-    ENHANCEMENT = 'ENHANCEMENT', // shown as "Reconsideration Sent"
+    ENHANCEMENT = 'ENHANCEMENT',
     DISCHARGE_INITIATED = 'DISCHARGE_INITIATED',
     DISCHARGE_SENT = 'DISCHARGE_SENT',
     DISCHARGED = 'DISCHARGED', // shown as "Discharge Approved"
