@@ -1,4 +1,5 @@
 import { statusOptions } from "@/constants/menu";
+import { STATUS_NAMES, statusChoices } from "@/lib/claimStatus";
 import { StatusType } from "@/types/claims";
 import { clsx, type ClassValue } from "clsx";
 import { addDays, subMonths, subYears } from "date-fns";
@@ -49,6 +50,13 @@ export function getFileIconType(fileName: string) {
   return "file"; // default generic file 📁
 }
 
+/** Local midnight today as ISO — the default Date of Admission for new claims. */
+export function startOfTodayISO() {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.toISOString();
+}
+
 export function formatDateTime(isoString) {
   if (!isoString) return { date: "", time: "" };
 
@@ -80,32 +88,26 @@ export function formatRaisedDate(
   return `${day}/${month}/${year}`;
 }
 
-export const getStatusVisibility = (currentStatus: StatusType) => {
-  const index = statusOptions.findIndex((s) => s.key === currentStatus);
+/** Options for the status selector: the current status followed by where it can go next. */
+export const getStatusVisibility = (currentStatus: StatusType) =>
+  statusChoices(currentStatus)
+    .map((key) => statusOptions.find((s) => s.key === key))
+    .filter(Boolean);
 
-  if (index === -1) return [];
-
-  if(currentStatus === StatusType.SENT_TO_TPA) {
-    return statusOptions.slice(index, index + 4)
-  }
-  if(currentStatus === StatusType.QUERIED) {
-    return statusOptions.slice(index, index + 3)
-  }
-  if (currentStatus === StatusType.APPROVED) {
-    return statusOptions.slice(index); // from approved to settled
-  }
-
-  return statusOptions.slice(index, index + 2); // current and next
-};
-
+// last tab index (in ClaimWorkspace allTabLabels) visible for each status;
+// Queried / Enhancement tabs still only show when the claim has that data
 export const statusMaxIndexMap: Record<string, number> = {
   PENDING: 1,
   SENT_TO_TPA: 1,
-  QUERIED: 2,
-  DENIED: 2,
-  APPROVED: 2,
+  QUERIED: 3,
+  QUERY_REPLY_SENT: 3,
+  DENIED: 3,
+  APPROVED: 3,
   ENHANCEMENT: 3,
+  DISCHARGE_INITIATED: 4,
+  DISCHARGE_SENT: 4,
   DISCHARGED: 4,
+  SETTLEMENT_INITIATED: 4,
   SETTLED: 5,
 };
 
@@ -137,14 +139,4 @@ export const filterTabsByData = (tabs: string[], res: any): string[] => {
   });
 };
 
-export const STATUS_LABELS: Record<string, string> = {
-  DRAFT: "Draft",
-  PENDING: "Pending",
-  APPROVED: "Approved",
-  SENT_TO_TPA: "Sent to TPA",
-  QUERIED: "Queried",
-  DENIED: "Denied",
-  ENHANCEMENT: "Enhancement",
-  DISCHARGED: "Dishcharged",
-  SETTLED: "Settled",
-};
+export const STATUS_LABELS: Record<string, string> = STATUS_NAMES;
