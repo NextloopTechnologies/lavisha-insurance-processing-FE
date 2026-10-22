@@ -1,4 +1,5 @@
 import { StatusType } from "@/types/claims";
+import { STATUS_NAMES } from "@/lib/claimStatus";
 import {
   dashboardImage,
   claimsImage,
@@ -230,52 +231,21 @@ export const navItems = [
   },
 ];
 
+// display order; names and transitions live in lib/claimStatus
 export const statusOptions = [
-  {
-    name: "Draft",
-    icon: draftIcon,
-    key: StatusType.DRAFT,
-  },
-  {
-    name: "Pending",
-    icon: pendingIcon,
-    key: StatusType.PENDING,
-  },
-  {
-    name: "Send to TPA",
-    icon: send1Icon,
-    key: StatusType.SENT_TO_TPA,
-  },
-  {
-    name: "Queried",
-    icon: faqIcon,
-    key: StatusType.QUERIED,
-  },
-  {
-    name: "Denied",
-    icon: cancelIcon,
-    key: StatusType.DENIED,
-  },
-  {
-    name: "Approved",
-    icon: approveIcon,
-    key: StatusType.APPROVED,
-  },
-  {
-    name: "Enhancement",
-    icon: growthIcon,
-    key: StatusType.ENHANCEMENT,
-  },
-  {
-    name: "Discharged",
-    icon: dischargeIcon,
-    key: StatusType.DISCHARGED,
-  },
-  {
-    name: "Settled",
-    icon: settledIcon,
-    key: StatusType.SETTLED,
-  },
+  { name: STATUS_NAMES[StatusType.DRAFT], icon: draftIcon, key: StatusType.DRAFT },
+  { name: STATUS_NAMES[StatusType.PENDING], icon: pendingIcon, key: StatusType.PENDING },
+  { name: STATUS_NAMES[StatusType.SENT_TO_TPA], icon: send1Icon, key: StatusType.SENT_TO_TPA },
+  { name: STATUS_NAMES[StatusType.APPROVED], icon: approveIcon, key: StatusType.APPROVED },
+  { name: STATUS_NAMES[StatusType.QUERIED], icon: faqIcon, key: StatusType.QUERIED },
+  { name: STATUS_NAMES[StatusType.QUERY_REPLY_SENT], icon: send1Icon, key: StatusType.QUERY_REPLY_SENT },
+  { name: STATUS_NAMES[StatusType.ENHANCEMENT], icon: growthIcon, key: StatusType.ENHANCEMENT },
+  { name: STATUS_NAMES[StatusType.DENIED], icon: cancelIcon, key: StatusType.DENIED },
+  { name: STATUS_NAMES[StatusType.DISCHARGE_INITIATED], icon: dischargeIcon, key: StatusType.DISCHARGE_INITIATED },
+  { name: STATUS_NAMES[StatusType.DISCHARGE_SENT], icon: send1Icon, key: StatusType.DISCHARGE_SENT },
+  { name: STATUS_NAMES[StatusType.DISCHARGED], icon: approveIcon, key: StatusType.DISCHARGED },
+  { name: STATUS_NAMES[StatusType.SETTLEMENT_INITIATED], icon: pendingIcon, key: StatusType.SETTLEMENT_INITIATED },
+  { name: STATUS_NAMES[StatusType.SETTLED], icon: settledIcon, key: StatusType.SETTLED },
 ];
 
 export const documents = [

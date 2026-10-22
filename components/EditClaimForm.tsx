@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { createClaims, getClaimsById, updateClaims } from "@/services/claims";
 import LoadingOverlay from "@/components/LoadingOverlay";
 import CreateClaim from "@/components/CreateClaim";
+import { startOfTodayISO } from "@/lib/utils";
+import { CLAIM_DOC_TYPES, collectDocuments, groupDocuments, hasMissingRemarks } from "@/lib/claimDocuments";
 
 interface EditClaimFormProps {
   /** claim already loaded by the parent; when omitted the form loads it from the route's ref number */
@@ -37,26 +39,7 @@ const emptyInputs = {
 
 /** Form state for an existing claim (documents grouped by type). */
 function inputsFromClaim(claims: any) {
-  const documentMap = claims.documents.reduce((acc, doc) => {
-    if (doc.type === "OTHER") {
-      acc[doc.type] = acc[doc.type] || [];
-      acc[doc.type].push({
-        id: doc.id,
-        fileName: doc.fileName,
-        type: doc.type,
-        remark: doc.remark,
-        url: doc.url
-      });
-    } else {
-      acc[doc.type] = {
-        id: doc.id,
-        fileName: doc.fileName,
-        type: doc.type,
-        url: doc.url
-      };
-    }
-    return acc;
-  }, {});
+  const documentMap = groupDocuments(claims.documents, CLAIM_DOC_TYPES);
 
   return {
     isPreAuth: claims.isPreAuth,
@@ -66,13 +49,13 @@ function inputsFromClaim(claims: any) {
     insuranceCompany: claims.insuranceCompany,
     status: claims.status,
     description: claims.description,
-    PRE_AUTH: documentMap.PRE_AUTH || "",
+    PRE_AUTH: documentMap.PRE_AUTH,
     additionalNotes: claims.additionalNotes || "",
-    OTHER: documentMap.OTHER || [],
-    CLINIC_PAPER: documentMap.CLINIC_PAPER || "",
-    ICP: documentMap.ICP || "",
-    CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION || "",
-    PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION || "",
+    OTHER: documentMap.OTHER,
+    CLINIC_PAPER: documentMap.CLINIC_PAPER,
+    ICP: documentMap.ICP,
+    CURRENT_INVESTIGATION: documentMap.CURRENT_INVESTIGATION,
+    PAST_INVESTIGATION: documentMap.PAST_INVESTIGATION,
     // SETTLEMENT_LETTER: documentMap.SETTLEMENT_LETTER || "",
     dateOfAdmission: claims.dateOfAdmission || "",
     diagnosis: claims.diagnosis || "",
@@ -87,22 +70,19 @@ export default function EditClaimForm({ claim, embedded = false, onSaved }: Edit
   const [initialHospitalId, setInitialHospitalId] = useState("");
   // start from the claim when the workspace passes one in, so a remount after a save never
   // renders a blank form (blank status would briefly show "Save as Draft")
-  const [claimInputs, setClaimInputs] = useState<any>(() => (claim ? inputsFromClaim(claim) : emptyInputs));
+  const [claimInputs, setClaimInputs] = useState<any>(() =>
+    claim ? inputsFromClaim(claim) : { ...emptyInputs, dateOfAdmission: startOfTodayISO() },
+  );
   const router = useRouter();
   const params = useParams();
   const id = params.id;
 
   const handleCreateClaim = async (value = null) => {
 
-      if (Array.isArray(claimInputs.OTHER) && claimInputs.OTHER.length > 0) {
-    const missingRemark = claimInputs.OTHER.some(
-      (file) => !file.remark || file.remark.trim() === "" || file.remark === "custom remark"
-    );
-    if (missingRemark) {
+    if (hasMissingRemarks(claimInputs, CLAIM_DOC_TYPES)) {
       toast.error("Please add a note for all miscellaneous documents.");
       return;
     }
-  }
     if (!!claims) {
       try {
         const {
@@ -115,40 +95,13 @@ export default function EditClaimForm({ claim, embedded = false, onSaved }: Edit
           status,
           ...others
         } = claimInputs;
-        const removeKeys = (obj) => {
-          delete obj.url;
-          delete obj.file;
-          return obj;
-        };
-        removeKeys(CLINIC_PAPER);
-        removeKeys(PAST_INVESTIGATION);
-        removeKeys(CURRENT_INVESTIGATION);
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(PRE_AUTH);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
-        const isNewUpload = (doc: any) => doc && !!doc.isNew;
+        const changed = collectDocuments(claimInputs, CLAIM_DOC_TYPES, { onlyNew: true });
 
         const payload = {
           ...others,
           status: value ? value : undefined,
           isBasicClaimUpdate: isClaimAssigned,
-          ...((() => {
-            const changed = [
-              isNewUpload(PRE_AUTH) ? PRE_AUTH : null,
-              isNewUpload(CLINIC_PAPER) ? CLINIC_PAPER : null,
-              isNewUpload(ICP) ? ICP : null,
-              isNewUpload(PAST_INVESTIGATION) ? PAST_INVESTIGATION : null,
-              isNewUpload(CURRENT_INVESTIGATION) ? CURRENT_INVESTIGATION : null,
-              ...(Array.isArray(OTHER) ? OTHER.filter(isNewUpload) : []),
-            ].filter(Boolean)
-              .map(({ url, file, isNew, ...rest }) => rest);
-
-            return changed.length > 0 ? { documents: changed } : {};
-          })()),
+          ...(changed.length > 0 ? { documents: changed } : {}),
         };
         setLoading(true);
         const res = await updateClaims(payload, id);
@@ -177,36 +130,9 @@ export default function EditClaimForm({ claim, embedded = false, onSaved }: Edit
           status,
           ...others
         } = claimInputs;
-        const removeKeys = (obj) => {
-          if(!obj){
-            return;
-          }
-          delete obj.url;
-          delete obj.file;
-          return obj;
-        };
-
-        // Removing 'url' and 'file' from individual objects
-        removeKeys(CLINIC_PAPER);
-        removeKeys(PAST_INVESTIGATION);
-        removeKeys(CURRENT_INVESTIGATION);
-        removeKeys(OTHER);
-        removeKeys(ICP);
-        removeKeys(PRE_AUTH);
-        removeKeys(status);
-        if (Array.isArray(OTHER)) {
-          OTHER.forEach(removeKeys);
-        }
         const payload = {
           ...others,
-          documents: [
-            PRE_AUTH,
-            CLINIC_PAPER,
-            ICP,
-            PAST_INVESTIGATION,
-            CURRENT_INVESTIGATION,
-            ...(OTHER || []),
-          ].filter(Boolean),
+          documents: collectDocuments(claimInputs, CLAIM_DOC_TYPES),
         };
         setLoading(true);
         const res = await createClaims(payload);

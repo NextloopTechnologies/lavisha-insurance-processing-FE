@@ -21,7 +21,7 @@ import {
   CloudUpload,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { bulkDeleteFiles, uploadFiles } from "@/services/files";
+import { bulkDeleteFiles, uploadFiles, DOCUMENT_FILE_ACCEPT } from "@/services/files";
 import { createUsers, getUsersDropdown, updateUser } from "@/services/users";
 import { toast } from "sonner";
 
@@ -361,7 +361,7 @@ export default function CreateUser({
                       <input
                         ref={rateListInputRef}
                         type="file"
-                        accept=".jpeg,.jpg,.png,.webp,.pdf"
+                        accept={DOCUMENT_FILE_ACCEPT}
                         multiple
                         hidden
                         onChange={handleRateListUpload}

@@ -166,8 +166,8 @@ export default function ClaimsContent() {
     if (res?.status === 200) fetchClaims();
   };
 
-  // ✅ CRITICAL: prevent hydration mismatch
-  if (!mounted) return null;
+  // ✅ CRITICAL: prevent hydration mismatch — keep the sidebar on screen meanwhile so the page doesn't blank out
+  if (!mounted) return <SidebarLayout><div className="bg-gray-100" /></SidebarLayout>;
 
   return (
     <SidebarLayout>

@@ -9,6 +9,9 @@ import { useEffect, useRef, useState } from "react";
 import { getNotificationsByParams, markAllRead } from "@/services/notification";
 import { format } from "date-fns";
 
+// new notifications from other users show up without a reload; paused in hidden tabs
+export const NOTIFICATIONS_POLL_MS = 30_000;
+
 export const NotificationPopover = () => {
   const [openNotification, setOpenNotification] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,8 +20,8 @@ export const NotificationPopover = () => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [visibleIds, setVisibleIds] = useState<string[]>([]);
   // Fetch notifications
-  const getNotifications = async () => {
-    setLoading(true);
+  const getNotifications = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const res = await getNotificationsByParams({});
       if (res?.status !== 200) return console.error("error notification read");
@@ -27,13 +30,29 @@ export const NotificationPopover = () => {
     } catch (err) {
       console.error("Failed to fetch notifications:", err);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     getNotifications();
+    const refresh = () => {
+      if (document.visibilityState === "visible") getNotifications(true);
+    };
+    const timer = setInterval(refresh, NOTIFICATIONS_POLL_MS);
+    document.addEventListener("visibilitychange", refresh);
+    window.addEventListener("focus", refresh);
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", refresh);
+      window.removeEventListener("focus", refresh);
+    };
   }, []);
+
+  // opening the bell always shows the latest list
+  useEffect(() => {
+    if (openNotification) getNotifications(true);
+  }, [openNotification]);
 
   // Auto mark as read when element becomes visible
   useEffect(() => {
